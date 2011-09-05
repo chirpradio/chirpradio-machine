@@ -42,6 +42,12 @@ Please follow `PEP8`_ when writing code.
 
 .. _`PEP8`: http://www.python.org/dev/peps/pep-0008/
 
+Community
+-----------
+
+You can reach out to the CHIRP development community on our
+`mailing list <http://groups.google.com/group/chirpdev>`_.
+
 Music Library
 ------------------
 
@@ -81,11 +87,11 @@ Carefully proofread the list of new artists.  If they are all correct, update th
 
 Now proofread the whitelist by viewing the changes in context::
 
-  svn diff chirp/library/data/artist-whitelist
+  git diff chirp/library/data/artist-whitelist
 
 If everything looks OK, common the changes back to Subversion::
 
-  svn commit chirp/library/data/artist-whitelist -m "Adding new artists"
+  git commit chirp/library/data/artist-whitelist -m "Adding new artists"
 
 Step #2: Actually Do The Import
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
