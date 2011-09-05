@@ -89,9 +89,10 @@ Now proofread the whitelist by viewing the changes in context::
 
   git diff chirp/library/data/artist-whitelist
 
-If everything looks OK, common the changes back to Subversion::
+If everything looks OK, common the changes back to git::
 
   git commit chirp/library/data/artist-whitelist -m "Adding new artists"
+  git push
 
 Step #2: Actually Do The Import
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
