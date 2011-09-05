@@ -6,7 +6,7 @@ import sys
 import time
 
 from chirp.common import http_console_server
-from chirp.common.settings import (ARCHIVER_PORT, STREAM_HOST, STREAM_PORT,
+from chirp.common.conf import (ARCHIVER_PORT, STREAM_HOST, STREAM_PORT,
                                    STREAM_PATH)
 
 from chirp.stream import archiver

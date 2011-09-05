@@ -18,7 +18,7 @@ import re
 import subprocess
 import sys
 
-from chirp.common.settings import MOUNT_BY_HDSN_ROOT
+from chirp.common.conf import MOUNT_BY_HDSN_ROOT
 
 
 NOT_MOUNTED_MARKER = "_NOT_MOUNTED"

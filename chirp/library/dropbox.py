@@ -1,7 +1,7 @@
 
 import logging
 import os
-from chirp.common import settings
+from chirp.common import conf
 from chirp.library import album
 from chirp.library import audio_file
 
@@ -9,7 +9,7 @@ from chirp.library import audio_file
 class Dropbox(object):
 
     def __init__(self, dropbox_path=None):
-        dropbox_path = dropbox_path or settings.MUSIC_DROPBOX
+        dropbox_path = dropbox_path or conf.MUSIC_DROPBOX
         self._path = dropbox_path
         self._dirs = {}
         self._all_files = []

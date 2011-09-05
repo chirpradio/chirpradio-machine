@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 from chirp.common import timestamp
-from chirp.common.settings import (LIBRARY_PREFIX, LIBRARY_DB,
+from chirp.common.conf import (LIBRARY_PREFIX, LIBRARY_DB,
                                    LIBRARY_TMP_PREFIX)
 from chirp.library import album
 from chirp.library import analyzer

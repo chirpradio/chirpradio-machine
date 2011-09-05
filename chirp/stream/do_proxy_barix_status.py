@@ -6,7 +6,7 @@ import sys
 import threading
 import time
 
-from chirp.common.settings import (BARIX_STATUS_HOST, BARIX_STATUS_PORT,
+from chirp.common.conf import (BARIX_STATUS_HOST, BARIX_STATUS_PORT,
                                    BARIX_HOST, BARIX_PORT)
 from chirp.stream import barix
 

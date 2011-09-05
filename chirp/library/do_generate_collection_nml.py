@@ -5,7 +5,7 @@
 import codecs
 import sys
 import time
-from chirp.common import settings
+from chirp.common import conf
 from chirp.library import database
 from chirp.library import nml_writer
 
@@ -14,7 +14,7 @@ def main():
     out_fh = codecs.open("output.nml", "w", "utf-8")
     # TODO(trow): Don't hard-wire the drive letter.
     writer = nml_writer.NMLWriter("T:", "/Library", out_fh)
-    db = database.Database(settings.LIBRARY_DB)
+    db = database.Database(conf.LIBRARY_DB)
     count = 0
     start_t = time.time()
     for au_file in db.get_all():

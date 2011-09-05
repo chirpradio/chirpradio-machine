@@ -3,7 +3,7 @@ import sys
 import time
 
 from chirp.common import http_console_server
-from chirp.common.settings import (STREAM_HOST, STREAM_PORT, STREAM_PATH,
+from chirp.common.conf import (STREAM_HOST, STREAM_PORT, STREAM_PATH,
                                    STREAM_PROXY_HOST, STREAM_PROXY_PORT)
 
 from chirp.stream import frame_splitter

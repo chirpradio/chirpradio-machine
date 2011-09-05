@@ -15,7 +15,7 @@ import time
 import urllib2
 
 from chirp.common import timestamp
-from chirp.common import settings
+from chirp.common import conf
 from chirp.library import album
 from chirp.library import constants
 from chirp.library import database
@@ -160,7 +160,7 @@ def main():
     #chirpradio.connect("10.0.1.98:8000")
     chirpradio.connect()
 
-    sql_db = database.Database(settings.LIBRARY_DB)
+    sql_db = database.Database(conf.LIBRARY_DB)
     pending_albums = []
     this_album = []
     # TODO(trow): Select the albums to import in a saner way.
