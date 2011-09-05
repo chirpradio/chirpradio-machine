@@ -1,3 +1,4 @@
 Nose
 http://mutagen.googlecode.com/files/mutagen-1.16.tar.gz#egg=mutagen
 simplejson
+PyCrypto
