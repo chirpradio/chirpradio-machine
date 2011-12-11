@@ -110,7 +110,7 @@ Now re-run the import script with an additional flag telling to actually go ahea
 
 ::
 
-  sudo `which do_periodic_import` --actually-do-import
+  do_periodic_import --actually-do-import
 
 Do not interrupt the import script while it is running!
 
@@ -118,10 +118,6 @@ At this point everything in the dropbox has been imported, so it is safe to clea
 
   ls path/to/dropbox
   sudo rm -rf path/to/dropbox/*
-
-Finally, run a script to copy the newly-added files to the backup drive::
-
-  ~trow/backup-lib.sh
 
 Step #3: Prepare a New NML File For Traktor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
