@@ -24,6 +24,8 @@ GOOGLE_APPENGINE_SDK_PATH = '/usr/local/google_appengine'
 # Stream Archiver.
 # Daemon that writes archives
 ARCHIVER_PORT = 16000
+# Top-level directory containing 2011, 2012, ...
+ARCHIVES_DIR = '/archives'
 # This is the IP address of the on-air studio's Barix box:
 STREAM_HOST = "192.168.80.5"
 # This port is reserved internally for the archiver to connect to:

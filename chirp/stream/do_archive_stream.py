@@ -7,7 +7,7 @@ import time
 
 from chirp.common import http_console_server
 from chirp.common.conf import (ARCHIVER_PORT, STREAM_HOST, STREAM_PORT,
-                                   STREAM_PATH)
+                               STREAM_PATH, ARCHIVES_DIR)
 
 from chirp.stream import archiver
 from chirp.stream import frame_splitter
@@ -25,7 +25,7 @@ def run_pipeline():
     fs_1, fs_2 = fs_tee.outputs
 
     arch = archiver.Archiver(fs_1)
-    arch.ROOT_DIR = "/archives"
+    arch.ROOT_DIR = ARCHIVES_DIR
  
     stats = statistics.Statistics(fs_2)
     stats.export()
