@@ -128,10 +128,11 @@ This command will create a file named ``output.nml`` in the current directory::
 
 Copy the new NML into Traktor's root directory::
 
-  NEW_NML=/samba/traktor/TraktorProRootDirectory/new-collection.nml
-  sudo install -o traktor -g traktor output.nml $NEW_NML
+  install -m 0775 -g traktor output.nml /mnt/disk_array/traktor/TraktorProRootDirectory/new-collection.nml
 
-At this point Traktor can be switched over to the new collection.
+At this point Traktor can be switched over to the new collection
+whereby you shut down Traktor, rename new-collection.nml to collection.nml
+and restart Traktor.
 
 Step #4: Upload New Data to the DJ Database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
