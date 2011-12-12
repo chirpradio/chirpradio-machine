@@ -54,12 +54,16 @@ Music Library
 .. note::
 
   This requires a lot of manual sysadmin work and some of it is hard coded
-  on our servers. At some point it will hopefully be available as a web app.
-  Get in touch if you'd like to help!
+  on our servers. The
+  `chirpradio-webcontrol <https://github.com/chirpradio/chirpradio-webcontrol>`_
+  project is a web app we're working on to help make it easier.
 
 Here's how to import new music into the digital library so that it's available
 for DJs to play on our Traktor machine and also available in the online
-DJ Database.  First, be sure to read through settings.py and add any
+DJ Database.  These import scripts currently run as the ``musiclib`` user
+in production.
+
+First, be sure to read through settings.py and add any
 necessary settings overrides to settings_local.py.  Here are some of the
 crucial settings:
 
@@ -155,7 +159,9 @@ Stream Archiver
 ------------------
 
 The stream archiver writes out mp3 archives of the stream in one hour chunks.
-To fire it up switch to the archiver user and type::
+This daemon currently runs as the ``archiver`` user in production.
+
+To fire it up type::
 
   ./bin/run_archiver.sh
 
@@ -168,9 +174,11 @@ To fire it up switch to the archiver user and type::
 Stream Monitor
 ------------------
 
-To check if the stream is up and see some basic stats, there's a small web 
+To check if the stream is up and see some basic stats, there's a small web
 page you can take a look at.
-To start the web server for this, switch to the archiver user and type::
+This daemon currently runs as the ``barix`` user in production.
+
+To start the web server type::
 
   ./bin/run_proxy_barix_status.sh
 
