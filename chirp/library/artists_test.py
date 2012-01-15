@@ -131,7 +131,7 @@ class ArtistsTest(unittest.TestCase):
     def test_suggest(self):
         # Suggest should handle simple typos.
         self.assertEqual("Bob Dylan", artists.suggest("Bo Dylann"))
-        self.assertEqual("Big Boi", artists.suggest("Bigg Boy"))
+        self.assertEqual("Big Boys", artists.suggest("Bigg Boy"))
         # Suggest should handle simple variations.
         self.assertEqual("Booker T. & the M.G.'s",
                          artists.suggest("Booker T and the MGs"))
