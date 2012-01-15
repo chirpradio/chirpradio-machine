@@ -149,8 +149,7 @@ To upload the album and track information, you must specify a "start timestamp" 
 
 ::
 
-  TIMESTAMP=20110403-000000
-  do_push_to_chirpradio --start-at=$TIMESTAMP
+  do_push_to_chirpradio --start-at=20120115-000000
 
 If you don’t see any output from this command you probably entered the wrong timestamp.  It should show you verbose output of all the new albums uploading to App Engine.
 
