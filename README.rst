@@ -103,7 +103,7 @@ Step #2: Actually Do The Import
 
 Run the import script without any additional args, logging the output to a file::
 
-  do_periodic_import >& ~/import.log
+  do_periodic_import 2>&1 | tee ~/import.log
 
 This might take a while to run.
 
