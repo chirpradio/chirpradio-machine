@@ -101,8 +101,8 @@ def parse_human_readable(human_readable_str):
 # Nov 30th, 2008
 _MIN_REASONABLE_TIMESTAMP = parse_human_readable("20081130-000000")
 
-# Dec 31st, 2011
-_MAX_REASONABLE_TIMESTAMP = parse_human_readable("20111231-000000")
+# Jan 19, 2038 <- end of the [Unix] world, Y2K38
+_MAX_REASONABLE_TIMESTAMP = parse_human_readable("20380119-000000")
 
 def is_valid(ts):
     """Check if a timestamp appears to be valid."""
