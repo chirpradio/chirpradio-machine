@@ -121,7 +121,7 @@ Do not interrupt the import script while it is running!
 At this point everything in the dropbox has been imported, so it is safe to clean it out::
 
   ls path/to/dropbox
-  sudo rm -rf path/to/dropbox/*
+  rm -rf path/to/dropbox/*
 
 Step #3: Prepare a New NML File For Traktor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
