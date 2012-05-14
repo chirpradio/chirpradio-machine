@@ -8,6 +8,8 @@ LIBRARY_DB = os.path.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
 LIBRARY_TMP_PREFIX = os.path.join(LIBRARY_PREFIX, "tmp")
 MUSIC_DROPBOX = os.path.join(SAMBA,
                  "public/public/Departments/Music Dept/New Music Dropbox/")
+# When an album needs fixing, it gets moved here:
+MUSIC_DROPBOX_FIX = os.path.join(SAMBA, "public/Departments/Music Dept/Needs-Fixing")
 
 
 # Path to checkout of App Engine code, from

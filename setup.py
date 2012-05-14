@@ -20,6 +20,8 @@ setup(
        do_generate_collection_nml = chirp.library.do_generate_collection_nml:main
        do_push_artists_to_chirpradio = chirp.library.do_push_artists_to_chirpradio:main
        do_push_to_chirpradio = chirp.library.do_push_to_chirpradio:main
+       remove_from_dropbox = chirp.library.remove_from_dropbox:main
+       empty_dropbox = chirp.library.empty_dropbox:main
 
        do_archive_stream = chirp.stream.do_archive_stream:main
        do_proxy_barix_status = chirp.stream.do_proxy_barix_status:main
