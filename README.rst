@@ -89,11 +89,14 @@ Carefully proofread the list of new artists.  If they are all correct, update th
 
   do_dump_new_artists_in_dropbox --rewrite
 
-Now proofread the whitelist by viewing the changes in context::
+It's a rare possibility that you will get an error at this stage. Read on to the
+import section to see the options for resolving albums that produce errors.
+
+If it ran without errors, proofread the whitelist by viewing the changes in context::
 
   git diff chirp/library/data/artist-whitelist
 
-If everything looks OK, common the changes back to git::
+If everything looks OK, commit the changes back to git::
 
   git commit chirp/library/data/artist-whitelist -m "Adding new artists"
   git push
@@ -110,18 +113,36 @@ This might take a while to run.
 Next, inspect the log file and see if any errors were reported.  If they were, correct them and try again.  Repeat this process until there are no more errors. **Do not proceed if there are errors.** If you can't resolve them,
 just move the culprit album aside temporarily.
 
-Now re-run the import script with an additional flag telling to actually go ahead with the import.  This currently requires root privileges.
+Correcting Errors
+~~~~~~~~~~~~~~~~~
+
+There is a helper script to set aside albums when they are producing errors.
+This lets you continue with an import while the music director can correct the
+album and re-upload it. Let's say you hit an error with an album named Hair.
+Run this to set it aside::
+
+  sudo `which remove_from_dropbox` '/mnt/disk_array/public/Departments/Music Dept/New Music Dropbox/Hair'
+
+After the problem albums have been set aside and you were able to do a dry-run
+without any errors, you can proceed
+with an additional flag to actually go ahead with the import.
+
+However, it's really important that you don't interrupt this script
+while it's running. Be sure your SSH session will not timeout by using
+`screen <http://www.gnu.org/software/screen/>`_ or something like that.
+Using screen is the best way to go through an import process.
 
 ::
 
   do_periodic_import --actually-do-import
 
-Do not interrupt the import script while it is running!
+Again, do not interrupt the import script while it is running!
 
-At this point everything in the dropbox has been imported, so it is safe to clean it out::
+At this point everything in the dropbox has been imported, so it is safe to clean it out.
+This command will remove all files::
 
-  ls path/to/dropbox
-  rm -rf path/to/dropbox/*
+  sudo `which empty_dropbox`
+
 
 Step #3: Prepare a New NML File For Traktor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
