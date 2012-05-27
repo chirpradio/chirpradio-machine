@@ -15,6 +15,8 @@ def main():
     if not len(args) == 1:
         op.error('incorrect args')
     dir = args[0]
+    if dir.endswith('/'):
+        dir = dir[0:-1]
     if not os.path.exists(dir):
         op.error('directory does not exist: %r; it must be an absolute path'
                  % dir)
@@ -25,6 +27,9 @@ def main():
         op.error('the fixit dir %r does not exist; check your settings'
                  % conf.MUSIC_DROPBOX_FIX)
     dest = os.path.join(conf.MUSIC_DROPBOX_FIX, base)
+    if os.path.exists(dest):
+        op.error('This album %r has already been set aside! It needs to be '
+                 'removed from the Needs-Fixing dir first' % dest)
     os.rename(dir, dest)
     print 'move %r -> %r' % (dir, dest)
 
