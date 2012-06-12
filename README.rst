@@ -60,10 +60,10 @@ Music Library
 
 Here's how to import new music into the digital library so that it's available
 for DJs to play on our Traktor machine and also available in the online
-DJ Database.  These import scripts currently run as the ``musiclib`` user
-in production.
+DJ Database.
 
-First, be sure to read through settings.py and add any
+If you're installing the app for the first time,
+read through settings.py and add any
 necessary settings overrides to settings_local.py.  Here are some of the
 crucial settings:
 
@@ -76,7 +76,21 @@ crucial settings:
 .. _`Google App Engine SDK`: http://code.google.com/appengine/
 .. _`CHIRP Radio internal app code`: http://code.google.com/p/chirpradio/source/checkout
 
-Next, change into the root directory and run these commands:
+Running an import
+-------------------
+
+To run an import you either need to install the app (instructions above)
+or have a server admin grant you permissions to run an import within the CHIRP
+studio servers. At CHIRP, all
+scripts are run as the ``musiclib`` user.
+
+First, enter into a musiclib shell::
+
+    sudo -u musiclib -i
+
+Next, change into the source directory::
+
+    cd ~/chirpradio-machine
 
 Step #1: Update the Artist White-list
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
