@@ -31,6 +31,7 @@ def main():
         op.error('This album %r has already been set aside! It needs to be '
                  'removed from the Needs-Fixing dir first' % dest)
     os.rename(dir, dest)
+    os.system('chown -R musiclib "%s"' % dest)
     print 'move %r -> %r' % (dir, dest)
 
 
