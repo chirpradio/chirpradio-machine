@@ -40,6 +40,6 @@ def connect(host=None):
     if host is None:
         host = conf.CHIRPRADIO_HOST
     remote_api_stub.ConfigureRemoteDatastore(
-        "chirpradio", "/remote_api", _auth_func, host)
+        "chirpradio-hrd", "/remote_api", _auth_func, host)
 
 
