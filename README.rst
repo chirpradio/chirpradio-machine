@@ -195,9 +195,34 @@ Stream Archiver
 The stream archiver writes out mp3 archives of the stream in one hour chunks.
 This daemon currently runs as the ``archiver`` user in production.
 
+The Barix box broadcasts on a separate IP reserved for the archiver to
+connect to. The archiver makes an HTTP connection on the same network
+in the CHIRP studio.
+
 To fire it up type::
 
   ./bin/run_archiver.sh
+
+Check the ``ARCHIVES_DIR`` setting for where to find the files.
+You'll see something like this in there::
+
+    archiver@musiclib:~/chirpradio-machine$ ls -1 /mnt/disk_array/archives/2013/03/22/
+    chirp-20130322-000000.019.mp3
+    chirp-20130322-010000.002.mp3
+    chirp-20130322-020000.011.mp3
+    chirp-20130322-030000.020.mp3
+    chirp-20130322-040000.003.mp3
+    chirp-20130322-050000.011.mp3
+    chirp-20130322-060000.025.mp3
+    chirp-20130322-070000.007.mp3
+    chirp-20130322-080000.017.mp3
+    chirp-20130322-090000.001.mp3
+    ...
+    chirp-20130322-200000.003.mp3
+    chirp-20130322-210000.013.mp3
+    chirp-20130322-220000.023.mp3
+    chirp-20130322-230000.004.mp3
+
 
 .. note::
 
