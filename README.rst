@@ -92,6 +92,12 @@ Next, change into the source directory::
 
     cd ~/chirpradio-machine
 
+**IMPORTANT**: You should always run an import with `screen`_ or `tmux`_ so that
+your SSH connection does not abort a running job.
+
+.. _`screen`: http://www.gnu.org/software/screen/
+.. _`tmux`: http://tmux.sourceforge.net/
+
 Step #1: Update the Artist White-list
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
