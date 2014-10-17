@@ -5,3 +5,4 @@
 settings_local.py
 *.egg-info
 output.nml
+*.idea
