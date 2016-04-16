@@ -1,20 +1,20 @@
-import os
+import os.path as op
 
 
 # For importing files:
 SAMBA = "/samba"
-LIBRARY_PREFIX = os.path.join(SAMBA, "traktor/Library")
-LIBRARY_DB = os.path.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
-LIBRARY_TMP_PREFIX = os.path.join(LIBRARY_PREFIX, "tmp")
-MUSIC_DROPBOX = os.path.join(SAMBA,
+LIBRARY_PREFIX = op.join(SAMBA, "traktor/Library")
+LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
+LIBRARY_TMP_PREFIX = op.join(LIBRARY_PREFIX, "tmp")
+MUSIC_DROPBOX = op.join(SAMBA,
                  "public/public/Departments/Music Dept/New Music Dropbox/")
 # When an album needs fixing, it gets moved here:
-MUSIC_DROPBOX_FIX = os.path.join(SAMBA, "public/Departments/Music Dept/Needs-Fixing")
+MUSIC_DROPBOX_FIX = op.join(SAMBA, "public/Departments/Music Dept/Needs-Fixing")
 
 
 # Path to checkout of App Engine code, from
 # http://code.google.com/p/chirpradio/
-CHIRPRADIO_PATH = os.path.expanduser('~/chirpradio')
+CHIRPRADIO_PATH = op.expanduser('~/chirpradio')
 # You can set this to a string of 'username password' for logging into
 # App Engine.  When None, the username/pass will be prompted on the
 # command line.
@@ -49,3 +49,7 @@ BARIX_PORT = 80
 
 # For auto-mounting:
 MOUNT_BY_HDSN_ROOT = "/mnt/by_hdsn/"
+
+# You can create a new service account key on the API manager credentials page:
+# https://console.cloud.google.com/apis/credentials
+GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/.ssh/chirpradio_service_account_key.json')
