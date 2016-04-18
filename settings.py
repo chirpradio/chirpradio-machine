@@ -15,10 +15,6 @@ MUSIC_DROPBOX_FIX = op.join(SAMBA, "public/Departments/Music Dept/Needs-Fixing")
 # Path to checkout of App Engine code, from
 # http://code.google.com/p/chirpradio/
 CHIRPRADIO_PATH = op.expanduser('~/chirpradio')
-# You can set this to a string of 'username password' for logging into
-# App Engine.  When None, the username/pass will be prompted on the
-# command line.
-CHIRPRADIO_AUTH = None
 CHIRPRADIO_HOST = 'chirpradio.appspot.com'
 GOOGLE_APPENGINE_SDK_PATH = '/usr/local/google_appengine'
 
@@ -52,4 +48,6 @@ MOUNT_BY_HDSN_ROOT = "/mnt/by_hdsn/"
 
 # You can create a new service account key on the API manager credentials page:
 # https://console.cloud.google.com/apis/credentials
-GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/.ssh/chirpradio_service_account_key.json')
+# This service key is needed when using the Remote API:
+# https://cloud.google.com/appengine/docs/python/tools/remoteapi
+GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/.chirpradio_service_account_key.json')

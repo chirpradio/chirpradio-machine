@@ -29,7 +29,10 @@ from auth import roles
 
 def connect():
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = conf.GOOGLE_APPLICATION_CREDENTIALS
-    project_id = json.load(open(conf.GOOGLE_APPLICATION_CREDENTIALS))['project_id']
+
+    with open(conf.GOOGLE_APPLICATION_CREDENTIALS) as fp:
+        project_id = json.load(fp)['project_id']
+
     # You will get UnicodeDecodeError if servername is a unicode string.
     servername = str('%s.appspot.com' % project_id)
     remote_api_stub.ConfigureRemoteApiForOAuth(servername, '/_ah/remote_api')
