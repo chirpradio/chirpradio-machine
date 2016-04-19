@@ -18,14 +18,33 @@ For more general info about CHIRP software see the `CHIRP Project`_ page.
 Installation
 ------------------
 
-You'll need Python greater than 2.5, `virtualenv`_ and `pip`_.
+You'll need Python 2.7+, `Google App Engine SDK 1.9+`_, `virtualenv`_ and `pip`_.
 Change into the source tree, activate a virtualenv, and type these commands::
 
   pip install -r requirements.txt
   python setup.py develop
-  cp settings_local.py-dist settings_local.py
+  cat > settings_local.py <<EOL
+  import os.path as op
 
+  # Any globals here will override those in settings.py
+  SAMBA = op.expanduser('~/chirpradio-data/samba')
+  LIBRARY_PREFIX = op.expanduser('~/chirpradio-data/library')
+  LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
+  LIBRARY_TMP_PREFIX = op.join(LIBRARY_PREFIX, "tmp")
+  CHIRPRADIO_PATH = op.expanduser('~/chirpradio')
+  MUSIC_DROPBOX = op.expanduser('~/music_dropbox')
+  GOOGLE_APPENGINE_SDK_PATH = '/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/'
+  GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/.chirpradio_service_account_key.json')
+  EOL
 
+Change the values of the settings variables in settings_local.py according to your own preferences and directory layout. To create the local SQL database, run the following::
+
+  python -c "from chirp.common.conf import LIBRARY_DB
+  from chirp.library import database
+  db = database.Database(LIBRARY_DB)
+  db.create_tables()"
+
+.. _`Google App Engine SDK 1.9+`: https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python
 .. _`virtualenv`: http://pypi.python.org/pypi/virtualenv
 .. _`pip`: http://www.pip-installer.org/
 .. _`CHIRP Radio`: http://chirpradio.org
