@@ -23,19 +23,7 @@ Change into the source tree, activate a virtualenv, and type these commands::
 
   pip install -r requirements.txt
   python setup.py develop
-  cat > settings_local.py <<EOL
-  import os.path as op
-
-  # Any globals here will override those in settings.py
-  SAMBA = op.expanduser('~/chirpradio-data/samba')
-  LIBRARY_PREFIX = op.expanduser('~/chirpradio-data/library')
-  LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
-  LIBRARY_TMP_PREFIX = op.join(LIBRARY_PREFIX, "tmp")
-  CHIRPRADIO_PATH = op.expanduser('~/chirpradio')
-  MUSIC_DROPBOX = op.expanduser('~/music_dropbox')
-  GOOGLE_APPENGINE_SDK_PATH = '/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/'
-  GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/.chirpradio_service_account_key.json')
-  EOL
+  cp settings_local.py-dist settings_local.py
 
 Change the values of the settings variables in settings_local.py according to your own preferences and directory layout. To create the local SQL database, run the following::
 

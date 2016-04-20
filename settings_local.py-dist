@@ -1,2 +1,12 @@
+import os.path as op
 
 # Any globals here will override those in settings.py
+SAMBA = op.expanduser('~/chirpradio-data/samba')
+LIBRARY_PREFIX = op.expanduser('~/chirpradio-data/library')
+LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
+LIBRARY_TMP_PREFIX = op.join(LIBRARY_PREFIX, "tmp")
+CHIRPRADIO_PATH = op.expanduser('~/chirpradio')
+MUSIC_DROPBOX = op.expanduser('~/music_dropbox')
+GOOGLE_APPENGINE_SDK_PATH = '/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/'
+GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/.chirpradio_service_account_key.json')
+EOL
