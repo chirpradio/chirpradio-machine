@@ -18,14 +18,21 @@ For more general info about CHIRP software see the `CHIRP Project`_ page.
 Installation
 ------------------
 
-You'll need Python greater than 2.5, `virtualenv`_ and `pip`_.
+You'll need Python 2.7+, `Google App Engine SDK 1.9+`_, `virtualenv`_ and `pip`_.
 Change into the source tree, activate a virtualenv, and type these commands::
 
   pip install -r requirements.txt
   python setup.py develop
   cp settings_local.py-dist settings_local.py
 
+Change the values of the settings variables in settings_local.py according to your own preferences and directory layout. To create the local SQL database, run the following::
 
+  python -c "from chirp.common.conf import LIBRARY_DB
+  from chirp.library import database
+  db = database.Database(LIBRARY_DB)
+  db.create_tables()"
+
+.. _`Google App Engine SDK 1.9+`: https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python
 .. _`virtualenv`: http://pypi.python.org/pypi/virtualenv
 .. _`pip`: http://www.pip-installer.org/
 .. _`CHIRP Radio`: http://chirpradio.org
