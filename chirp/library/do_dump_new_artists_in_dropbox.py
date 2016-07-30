@@ -38,9 +38,9 @@ def main_generator():
         yield
 
     if rewrite:
-        cprint('Artist whitelist updated')
+        cprint('Artist whitelist updated', type='highlight')
     else:
-        cprint('Found %d new artists' % len(to_print))
+        cprint('Found %d new artists' % len(to_print), type='success')
 
 
 def main():
