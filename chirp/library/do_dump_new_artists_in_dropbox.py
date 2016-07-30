@@ -7,9 +7,7 @@ from chirp.library import artists
 from chirp.library import dropbox
 
 
-def main_generator():
-    rewrite = ("--rewrite" in sys.argv)
-
+def main_generator(rewrite):
     drop = dropbox.Dropbox()
     new_artists = set()
     for au_file in drop.tracks():
@@ -44,7 +42,7 @@ def main_generator():
 
 
 def main():
-    for _ in main_generator():
+    for _ in main_generator("--rewrite" in sys.argv):
         pass
 
 
