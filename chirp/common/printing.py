@@ -19,6 +19,8 @@ class CustomPrint(object):
     def default_write(self, message, **kwargs):
         if message:
             print(message)
+        else:
+            print
 
     @contextlib.contextmanager
     def use_write_function(self, func):

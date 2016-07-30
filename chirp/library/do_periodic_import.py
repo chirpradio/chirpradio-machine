@@ -35,8 +35,7 @@ def import_albums(inbox):
         for alb in inbox.albums():
             alb.drop_payloads()
             album_count += 1
-            print "#%d" % album_count,
-            print (u'"%s"' % alb.title()).encode("utf-8"),
+            print u'#%d "%s"' % (album_count, alb.title().encode("utf-8"))
             if alb.tags():
                 print "(%s)" % ", ".join(alb.tags())
             else:
@@ -45,8 +44,8 @@ def import_albums(inbox):
             if alb.is_compilation():
                 print "Compilation"
                 for i, au in enumerate(alb.all_au_files):
-                    print "  %02d:" % (i+1,),
-                    print unicode(au.mutagen_id3["TPE1"]).encode("utf-8")
+                    artist = unicode(au.mutagen_id3["TPE1"]).encode("utf-8")
+                    print "  %02d: %s" % (i+1, artist)
             else:
                 print alb.artist_name().encode("utf-8")
             print "%d tracks / %d minutes" % (
@@ -84,7 +83,7 @@ def import_albums(inbox):
                 print "***** IMPORT ERROR"
                 print "*****   %s\n" % str(ex)
                 error_count += 1
-            
+
             sys.stdout.flush()
     except analyzer.InvalidFileError, ex:
         print "***** INVALID FILE ERROR"
