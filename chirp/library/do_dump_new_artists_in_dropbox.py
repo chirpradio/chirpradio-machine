@@ -7,7 +7,7 @@ from chirp.library import artists
 from chirp.library import dropbox
 
 
-def main():
+def main_generator():
     rewrite = ("--rewrite" in sys.argv)
 
     drop = dropbox.Dropbox()
@@ -38,11 +38,15 @@ def main():
         yield
 
     if rewrite:
-        cprint('Artist whitelist updated', type='success')
+        cprint('Artist whitelist updated')
     else:
-        cprint('Found %d new artists' % len(to_print), type='success')
+        cprint('Found %d new artists' % len(to_print))
+
+
+def main():
+    for _ in main_generator():
+        pass
 
 
 if __name__ == "__main__":
-    for _ in main():
-        pass
+    main()
