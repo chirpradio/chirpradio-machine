@@ -42,7 +42,7 @@ def main_generator(rewrite):
 
 
 def main():
-    for _ in main_generator("--rewrite" in sys.argv):
+    for _ in main_generator(rewrite="--rewrite" in sys.argv):
         pass
 
 

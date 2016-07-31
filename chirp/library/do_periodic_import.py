@@ -21,10 +21,8 @@ VOLUME_NUMBER = 1
 IMPORT_SIZE_LIMIT = 0.95 * (3 << 30)  # 95% of 3GB.
 
 
-dry_run = ("--actually-do-import" not in sys.argv)
-
-
-def import_albums(inbox):
+def import_albums(dry_run):
+    inbox = dropbox.Dropbox()
     prescan_timestamp = timestamp.now()
     error_count = 0
     album_count = 0
@@ -123,6 +121,7 @@ def import_albums(inbox):
 
 
 def main():
+    dry_run = "--actually-do-import" not in sys.argv
     print
     if dry_run:
         cprint("+++ This is only a dry run.  No actual import will occur.")
@@ -135,8 +134,7 @@ def main():
         cprint("***")
         cprint("*" * 70)
     print
-    inbox = dropbox.Dropbox()
-    for _ in import_albums(inbox):
+    for _ in import_albums(dry_run):
         pass
 
 
