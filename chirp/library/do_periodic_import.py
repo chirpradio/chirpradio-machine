@@ -98,7 +98,7 @@ def import_albums(dry_run):
     cprint("No errors found")
 
     if dry_run:
-        cprint("Dry run --- terminating")
+        cprint("Dry run --- terminating", type='success')
         return
 
     txn = None
@@ -113,7 +113,7 @@ def import_albums(dry_run):
         if txn.total_size_in_bytes > IMPORT_SIZE_LIMIT:
             txn.commit(LIBRARY_PREFIX)
             txn = None
-        yield # process an album
+        yield # import an album
     # Flush out any remaining tracks.
     if txn:
         txn.commit(LIBRARY_PREFIX)
