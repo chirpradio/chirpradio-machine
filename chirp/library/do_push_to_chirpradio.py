@@ -14,6 +14,7 @@ import sys
 import time
 import urllib2
 
+from chirp.common.printing import cprint
 from chirp.common import timestamp
 from chirp.common import conf
 from chirp.library import album
@@ -26,6 +27,7 @@ from chirp.common import chirpradio
 from google.appengine.ext import db
 from djdb import models
 from djdb import search
+
 
 START_TIMESTAMP = 0
 start_at_flag = "--start-at="
@@ -61,7 +63,7 @@ def get_artist_by_name(name):
             _artist_cache[name] = art
             return art
         except urllib2.URLError:
-            print "Retrying fetch_by_name for '%s'" % name
+            cprint("Retrying fetch_by_name for '%s'" % name)
 
 
 def seen_album(album_id):
@@ -72,7 +74,7 @@ def seen_album(album_id):
                     return True
             return False
         except urllib2.URLError:
-            print "Retrying fetch of album_id=%s" % album_id
+            cprint("Retrying fetch of album_id=%s" % album_id)
 
 
 def process_one_album(idx, alb):
@@ -93,9 +95,9 @@ def process_one_album(idx, alb):
         kwargs["album_artist"] = get_artist_by_name(alb.artist_name())
 
     for key, val in sorted(kwargs.iteritems()):
-        print "%s: %s" % (key, val)
+        cprint("%s: %s" % (key, val))
     if seen_album(alb.album_id):
-        print "   Skipping"
+        cprint("   Skipping")
         return
 
     album = models.Album(**kwargs)
@@ -114,7 +116,7 @@ def process_one_album(idx, alb):
         track_num, _ = order.decode(unicode(au_file.mutagen_id3["TRCK"]))
         kwargs = {}
         if alb.is_compilation():
-            kwargs["track_artist"] = get_artist_by_name(au_file.tpe1()) 
+            kwargs["track_artist"] = get_artist_by_name(au_file.tpe1())
         track = models.Track(
             parent=idx.transaction,
             ufid=au_file.ufid(),
@@ -134,7 +136,7 @@ def flush(list_of_pending_albums):
     if not list_of_pending_albums:
         return
     if DRY_RUN:
-        print "Dry run -- skipped flush"
+        cprint("Dry run -- skipped flush")
         return
     idx = search.Indexer()
     for alb in list_of_pending_albums:
@@ -146,7 +148,7 @@ def flush(list_of_pending_albums):
             idx.save(rpc=rpc)
             return
         except urllib2.URLError:
-            print "Retrying indexer flush"
+            cprint("Retrying indexer flush")
 
 
 def maybe_flush(list_of_pending_albums):
@@ -154,9 +156,14 @@ def maybe_flush(list_of_pending_albums):
         return list_of_pending_albums
     flush(list_of_pending_albums)
     return []
-   
+
 
 def main():
+    for _ in main_generator(START_TIMESTAMP):
+        pass
+
+
+def main_generator(start_timestamp):
     #chirpradio.connect("10.0.1.98:8000")
     chirpradio.connect()
 
@@ -165,30 +172,31 @@ def main():
     this_album = []
     # TODO(trow): Select the albums to import in a saner way.
     for vol, import_timestamp in sql_db.get_all_imports():
-        if START_TIMESTAMP is not None and import_timestamp < START_TIMESTAMP:
+        if start_timestamp is not None and import_timestamp < start_timestamp:
             continue
-        print "***"
-        print "*** import_timestamp = %s" % timestamp.get_human_readable(
-            import_timestamp)
-        print "***"
+        cprint("***")
+        cprint("*** import_timestamp = %s" % timestamp.get_human_readable(
+            import_timestamp))
+        cprint("***")
         for au_file in sql_db.get_by_import(vol, import_timestamp):
             if this_album and this_album[0].album_id != au_file.album_id:
                 alb = album.Album(this_album)
                 pending_albums.append(alb)
-                print 'Adding "%s"' % alb.title()
+                cprint('Adding "%s"' % alb.title())
                 pending_albums = maybe_flush(pending_albums)
                 this_album = []
             this_album.append(au_file)
-        
+            yield
+
     # Add the last album to the list of pending albums, then do the
     # final flush.
     if this_album:
         alb = album.Album(this_album)
-        print 'Adding "%s"' % alb.title()
+        cprint('Adding "%s"' % alb.title())
         pending_albums.append(alb)
         this_album = []
     flush(pending_albums)
 
-    
+
 if __name__ == "__main__":
     main()
