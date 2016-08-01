@@ -28,7 +28,7 @@ Tom Petty and his heartbreakers SEP Tom Petty & the Heartbreakers
 def _unicode_stringio(text):
     return codecs.iterdecode(cStringIO.StringIO(text.encode("utf-8")),
                              "utf-8")
-    
+
 
 class ArtistsTest(unittest.TestCase):
 
@@ -86,7 +86,7 @@ class ArtistsTest(unittest.TestCase):
             # Since we don't use the artist whitelist, we just do the
             # simple thing w.r.t. multiple solutions and return the
             # shortest possible primary.
-            ("Unknown Artist & Cher feat. T-Pain", 
+            ("Unknown Artist & Cher feat. T-Pain",
              "Unknown Artist", "Cher feat. T-Pain"),
             )
         for text, expected_head, expected_tail in test_cases:
@@ -115,8 +115,10 @@ class ArtistsTest(unittest.TestCase):
              "Frank Black & the Catholics", "T-Pain"),
             # The main artist has to be on our whitelist, but not the
             # secondary artist(s).
-            ("Unknown Artist", None, None),
-            ("Unknown Artist Feat. T-Pain", None, None),
+            # For these values to equal None, the artist name must not
+            # be in the whitelist.
+            ("Literally Unknown Artist", None, None),
+            ("Literally Unknown Artist Feat. T-Pain", None, None),
             ("The Fall feat. Unknown Artist", "The Fall", "Unknown Artist"),
             )
         for text, expected_head, expected_tail in test_cases:
@@ -159,7 +161,7 @@ class ArtistsTest(unittest.TestCase):
         # to stdout, and cause the test to fail.
         whitelist, mappings = artists.merge_whitelist_and_mappings(
             artists._global_whitelist, artists._global_raw_mappings)
-        
+
         fixed_whitelist_filename = artists._WHITELIST_FILE + ".fixed"
         fixed_mappings_filename = artists._MAPPINGS_FILE + ".fixed"
         # Delete these files if they already exist.
@@ -216,6 +218,6 @@ class ArtistsTest(unittest.TestCase):
 
         self.assertTrue(test_should_succeed)
 
-                                           
+
 if __name__ == "__main__":
     unittest.main()
