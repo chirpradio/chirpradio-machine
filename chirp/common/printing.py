@@ -13,14 +13,12 @@ class CustomPrint(object):
     def __init__(self):
         self.write = self.default_write
 
-    def __call__(self, message, **kwargs):
+    def __call__(self, message=None, **kwargs):
         self.write(message, **kwargs)
 
-    def default_write(self, message, **kwargs):
+    def default_write(self, message=None, **kwargs):
         if message:
             print(message)
-        else:
-            print
 
     @contextlib.contextmanager
     def use_write_function(self, func):
