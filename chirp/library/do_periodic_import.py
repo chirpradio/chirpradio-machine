@@ -122,7 +122,7 @@ def import_albums(dry_run):
 
 def main():
     dry_run = "--actually-do-import" not in sys.argv
-    print
+    cprint()
     if dry_run:
         cprint("+++ This is only a dry run.  No actual import will occur.")
         cprint("+++ We will only scan the dropbox looking for errors.")
@@ -133,7 +133,7 @@ def main():
         cprint("*** If no errors are found, the music library will be updated!")
         cprint("***")
         cprint("*" * 70)
-    print
+    cprint()
     for _ in import_albums(dry_run):
         pass
 
