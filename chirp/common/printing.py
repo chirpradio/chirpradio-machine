@@ -22,6 +22,8 @@ class CustomPrint(object):
             if len(kwargs) == 0:
                 print
         else:
+            if not isinstance(message, basestring):
+                message = unicode(message)
             # Encode in utf-8 so that the message can be displayed in the console.
             print(message.encode('utf-8'))
 

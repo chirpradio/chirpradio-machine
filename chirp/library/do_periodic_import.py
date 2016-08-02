@@ -56,14 +56,14 @@ def import_albums(dry_run):
             collision = False
             for au in alb.all_au_files:
                 if au.fingerprint in seen_fp:
-                    cprint("***** ERROR: DUPLICATE TRACK WITHIN IMPORT")
+                    cprint("***** ERROR: DUPLICATE TRACK WITHIN IMPORT", type='error')
                     cprint("This one is at %s" % au.path)
                     cprint("Other one is at %s" % seen_fp[au.fingerprint].path)
                     collision = True
                     break
                 fp_au_file = db.get_by_fingerprint(au.fingerprint)
                 if fp_au_file is not None:
-                    cprint("***** ERROR: TRACK ALREADY IN LIBRARY")
+                    cprint("***** ERROR: TRACK ALREADY IN LIBRARY", type='error')
                     cprint(unicode(fp_au_file.mutagen_id3))
                     collision = True
                     break
@@ -93,7 +93,7 @@ def import_albums(dry_run):
     cprint("-" * 40)
     cprint("Found %d albums" % album_count)
     if error_count > 0:
-        cprint("Saw %d errors" % error_count)
+        cprint("Saw %d errors" % error_count, type='failure')
         return
     cprint("No errors found")
 
