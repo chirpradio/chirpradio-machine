@@ -1,6 +1,7 @@
 import os
 import sys
 
+from chirp.common.printing import cprint
 from chirp.library import album
 from chirp.library import audio_file
 from chirp.library import import_file
@@ -17,10 +18,10 @@ class ImportTransaction(object):
         self._tmp_prefix = tmp_prefix
         self._dry_run = dry_run
 
-        self.total_size_in_bytes = 0 
+        self.total_size_in_bytes = 0
         self.num_albums = 0
         self._all_au_files = []
-    
+
     @property
     def num_tracks(self):
         return len(self._all_au_files)
@@ -31,7 +32,7 @@ class ImportTransaction(object):
             self._volume, self._import_timestamp)
         alb.ensure_payloads()
 
-        print 'Adding Album "%s"' % alb.title().encode("utf-8")
+        cprint('Adding Album "%s"' % alb.title().encode("utf-8"))
         sys.stdout.flush()
 
         # Write the files to our temporary prefix.
@@ -62,10 +63,10 @@ class ImportTransaction(object):
             ufid_prefix = ufid_prefix[:-1]
         tmp_dir = os.path.join(self._tmp_prefix, ufid_prefix)
         real_dir = os.path.join(target_prefix, ufid_prefix)
-        print "*** Committing %d albums / %d bytes" % (
-            self.num_albums, self.total_size_in_bytes)
-        print "*** tmp_dir=%s" % tmp_dir
-        print "*** real_dir=%s" % real_dir
+        cprint("*** Committing %d albums / %d bytes" % (
+            self.num_albums, self.total_size_in_bytes))
+        cprint("*** tmp_dir=%s" % tmp_dir)
+        cprint("*** real_dir=%s" % real_dir)
         sys.stdout.flush()
         os.renames(tmp_dir, real_dir)
         txn.commit()
@@ -75,5 +76,3 @@ class ImportTransaction(object):
             out.write(path)
             out.write("\n")
         out.close()
-
-        

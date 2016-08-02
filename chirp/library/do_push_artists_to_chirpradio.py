@@ -3,14 +3,21 @@ Pushes artists that have been added to the whitelist up to chirpradio.
 """
 
 import time
+
 from chirp.library import artists
 
+from chirp.common.printing import cprint
 from chirp.common import chirpradio
 from djdb import models
 from djdb import search
 
 
 def main():
+    for _ in main_generator():
+        pass
+
+
+def main_generator():
     chirpradio.connect()
 
     dry_run = False
@@ -27,7 +34,7 @@ def main():
             continue
         std_name = artists.standardize(art.name)
         if std_name != art.name:
-            print "Mapping %d: %s => %s" % (mapped, art.name, std_name)
+            cprint("Mapping {}: {} => {}".format(mapped, art.name, std_name))
             mapped += 1
             art.name = std_name
             idx = search.Indexer()
@@ -36,23 +43,24 @@ def main():
             if not dry_run:
                 idx.save()
         all_chirpradio_artists.add(art.name)
+        yield
 
     to_push = list(all_library_artists.difference(all_chirpradio_artists))
 
-    print "Pushing %d artists" % len(to_push)
+    cprint("Pushing %d artists" % len(to_push))
     while to_push:
         # Push the artists in batches of 50
         this_push = to_push[:50]
         to_push = to_push[50:]
         idx = search.Indexer()
         for name in this_push:
-            print name
+            cprint(name)
             art = models.Artist.create(parent=idx.transaction, name=name)
             idx.add_artist(art)
         if not dry_run:
             idx.save()
-        print "+++++ Indexer saved"
-
+        cprint("+++++ Indexer saved")
+        yield
 
 
 if __name__ == "__main__":

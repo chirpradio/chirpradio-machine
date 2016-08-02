@@ -6,6 +6,7 @@ import sys
 from chirp.common import timestamp
 from chirp.common.conf import (LIBRARY_PREFIX, LIBRARY_DB,
                                    LIBRARY_TMP_PREFIX)
+from chirp.common.printing import cprint
 from chirp.library import album
 from chirp.library import analyzer
 from chirp.library import artists
@@ -20,10 +21,8 @@ VOLUME_NUMBER = 1
 IMPORT_SIZE_LIMIT = 0.95 * (3 << 30)  # 95% of 3GB.
 
 
-dry_run = ("--actually-do-import" not in sys.argv)
-
-
-def import_albums(inbox):
+def import_albums(dry_run):
+    inbox = dropbox.Dropbox()
     prescan_timestamp = timestamp.now()
     error_count = 0
     album_count = 0
@@ -35,38 +34,37 @@ def import_albums(inbox):
         for alb in inbox.albums():
             alb.drop_payloads()
             album_count += 1
-            print "#%d" % album_count,
-            print (u'"%s"' % alb.title()).encode("utf-8"),
+            cprint(u'#{num} "{title}"'.format(num=album_count, title=alb.title()))
             if alb.tags():
-                print "(%s)" % ", ".join(alb.tags())
+                cprint("(%s)" % ", ".join(alb.tags()))
             else:
                 print
             duration_ms = sum(au.duration_ms for au in alb.all_au_files)
             if alb.is_compilation():
-                print "Compilation"
+                cprint("Compilation")
                 for i, au in enumerate(alb.all_au_files):
-                    print "  %02d:" % (i+1,),
-                    print unicode(au.mutagen_id3["TPE1"]).encode("utf-8")
+                    artist = unicode(au.mutagen_id3["TPE1"])
+                    cprint("  {:02d}: {}".format(i+1, artist))
             else:
-                print alb.artist_name().encode("utf-8")
-            print "%d tracks / %d minutes" % (
-                len(alb.all_au_files), int(duration_ms / 60000))
-            print "ID=%015x" % alb.album_id
+                cprint(alb.artist_name())
+            cprint("{} tracks / {} minutes".format(
+                len(alb.all_au_files), int(duration_ms / 60000)))
+            cprint("ID=%015x" % alb.album_id)
             sys.stdout.flush()
 
             # Check that the album isn't already in library.
             collision = False
             for au in alb.all_au_files:
                 if au.fingerprint in seen_fp:
-                    print "***** ERROR: DUPLICATE TRACK WITHIN IMPORT"
-                    print "This one is at %s" % au.path
-                    print "Other one is at %s" % seen_fp[au.fingerprint].path
+                    cprint("***** ERROR: DUPLICATE TRACK WITHIN IMPORT", type='error')
+                    cprint("This one is at %s" % au.path)
+                    cprint("Other one is at %s" % seen_fp[au.fingerprint].path)
                     collision = True
                     break
                 fp_au_file = db.get_by_fingerprint(au.fingerprint)
                 if fp_au_file is not None:
-                    print "***** ERROR: TRACK ALREADY IN LIBRARY"
-                    print unicode(fp_au_file.mutagen_id3).encode("utf-8")
+                    cprint("***** ERROR: TRACK ALREADY IN LIBRARY", type='error')
+                    cprint(unicode(fp_au_file.mutagen_id3))
                     collision = True
                     break
                 seen_fp[au.fingerprint] = au
@@ -79,28 +77,29 @@ def import_albums(inbox):
             alb.set_volume_and_import_timestamp(0xff, prescan_timestamp)
             try:
                 alb.standardize()
-                print "OK!\n"
+                cprint("OK!\n")
             except (import_file.ImportFileError, album.AlbumError), ex:
-                print "***** IMPORT ERROR"
-                print "*****   %s\n" % str(ex)
+                cprint("***** IMPORT ERROR")
+                cprint("*****   %s\n" % str(ex))
                 error_count += 1
-            
+
             sys.stdout.flush()
-    except analyzer.InvalidFileError, ex:
-        print "***** INVALID FILE ERROR"
-        print "*****   %s\n" % str(ex)
+            yield # scanned an album
+    except analyzer.InvalidFileError as ex:
+        cprint("***** INVALID FILE ERROR", type='error')
+        cprint("*****   %s\n" % str(ex), type='error')
         error_count += 1
 
-    print "-" * 40
-    print "Found %d albums" % album_count
+    cprint("-" * 40)
+    cprint("Found %d albums" % album_count)
     if error_count > 0:
-        print "Saw %d errors" % error_count
-        return False
-    print "No errors found"
+        cprint("Saw %d errors" % error_count, type='failure')
+        return
+    cprint("No errors found")
 
     if dry_run:
-        print "Dry run --- terminating"
-        return True
+        cprint("Dry run --- terminating", type='success')
+        return
 
     txn = None
     for alb in inbox.albums():
@@ -114,27 +113,29 @@ def import_albums(inbox):
         if txn.total_size_in_bytes > IMPORT_SIZE_LIMIT:
             txn.commit(LIBRARY_PREFIX)
             txn = None
+        yield # import an album
     # Flush out any remaining tracks.
     if txn:
         txn.commit(LIBRARY_PREFIX)
-    return True
+    return
 
 
 def main():
-    print
+    dry_run = "--actually-do-import" not in sys.argv
+    cprint()
     if dry_run:
-        print "+++ This is only a dry run.  No actual import will occur."
-        print "+++ We will only scan the dropbox looking for errors."
+        cprint("+++ This is only a dry run.  No actual import will occur.")
+        cprint("+++ We will only scan the dropbox looking for errors.")
     else:
-        print "*" * 70
-        print "***"
-        print "*** WARNING!  This is a real import!"
-        print "*** If no errors are found, the music library will be updated!"
-        print "***"
-        print "*" * 70
-    print
-    inbox = dropbox.Dropbox()
-    import_albums(inbox)
+        cprint("*" * 70)
+        cprint("***")
+        cprint("*** WARNING!  This is a real import!")
+        cprint("*** If no errors are found, the music library will be updated!")
+        cprint("***")
+        cprint("*" * 70)
+    cprint()
+    for _ in import_albums(dry_run):
+        pass
 
 
 if __name__ == "__main__":
