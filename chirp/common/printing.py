@@ -17,8 +17,13 @@ class CustomPrint(object):
         self.write(message, **kwargs)
 
     def default_write(self, message=None, **kwargs):
-        if message:
-            print(message)
+        if message is None:
+            # If there were no arguments at all, print a newline to stdout.
+            if len(kwargs) == 0:
+                print
+        else:
+            # Encode in utf-8 so that the message can be displayed in the console.
+            print(message.encode('utf-8'))
 
     @contextlib.contextmanager
     def use_write_function(self, func):

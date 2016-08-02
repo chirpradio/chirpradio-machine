@@ -34,7 +34,7 @@ def import_albums(dry_run):
         for alb in inbox.albums():
             alb.drop_payloads()
             album_count += 1
-            cprint(u'#%d "%s"' % (album_count, alb.title().encode("utf-8")))
+            cprint(u'#{num} "{title}"'.format(num=album_count, title=alb.title()))
             if alb.tags():
                 cprint("(%s)" % ", ".join(alb.tags()))
             else:
@@ -43,11 +43,11 @@ def import_albums(dry_run):
             if alb.is_compilation():
                 cprint("Compilation")
                 for i, au in enumerate(alb.all_au_files):
-                    artist = unicode(au.mutagen_id3["TPE1"]).encode("utf-8")
-                    cprint("  %02d: %s" % (i+1, artist))
+                    artist = unicode(au.mutagen_id3["TPE1"])
+                    cprint("  {:02d}: {}".format(i+1, artist))
             else:
-                cprint(alb.artist_name().encode("utf-8"))
-            cprint("%d tracks / %d minutes" % (
+                cprint(alb.artist_name())
+            cprint("{} tracks / {} minutes".format(
                 len(alb.all_au_files), int(duration_ms / 60000)))
             cprint("ID=%015x" % alb.album_id)
             sys.stdout.flush()
@@ -64,7 +64,7 @@ def import_albums(dry_run):
                 fp_au_file = db.get_by_fingerprint(au.fingerprint)
                 if fp_au_file is not None:
                     cprint("***** ERROR: TRACK ALREADY IN LIBRARY")
-                    cprint(unicode(fp_au_file.mutagen_id3).encode("utf-8"))
+                    cprint(unicode(fp_au_file.mutagen_id3))
                     collision = True
                     break
                 seen_fp[au.fingerprint] = au

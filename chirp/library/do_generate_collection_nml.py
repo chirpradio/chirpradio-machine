@@ -27,9 +27,9 @@ def main_generator():
         writer.write(au_file)
         count += 1
         elapsed_t = time.time() - start_t
-        cprint(type='count', count=count, elapsed_seconds=elapsed_t)        
+        cprint(type='count', count=count, elapsed_seconds=elapsed_t)
         if count % 1000 == 0:
-            sys.stderr.write("%d (%.1f/s)...\n" % (count, count / elapsed_t))
+            sys.stderr.write("{count} ({rate:.1f}/s)...\n".format(count=count, rate=count / elapsed_t))
         yield
     writer.close()
     out_fh.close()
