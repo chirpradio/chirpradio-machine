@@ -1,5 +1,10 @@
 from setuptools import setup, find_packages
 
+
+with open('requirements.txt') as fp:
+    requires = [line.strip() for line in fp.readlines()]
+
+
 setup(
     name='chirp',
     version='2.0',
@@ -9,7 +14,7 @@ setup(
     author_email='kumar.mcmillan@gmail.com',
     license="Apache License",
     packages=find_packages(exclude=['ez_setup']),
-    install_requires=[],
+    install_requires=requires,
     url='',
     include_package_data=True,
     entry_points="""
