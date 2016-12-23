@@ -9,3 +9,4 @@ CHIRPRADIO_PATH = op.expanduser('~/chirpradio')
 MUSIC_DROPBOX = op.expanduser('~/chirpradio-data/music_dropbox')
 GOOGLE_APPENGINE_SDK_PATH = '/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/'
 GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/chirpradio-data/chirpradio_service_account_key.json')
+TRAKTOR_NML_FILE = '~/chirpradio-data/new-collection.nml'
