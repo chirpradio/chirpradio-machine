@@ -45,7 +45,7 @@ def main_generator():
         '-g', 'traktor',
         nml_file,
         conf.TRAKTOR_NML_FILE]
-    subprocess.call(cmd)
+    subprocess.check_call(cmd)
 
     cprint("Wrote %d tracks to collection\n" % count, type='success')
 
