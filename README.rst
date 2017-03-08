@@ -178,12 +178,12 @@ This command will create a file named ``output.nml`` in the current directory::
 
   do_generate_collection_nml
 
-Copy the new NML into Traktor's root directory::
-
-  install -m 0775 -g traktor output.nml /mnt/disk_array/traktor/TraktorProRootDirectory/new-collection.nml
+Note that for this command to work, you must have a ```traktor`` group in your
+system, and the current user must be in that group. You also need to have set
+the settings variable ``TRAKTOR_NML_FILE`` to a valid path.
 
 At this point Traktor can be switched over to the new collection
-whereby you shut down Traktor, rename new-collection.nml to collection.nml
+whereby you shut down Traktor, rename ``new-collection.nml`` to ``collection.nml``
 and restart Traktor.
 
 Step #4: Upload New Data to the DJ Database
