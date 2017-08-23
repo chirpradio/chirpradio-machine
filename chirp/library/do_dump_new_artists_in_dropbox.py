@@ -14,7 +14,7 @@ def main_generator(rewrite):
         try:
             tpe1 = au_file.mutagen_id3["TPE1"].text[0]
         except:
-            cprint('** file: %r' % au_file.path)
+            cprint(u'** file: %r' % au_file.path)
             raise
         if artists.standardize(tpe1) is None:
             new_artists.add(tpe1)
@@ -32,7 +32,7 @@ def main_generator(rewrite):
             output.write(tpe1)
             output.write("\n")
         else:
-            cprint(tpe1.encode("utf-8"))
+            cprint(tpe1)
         yield
 
     if rewrite:

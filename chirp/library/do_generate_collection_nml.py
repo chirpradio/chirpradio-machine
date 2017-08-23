@@ -20,7 +20,7 @@ def main():
 
 def main_generator():
     nml_file = os.path.join(os.getcwd(), 'output.nml')
-    cprint('Writing Traktor file to {}'.format(nml_file))
+    cprint(u'Writing Traktor file to {}'.format(nml_file))
     with codecs.open(nml_file, "w", "utf-8") as out_fh:
         # TODO(trow): Don't hard-wire the drive letter.
         writer = nml_writer.NMLWriter("T:", "/Library", out_fh)
@@ -38,7 +38,7 @@ def main_generator():
         writer.close()
 
     # Move the file to where Traktor users expect to find it.
-    cprint('Copying NML file to {}'.format(conf.TRAKTOR_NML_FILE))
+    cprint(u'Copying NML file to {}'.format(conf.TRAKTOR_NML_FILE))
     cmd = [
         'install',      # command that combines cp with chown, chmod, and strip
         '-m', '0775',
