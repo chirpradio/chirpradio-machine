@@ -24,8 +24,11 @@ class CustomPrint(object):
         else:
             if not isinstance(message, basestring):
                 message = unicode(message)
-            # Encode in utf-8 so that the message can be displayed in the console.
-            print(message.encode('utf-8'))
+            if not isinstance(message, str):
+                # This is a Unicode object so we should encode it as a byte
+                # string before writing it to the console.
+                message = message.encode('utf-8')
+            print(message)
 
     @contextlib.contextmanager
     def use_write_function(self, func):

@@ -25,7 +25,16 @@ Change into the source tree, activate a virtualenv, and type these commands::
   python setup.py develop
   cp settings_local.py-dist settings_local.py
 
-Change the values of the settings variables in settings_local.py according to your own preferences and directory layout. To create the local SQL database, run the following::
+Change the values of the settings variables in ``settings_local.py`` according to your own preferences and
+directory layout. You'll need to manually create empty directories for each setting.
+With the default settings, that would look like this::
+
+  mkdir ~/chirpradio-data/samba
+  mkdir ~/chirpradio-data/library
+  mkdir ~/chirpradio-data/tmp
+  mkdir ~/chirpradio-data/music_dropbox
+
+Next, create the local SQL database with the following command::
 
   python -c "from chirp.common.conf import LIBRARY_DB
   from chirp.library import database
