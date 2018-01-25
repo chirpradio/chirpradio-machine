@@ -24,7 +24,8 @@ class AudioFileManager(object):
     def __init__(self, library_db_file=None):
         if not library_db_file:
             library_db_file = LIBRARY_DB
-        self.db = database.Database(LIBRARY_DB)
+        self.db_path = library_db_file
+        self.db = database.Database(library_db_file)
         self.conn = self.db._get_connection()
         self.conn.row_factory = sqlite3.Row
 
@@ -45,7 +46,8 @@ class AudioFileManager(object):
         for fingerprint in fingerprints:
             af = self.db.get_by_fingerprint(fingerprint)
             if not af:
-                raise Exception('Fingerprint %s has no record in the db.' % fingerprint)
+                raise Exception(
+                    'Fingerprint %s has no record in the db.' % fingerprint)
             audio_files.append(af)
         return audio_files
 
@@ -86,18 +88,29 @@ class AudioFileManager(object):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Manage records in audio file sqlite database.')
+        description='Delete records in audio file sqlite database.')
     parser.add_argument(
         'fingerprint', type=str, nargs='+',
-        help='an integer for the accumulator')
+        help=(
+            'Audio file finterprint to delete. Can specify more '
+            'than one, space delimited.  Must pass the --delete flag to '
+            'confirm the delete.'))
     parser.add_argument(
         '--delete', action="store_true",
         help='Delete the audiofile based on the fingerprint passed in')
+    parser.add_argument(
+        '--db', action='store', type=str, default=None,
+        help=(
+            "Specify a full filesystem path to the database file "
+            "to operate on."))
+
     args = parser.parse_args()
 
-    afm = AudioFileManager()
+    afm = AudioFileManager(library_db_file=args.db)
 
     sys.stdout.write("ARGS: {} \n\n".format(str(args)))
+    sys.stdout.write("Using database: {}\n".format(afm.db_path))
+
     fingerprints = args.fingerprint
     try:
         tags = afm.get_tags(fingerprints)
