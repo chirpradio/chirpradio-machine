@@ -211,6 +211,35 @@ To upload the album and track information, you must specify a "start timestamp" 
 If you don’t see any output from this command you probably entered the wrong timestamp.  It should show you verbose output of all the new albums uploading to App Engine.
 
 
+Remove Audio File Records
+-------------------------
+
+Remove audio files and their M3U tags based on a fingerprint id given.
+
+After running an import, the SQLite database file (as set by the LIBRARY_DB
+settings variable) will contain metadata about the songs imported. The import
+process will have assigned each song a unique fingerprint.
+
+If you wish to remove a song's metadata from the database, you can follow the
+steps below. You must provide the fingerprint of the song or songs that you
+wish to remove.
+
+This does not delete the actual audio file from the filesystem (just the
+reference to it in the db).
+
+Usage::
+
+  See what will be deleted:
+  ./do_delete_auto_file_from_db.py <fingerprint_id> <fingerprint_id>
+
+  Actually delete:
+  ./do_delete_auto_file_from_db.py <fingerprint_id> <fingerprint_id> --delete
+
+  Flags:
+   --db = specify a filesystem path to an alternate location for the SQLite database file
+   --delete = actually do the delete. Nothing will be deleted without this flag.
+
+
 Stream Archiver
 ------------------
 
