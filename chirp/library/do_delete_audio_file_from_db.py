@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Remvoe audio files and their M3U tags based on a fingerprints id given
+Remove audio files and their M3U tags based on a fingerprints id given
 Usage:
 
     See what will be deleted:
@@ -8,6 +8,10 @@ Usage:
 
     Actually delete:
     ./do_delete_auto_file_from_db.py <fingerprint_id> <fingerprint_id> --delete
+
+Flags:
+ --db = specify a filesystem path to an alternate location for the sqlite database file 
+ --delete = actually do the delete. Nothing will be deleted without this flag. 
 
 """
 
