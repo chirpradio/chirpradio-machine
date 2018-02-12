@@ -74,8 +74,11 @@ class AudioFileManager(object):
                "FROM %s "
                "WHERE fingerprint IN (%s) "
                ) % (table, ",".join("?" * len(fingerprints)))
-        self.conn.execute(sql, fingerprints)
-        self.conn.commit()
+        try:
+            self.conn.execute(sql, fingerprints)
+        except:
+            self.conn.rollback()
+            raise
 
     def del_tags(self, fingerprints):
         self.del_rows(fingerprints, table="id3_tags")
@@ -88,6 +91,7 @@ class AudioFileManager(object):
             raise
         else:
             self.del_rows(fingerprints, table="audio_files")
+            self.conn.commit()
 
 
 def main():
