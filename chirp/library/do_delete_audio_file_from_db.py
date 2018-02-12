@@ -116,29 +116,26 @@ def main():
     sys.stdout.write("Using database: {}\n".format(afm.db_path))
 
     fingerprints = args.fingerprint
-    try:
-        tags = afm.get_tags(fingerprints)
 
-        audio_files = list(afm.get_audio_files(fingerprints))
-        sys.stdout.write("\nROWS TO DELETE from audio_files\n\n")
-        afm.print_rows(audio_files)
+    tags = afm.get_tags(fingerprints)
 
-        sys.stdout.write("\nROWS TO DELETE from id3_tags\n\n")
-        afm.print_rows(tags)
+    audio_files = list(afm.get_audio_files(fingerprints))
+    sys.stdout.write("\nROWS TO DELETE from audio_files\n\n")
+    afm.print_rows(audio_files)
 
-        if set(fingerprints) != set(f["fingerprint"] for f in audio_files):
-            sys.stdout.write(
-                "\n\nWARNING: A fingerprint was given that does not match "
-                "an audio file in the database\n\n")
+    sys.stdout.write("\nROWS TO DELETE from id3_tags\n\n")
+    afm.print_rows(tags)
 
-        if args.delete:
-            afm.del_audiofiles(fingerprints)
-            sys.stdout.write("\nDELETED\n")
-        else:
-            sys.stdout.write("\nNOTHING DELETED.  Pass in the --delete flag.\n")
-    except Exception as e:
-        raise
-        sys.stderr.write("ERROR: {}\n".format(str(e)))
+    if set(fingerprints) != set(f["fingerprint"] for f in audio_files):
+        sys.stdout.write(
+            "\n\nWARNING: A fingerprint was given that does not match "
+            "an audio file in the database\n\n")
+
+    if args.delete:
+        afm.del_audiofiles(fingerprints)
+        sys.stdout.write("\nDELETED\n")
+    else:
+        sys.stdout.write("\nNOTHING DELETED.  Pass in the --delete flag.\n")
 
 
 if __name__ == "__main__":
