@@ -45,16 +45,6 @@ class AudioFileManager(object):
         for row in rows:
             w.writerow(row)
 
-    def get_audiofiles(self, fingerprints):
-        audio_files = []
-        for fingerprint in fingerprints:
-            af = self.db.get_by_fingerprint(fingerprint)
-            if not af:
-                raise Exception(
-                    'Fingerprint %s has no record in the db.' % fingerprint)
-            audio_files.append(af)
-        return audio_files
-
     def get_rows(self, fingerprints, table):
         sql = ("SELECT * "
                "FROM %s "
