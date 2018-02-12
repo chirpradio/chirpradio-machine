@@ -28,8 +28,9 @@ setup(
        remove_from_dropbox = chirp.library.remove_from_dropbox:main
        empty_dropbox = chirp.library.empty_dropbox:main
 
+       do_delete_audio_file_from_db = chirp.library.do_delete_audio_file_from_db:main
        do_archive_stream = chirp.stream.do_archive_stream:main
        do_proxy_barix_status = chirp.stream.do_proxy_barix_status:main
        """,
-    classifiers = [],
+    classifiers=[],
     )

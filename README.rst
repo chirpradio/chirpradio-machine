@@ -230,14 +230,8 @@ reference to it in the db).
 Usage::
 
   See what will be deleted:
-  ./do_delete_auto_file_from_db.py <fingerprint_id> <fingerprint_id>
 
-  Actually delete:
-  ./do_delete_auto_file_from_db.py <fingerprint_id> <fingerprint_id> --delete
-
-  Flags:
-   --db = specify a filesystem path to an alternate location for the SQLite database file
-   --delete = actually do the delete. Nothing will be deleted without this flag.
+  do_delete_audio_file_from_db <fingerprint_id> <fingerprint_id>
 
 
 Stream Archiver
