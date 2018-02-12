@@ -224,14 +224,19 @@ If you wish to remove a song's metadata from the database, you can follow the
 steps below. You must provide the fingerprint of the song or songs that you
 wish to remove.
 
-This does not delete the actual audio file from the filesystem (just the
-reference to it in the db).
+This does not delete the actual audio file from the filesystem or the ChirpRadio
+web app. It just removes the database entires in the SQLite database.
+
+To delete the audio file from the ChirpRadio web app, log in as an
+administrator, search for a track that was deleted, and click the red X to
+revoke the track.
 
 Usage::
 
   See what will be deleted:
 
   do_delete_audio_file_from_db <fingerprint_id> <fingerprint_id>
+
 
 
 Stream Archiver
