@@ -225,7 +225,7 @@ steps below. You must provide the fingerprint of the song or songs that you
 wish to remove.
 
 This does not delete the actual audio file from the filesystem or the ChirpRadio
-web app. It just removes the database entires in the SQLite database.
+web app. It just removes the database entries in the SQLite database.
 
 To delete the audio file from the ChirpRadio `web app`_, `log in`_ as an
 administrator, search for a track that was deleted, and click the red X to
