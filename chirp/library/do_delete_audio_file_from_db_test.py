@@ -127,7 +127,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         self._add_test_audiofiles()
 
         afm = do_delete_audio_file_from_db.AudioFileManager(
-                    library_db_file=self.name)
+            library_db_file=self.name)
 
         # TEST
         af = afm.get_audio_files(fingerprints=[test_fingerprint])
@@ -146,7 +146,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         self._add_test_audiofiles()
 
         afm = do_delete_audio_file_from_db.AudioFileManager(
-                    library_db_file=self.name)
+            library_db_file=self.name)
 
         # TEST
         af = afm.get_audio_files(
@@ -164,7 +164,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         self._add_test_audiofiles()
 
         afm = do_delete_audio_file_from_db.AudioFileManager(
-                    library_db_file=self.name)
+            library_db_file=self.name)
 
         # TEST
         af = afm.get_tags(
@@ -184,7 +184,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         self._add_test_audiofiles()
 
         afm = do_delete_audio_file_from_db.AudioFileManager(
-                    library_db_file=self.name)
+            library_db_file=self.name)
 
         # TEST
         af = afm.get_tags(
