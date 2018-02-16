@@ -54,7 +54,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         # TEST
         afm.del_audiofiles([test_fingerprint])
 
-        # RESUTLS
+        # RESULTS
         # verify audiofile doesn't exist
         af = self.db.get_by_fingerprint(test_fingerprint)
         self.assertEquals(af, None)
@@ -86,7 +86,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         # TEST
         afm.del_audiofiles([test_fingerprint_1, test_fingerprint_2])
 
-        # RESUTLS
+        # RESULTS
         # verify audiofiles don't exist
         af = self.db.get_by_fingerprint(test_fingerprint_1)
         self.assertEquals(af, None)
@@ -114,7 +114,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         # TEST
         afm.del_audiofiles([test_fingerprint_1])
 
-        # RESUTLS
+        # RESULTS
         # make sure nothing was deleted
         self.assertEqual(len(list(self.db.get_all())), 10)
 
@@ -152,7 +152,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         af = afm.get_audio_files(
             fingerprints=[test_fingerprint_1])
 
-        # RESUTLS
+        # RESULTS
         self.assertEqual(len(list(af)), 0)
 
     def test_get_tags__existing_record(self):
@@ -190,7 +190,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         af = afm.get_tags(
             fingerprints=[test_fingerprint_1])
 
-        # RESUTLS
+        # RESULTS
         self.assertEqual(len(list(af)), 0)
 
     def tearDown(self):
