@@ -1,3 +1,4 @@
+import os
 import time
 import unittest
 
@@ -225,3 +226,6 @@ class DeleteFingerprintTest(unittest.TestCase):
 
         # RESUTLS
         self.assertEqual(len(list(af)), 0)
+
+    def tearDown(self):
+        os.unlink(self.name)
