@@ -132,27 +132,10 @@ class DeleteFingerprintTest(unittest.TestCase):
         # TEST
         af = afm.get_audio_files(fingerprints=[test_fingerprint])
 
-        # RESUTLS
-        self.assertEqual(len(list(af)), 1)
-
-    def test_get_audio_files__existing_records(self):
-        # SETUP
-        test_fingerprint_1 = "0000000000000005"
-        test_fingerprint_2 = "0000000000000007"
-
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
-        self._add_test_audiofiles()
-
-        afm = do_delete_audio_file_from_db.AudioFileManager(
-                    library_db_file=self.name)
-
-        # TEST
-        af = afm.get_audio_files(
-            fingerprints=[test_fingerprint_1, test_fingerprint_2])
-
-        # RESUTLS
-        self.assertEqual(len(list(af)), 2)
+        # RESULTS
+        self.assertSetEqual(
+            set(a['fingerprint'] for a in af),
+            set([test_fingerprint]))
 
     def test_get_audio_files__non_existing_records(self):
         # SETUP
@@ -187,27 +170,10 @@ class DeleteFingerprintTest(unittest.TestCase):
         af = afm.get_tags(
             fingerprints=[test_fingerprint_1])
 
-        # RESUTLS
-        self.assertEqual(len(list(af)), 5)
-
-    def test_get_tags__existing_records(self):
-        # SETUP
-        test_fingerprint_1 = "0000000000000005"
-        test_fingerprint_2 = "0000000000000007"
-
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
-        self._add_test_audiofiles()
-
-        afm = do_delete_audio_file_from_db.AudioFileManager(
-                    library_db_file=self.name)
-
-        # TEST
-        af = afm.get_tags(
-            fingerprints=[test_fingerprint_1, test_fingerprint_2])
-
-        # RESUTLS
-        self.assertEqual(len(list(af)), 10)
+        # RESULTS
+        self.assertListEqual(
+            list(a['fingerprint'] for a in af),
+            5 * [test_fingerprint_1])
 
     def test_get_tags__non_existing_records(self):
         # SETUP
