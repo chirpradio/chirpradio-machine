@@ -16,6 +16,9 @@ class DeleteFingerprintTest(unittest.TestCase):
         self.name = TEST_DB_NAME_PATTERN % int(time.time() * 1000000)
         self.db = database.Database(self.name)
 
+    def tearDown(self):
+        os.unlink(self.name)
+
     def _add_test_audiofiles(self):
         test_volume = 17
         test_import_timestamp = 1230959520
@@ -192,6 +195,3 @@ class DeleteFingerprintTest(unittest.TestCase):
 
         # RESULTS
         self.assertEqual(len(list(af)), 0)
-
-    def tearDown(self):
-        os.unlink(self.name)
