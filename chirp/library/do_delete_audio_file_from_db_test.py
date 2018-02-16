@@ -52,7 +52,7 @@ class DeleteFingerprintTest(unittest.TestCase):
             library_db_file=self.name)
 
         # TEST
-        afm.del_audiofiles([test_fingerprint, ])
+        afm.del_audiofiles([test_fingerprint])
 
         # RESUTLS
         # verify audiofile doesn't exist
@@ -112,7 +112,7 @@ class DeleteFingerprintTest(unittest.TestCase):
             library_db_file=self.name)
 
         # TEST
-        afm.del_audiofiles([test_fingerprint_1, ])
+        afm.del_audiofiles([test_fingerprint_1])
 
         # RESUTLS
         # make sure nothing was deleted
