@@ -10,7 +10,8 @@ Usage:
     do_delete_audio_file_from_db <fingerprint_id> <fingerprint_id> --delete
 
 Flags:
- --db = specify a filesystem path to an alternate location for the sqlite database file
+ --db = specify a filesystem path to an alternate location for the sqlite
+        database file
  --delete = actually do the delete. Nothing will be deleted without this flag.
 
 """
@@ -74,8 +75,9 @@ class AudioFileManager(object):
         try:
             self.del_tags(fingerprints)
             self.del_rows(fingerprints, table="audio_files")
-        except:
+        except Exception:
             self.conn.rollback()
+            raise
         else:
             self.conn.commit()
 

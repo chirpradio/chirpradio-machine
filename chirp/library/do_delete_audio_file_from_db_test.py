@@ -1,6 +1,7 @@
 import os
 import time
 import unittest
+from mock import patch
 
 from chirp.library import audio_file_test
 from chirp.library import do_delete_audio_file_from_db
@@ -120,6 +121,36 @@ class DeleteFingerprintTest(unittest.TestCase):
         # RESULTS
         # make sure nothing was deleted
         self.assertEqual(len(list(self.db.get_all())), 10)
+
+    def test_del_audiofiles__raises_exception(self):
+        # SETUP
+        test_fingerprint_1 = "0000000000000007"
+
+        # Create db tables
+        self.assertTrue(self.db.create_tables())
+        self._add_test_audiofiles()
+
+        # make sure 10 records exist
+        self.assertEqual(len(list(self.db.get_all())), 10)
+
+        afm = do_delete_audio_file_from_db.AudioFileManager(
+            library_db_file=self.name)
+
+        # TEST
+        def _raise_exception(*args, **kwargs):
+            raise Exception('Test')
+
+        with patch.object(afm, 'conn', autospec=True) as mock_conn:
+            mock_conn.execute.side_effect = _raise_exception
+            with self.assertRaises(Exception):
+                afm.del_audiofiles([test_fingerprint_1])
+            mock_conn.rollback.assert_called_with()
+
+        # RESULTS
+        # make sure nothing was deleted
+        self.assertEqual(len(list(self.db.get_all())), 10)
+        # make sure tags are sitll there for the fingerprint we tried to delete
+        self.assertEqual(len(list(afm.get_tags([test_fingerprint_1]))), 5)
 
     def test_get_audio_files__existing_record(self):
         # SETUP
