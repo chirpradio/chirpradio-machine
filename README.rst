@@ -211,6 +211,40 @@ To upload the album and track information, you must specify a "start timestamp" 
 If you don’t see any output from this command you probably entered the wrong timestamp.  It should show you verbose output of all the new albums uploading to App Engine.
 
 
+Remove Audio File Records
+-------------------------
+
+Remove audio files and their M3U tags based on a fingerprint id given.
+
+After running an import, the SQLite database file (as set by the LIBRARY_DB
+settings variable) will contain metadata about the songs imported. The import
+process will have assigned each song a unique fingerprint.
+
+If you wish to remove a song's metadata from the database, you can follow the
+steps below. You must provide the fingerprint of the song or songs that you
+wish to remove.
+
+This does not delete the actual audio file from the filesystem or the ChirpRadio
+web app. It just removes the database entries in the SQLite database.
+
+To delete the audio file from the ChirpRadio web app (`source code`_), `log in`_ as an
+administrator, search for a track that was deleted, and click the red X to
+revoke the track.
+
+.. _`source code`: https://github.com/chirpradio/chirpradio/
+.. _`log in`: https://chirpradio.appspot.com/djdb/
+
+*Usage:*
+
+See what will be deleted::
+
+  do_delete_audio_file_from_db <fingerprint_id> <fingerprint_id>
+
+If that looks correct, you need to run it once more with --delete to perform the deletion::
+
+  do_delete_audio_file_from_db <fingerprint_id> <fingerprint_id> --delete
+
+
 Stream Archiver
 ------------------
 
