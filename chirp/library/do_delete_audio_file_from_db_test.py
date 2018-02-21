@@ -146,12 +146,6 @@ class DeleteFingerprintTest(unittest.TestCase):
                 afm.del_audiofiles([test_fingerprint_1])
             mock_conn.rollback.assert_called_with()
 
-        # RESULTS
-        # make sure nothing was deleted
-        self.assertEqual(len(list(self.db.get_all())), 10)
-        # make sure tags are sitll there for the fingerprint we tried to delete
-        self.assertEqual(len(list(afm.get_tags([test_fingerprint_1]))), 5)
-
     def test_get_audio_files__existing_record(self):
         # SETUP
         test_fingerprint = "0000000000000007"
