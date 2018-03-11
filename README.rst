@@ -71,7 +71,7 @@ Music Library
 
   This requires a lot of manual sysadmin work and some of it is hard coded
   on our servers. The
-  `chirpradio-webcontrol <https://github.com/chirpradio/chirpradio-webcontrol>`_
+  `command-center <https://github.com/chirpradio/command-center>`_
   project is a web app we're working on to help make it easier.
 
 Here's how to import new music into the digital library so that it's available
