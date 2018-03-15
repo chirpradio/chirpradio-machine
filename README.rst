@@ -236,14 +236,46 @@ revoke the track.
 
 *Usage:*
 
+First, find the fingerprint for a file you want to delete. One way to do it is to look in the NML file for the song you need to delete. For example::
+
+    <ENTRY
+        MODIFIED_DATE="2017/10/17"
+        MODIFIED_TIME="35364"
+        TITLE="FreeName1%"
+        ARTIST="The Weather Station"
+    >
+        <LOCATION
+            DIR="/:Library/:vol01/:20171016-212700/:"
+            FILE="8af53f41dc6532daef0cfe26a17c5af8dd95f851.mp3"
+            VOLUME="T:"
+            VOLUME_ID=""
+        >
+        </LOCATION>
+        <ALBUM OF_TRACKS="11" TITLE="The Weather Station" TRACK="1">
+        </ALBUM>
+        <INFO
+            BITRATE="320000"
+            GENRE="Unknown"
+            PLAYTIME="187"
+            IMPORT_DATE="2017/10/17"
+            FILESIZE="7313"
+        >
+        </INFO>
+    </ENTRY>
+
+In this example, ``8af53f41dc6532daef0cfe26a17c5af8dd95f851.mp3`` is the filename and ``8af53f41dc6532daef0cfe26a17c5af8dd95f851`` (without the extension) is the fingerprint.
+
 See what will be deleted::
 
-  do_delete_audio_file_from_db <fingerprint_id> <fingerprint_id>
+  do_delete_audio_file_from_db <fingerprint>
 
 If that looks correct, you need to run it once more with --delete to perform the deletion::
 
-  do_delete_audio_file_from_db <fingerprint_id> <fingerprint_id> --delete
+  do_delete_audio_file_from_db <fingerprint> --delete
 
+If you need to delete multiple files at once, just specify each one as additional arguments::
+
+  do_delete_audio_file_from_db <fingerprint1> <fingerprint2> ...
 
 Stream Archiver
 ------------------
