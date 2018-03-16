@@ -1,8 +1,10 @@
 from setuptools import setup, find_packages
 
 
-with open('requirements.txt') as fp:
-    requires = [line.strip() for line in fp.readlines()]
+with open('requirements/prod.txt') as fp:
+    requires = [
+        line.strip() for line in fp.readlines() if not line.startswith('#')
+    ]
 
 
 setup(
