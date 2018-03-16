@@ -1,0 +1,3 @@
+-r prod.txt
+Nose
+mock>=2.0.0
