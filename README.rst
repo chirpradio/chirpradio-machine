@@ -15,25 +15,64 @@ For more general info about CHIRP software see the `CHIRP Project`_ page.
 .. contents::
    :local:
 
-Installation
+Deployment
+-----------------
+
+To deploy a new version of ``chirpradio-machine`` on the CHIRP studio server, you'll need to ssh into an account with sudo access to the musiclib user.
+
+Enter into a musiclib shell::
+
+    sudo -u musiclib -i
+
+This command activates a `virtualenv`_ used for all requirements. Next, change into the source directory::
+
+    cd ~/chirpradio-machine
+
+Make a note of what tag you are on in case you need to roll back::
+
+    git describe --tags
+
+Pull in the latest changes from master::
+
+    git pull
+
+Now you are ready to deploy. Make sure all dependencies are up to date and re-install a symlink to the module, along with its scripts::
+
+    pip install -r requirements/prod.txt
+    python setup.py develop
+
+Finally, tag the commit you just deployed with today's date (YYYY-MM-DD) and push it upstream::
+
+    git tag YYYY-MM-DD
+    git push --tags
+
+Restart the `command-center`_ website so that the new scripts will be available.
+
+Development
 ------------------
 
-You'll need Python 2.7+, `Google App Engine SDK 1.9+`_, `virtualenv`_ and `pip`_.
+For local development, you'll need Python 2.7+, `Google App Engine SDK 1.9+`_, `virtualenv`_ and `pip`_.
 Change into the source tree, activate a virtualenv, and type this to install all development requirements::
 
   pip install -r requirements/dev.txt
-
-For only the production requirements, type this::
-
-  pip install -r requirements/prod.txt
 
 Next, install the module as a symlink, install the scripts, and generate a local settings file::
 
   python setup.py develop
   cp settings_local.py-dist settings_local.py
 
-Change the values of the settings variables in ``settings_local.py`` according to your own preferences and
-directory layout. You'll need to manually create empty directories for each setting.
+Change the values of the settings variables in ``settings_local.py`` according to your own preferences and directory layout. Here are some of the crucial things to check in your settings:
+
+- Set CHIRPRADIO_PATH to your source checkout of the
+  `CHIRP Radio internal app code`_.
+- Make sure MUSIC_DROPBOX is correct.
+- Make sure GOOGLE_APPENGINE_SDK_PATH is set to the latest
+  `Google App Engine SDK`_.
+
+.. _`Google App Engine SDK`: http://code.google.com/appengine/
+.. _`CHIRP Radio internal app code`: http://code.google.com/p/chirpradio/source/checkout
+
+You'll need to manually create empty directories for each setting.
 With the default settings, that would look like this::
 
   mkdir ~/chirpradio-data/samba
@@ -54,16 +93,16 @@ Next, create the local SQL database with the following command::
 .. _`CHIRP Radio`: http://chirpradio.org
 .. _`CHIRP Project`: http://code.google.com/p/chirpradio/
 
-Developers
+Please follow `PEP8`_ when writing code.
+
+.. _`PEP8`: http://www.python.org/dev/peps/pep-0008/
+
+Testing
 ------------------
 
 To run the test suite, type::
 
   nosetests -v
-
-Please follow `PEP8`_ when writing code.
-
-.. _`PEP8`: http://www.python.org/dev/peps/pep-0008/
 
 Community
 -----------
@@ -78,26 +117,12 @@ Music Library
 
   This requires a lot of manual sysadmin work and some of it is hard coded
   on our servers. The
-  `command-center <https://github.com/chirpradio/command-center>`_
+  `command-center`_
   project is a web app we're working on to help make it easier.
 
 Here's how to import new music into the digital library so that it's available
 for DJs to play on our Traktor machine and also available in the online
 DJ Database.
-
-If you're installing the app for the first time,
-read through settings.py and add any
-necessary settings overrides to settings_local.py.  Here are some of the
-crucial settings:
-
-- Set CHIRPRADIO_PATH to your source checkout of the
-  `CHIRP Radio internal app code`_.
-- Make sure MUSIC_DROPBOX is correct.
-- Make sure GOOGLE_APPENGINE_SDK_PATH is set to the latest
-  `Google App Engine SDK`_.
-
-.. _`Google App Engine SDK`: http://code.google.com/appengine/
-.. _`CHIRP Radio internal app code`: http://code.google.com/p/chirpradio/source/checkout
 
 Running an import
 -------------------
@@ -308,3 +333,5 @@ To start the web server type::
 
   Currently this assumes you installed into a virtualenv at
   ~/.virtualenvs/chirpradio-machine/
+
+.. _`command-center`: https://github.com/chirpradio/command-center
