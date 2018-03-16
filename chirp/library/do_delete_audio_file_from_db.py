@@ -44,7 +44,9 @@ class AudioFileManager(object):
     def print_rows(self, rows):
         w = csv.writer(sys.stdout, delimiter=',')
         for row in rows:
-            w.writerow(row)
+            # An older version of the csv module requires the writerow()
+            # argument to be a list type.
+            w.writerow(list(row))
 
     def get_rows(self, fingerprints, table):
         sql = ("SELECT * "

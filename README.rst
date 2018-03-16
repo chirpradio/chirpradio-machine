@@ -19,9 +19,16 @@ Installation
 ------------------
 
 You'll need Python 2.7+, `Google App Engine SDK 1.9+`_, `virtualenv`_ and `pip`_.
-Change into the source tree, activate a virtualenv, and type these commands::
+Change into the source tree, activate a virtualenv, and type this to install all development requirements::
 
-  pip install -r requirements.txt
+  pip install -r requirements/dev.txt
+
+For only the production requirements, type this::
+
+  pip install -r requirements/prod.txt
+
+Next, install the module as a symlink, install the scripts, and generate a local settings file::
+
   python setup.py develop
   cp settings_local.py-dist settings_local.py
 
