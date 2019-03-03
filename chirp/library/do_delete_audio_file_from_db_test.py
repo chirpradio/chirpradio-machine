@@ -220,3 +220,11 @@ class DeleteFingerprintTest(unittest.TestCase):
 
         # RESULTS
         self.assertEqual(len(list(af)), 0)
+
+    def test_print_rows_can_handle_non_ascii(self):
+        afm = do_delete_audio_file_from_db.AudioFileManager(
+            library_db_file=self.name
+        )
+        afm.print_rows([
+            [u'non-ascii string with a \xf8 character'],
+        ])

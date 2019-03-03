@@ -16,8 +16,8 @@ Flags:
 
 """
 
+import pprint
 import sys
-import csv
 import sqlite3
 import argparse
 from chirp.common.conf import LIBRARY_DB
@@ -42,11 +42,8 @@ class AudioFileManager(object):
             yield item
 
     def print_rows(self, rows):
-        w = csv.writer(sys.stdout, delimiter=',')
         for row in rows:
-            # An older version of the csv module requires the writerow()
-            # argument to be a list type.
-            w.writerow(list(row))
+            pprint.pprint(row)
 
     def get_rows(self, fingerprints, table):
         sql = ("SELECT * "
