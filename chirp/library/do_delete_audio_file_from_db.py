@@ -43,7 +43,7 @@ class AudioFileManager(object):
 
     def print_rows(self, rows):
         for row in rows:
-            pprint.pprint(row)
+            pprint.pprint(list(row))
 
     def get_rows(self, fingerprints, table):
         sql = ("SELECT * "
