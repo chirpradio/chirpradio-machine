@@ -9,16 +9,16 @@ class UnicodeUtilTest(unittest.TestCase):
 
     def test_simplify(self):
         CASES = (
-            (u"Foo", u"Foo"),
-            (u"Øåø", u"Oao"),
-            (u"Allá", u"Alla"),
-            (u"Björk", u"Bjork"),
-            (u"Édith Piaf", u"Edith Piaf"),
-            (u"Stéphane", u"Stephane"),
-            (u"Maxïmo", u"Maximo"),
-            (u"Hüsker Dü", u"Husker Du"),
-            (u"Dâm-Funk", u"Dam-Funk"),
-            (u"Françoise", "Francoise"),
+            ("Foo", "Foo"),
+            ("Øåø", "Oao"),
+            ("Allá", "Alla"),
+            ("Björk", "Bjork"),
+            ("Édith Piaf", "Edith Piaf"),
+            ("Stéphane", "Stephane"),
+            ("Maxïmo", "Maximo"),
+            ("Hüsker Dü", "Husker Du"),
+            ("Dâm-Funk", "Dam-Funk"),
+            ("Françoise", "Francoise"),
             )
         for before, after in CASES:
             self.assertEqual(after, unicode_util.simplify(before))

@@ -52,7 +52,7 @@ def _insert_tags(conn, fingerprint, timestamp, mutagen_id3):
         import timestamp.
       mutagen_id3: A mutagen.id3.ID3 object containing the file's tags
     """
-    for tag in mutagen_id3.itervalues():
+    for tag in mutagen_id3.values():
         tag_tuple = schema.id3_tag_to_tuple(fingerprint, timestamp, tag)
         _insert(conn, "id3_tags", tag_tuple)
 
@@ -144,7 +144,7 @@ class Database(object):
             conn.execute(schema.create_audio_files_index)
             conn.execute(schema.create_id3_tags_table)
             conn.execute(schema.create_id3_tags_index)
-        except sqlite3.OperationalError, ex:
+        except sqlite3.OperationalError as ex:
             return False
         return True
 

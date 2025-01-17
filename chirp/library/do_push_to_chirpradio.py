@@ -12,7 +12,7 @@ import datetime
 import re
 import sys
 import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from chirp.common.printing import cprint
 from chirp.common import timestamp
@@ -62,7 +62,7 @@ def get_artist_by_name(name):
                 raise UnknownArtistError("Unknown artist: %s" % name)
             _artist_cache[name] = art
             return art
-        except urllib2.URLError:
+        except urllib.error.URLError:
             cprint("Retrying fetch_by_name for '%s'" % name)
 
 
@@ -73,7 +73,7 @@ def seen_album(album_id):
                 if not alb.revoked:
                     return True
             return False
-        except urllib2.URLError:
+        except urllib.error.URLError:
             cprint("Retrying fetch of album_id=%s" % album_id)
 
 
@@ -94,7 +94,7 @@ def process_one_album(idx, alb):
         kwargs["is_compilation"] = False
         kwargs["album_artist"] = get_artist_by_name(alb.artist_name())
 
-    for key, val in sorted(kwargs.iteritems()):
+    for key, val in sorted(kwargs.items()):
         cprint("%s: %s" % (key, val))
     if seen_album(alb.album_id):
         cprint("   Skipping")
@@ -113,7 +113,7 @@ def process_one_album(idx, alb):
 
     for au_file in alb.all_au_files:
         track_title, import_tags = titles.split_tags(au_file.tit2())
-        track_num, _ = order.decode(unicode(au_file.mutagen_id3["TRCK"]))
+        track_num, _ = order.decode(str(au_file.mutagen_id3["TRCK"]))
         kwargs = {}
         if alb.is_compilation():
             kwargs["track_artist"] = get_artist_by_name(au_file.tpe1())
@@ -147,7 +147,7 @@ def flush(list_of_pending_albums):
             rpc = db.create_rpc(deadline=120)
             idx.save(rpc=rpc)
             return
-        except urllib2.URLError:
+        except urllib.error.URLError:
             cprint("Retrying indexer flush")
 
 

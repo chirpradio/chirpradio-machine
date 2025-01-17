@@ -106,9 +106,9 @@ class AudioFileTest(unittest.TestCase):
         self.assertTrue(test_au.talb() is None)
 
         test_au = get_test_audio_file(0)
-        self.assertEqual(u"TPE1 0", test_au.tpe1())
-        self.assertEqual(u"TIT2 0", test_au.tit2())
-        self.assertEqual(u"TALB 0", test_au.talb())
+        self.assertEqual("TPE1 0", test_au.tpe1())
+        self.assertEqual("TIT2 0", test_au.tit2())
+        self.assertEqual("TALB 0", test_au.talb())
 
     def test_scan_fast_tag_handling(self):
         test_mp3 = mutagen.mp3.MP3()
@@ -116,17 +116,17 @@ class AudioFileTest(unittest.TestCase):
         test_mp3.info = MockInfo()
         test_mp3.add_tags()
         test_mp3.tags.add(ufid.ufid_tag(TEST_VOL, TEST_TS, TEST_FP))
-        test_mp3.tags.add(mutagen.id3.TLEN(text=u"11111"))
+        test_mp3.tags.add(mutagen.id3.TLEN(text="11111"))
         test_mp3.tags.add(mutagen.id3.TXXX(
                 desc=constants.TXXX_ALBUM_ID_DESCRIPTION,
-                text=[u"222"]))
+                text=["222"]))
         test_mp3.tags.add(mutagen.id3.TXXX(
                 desc=constants.TXXX_FRAME_COUNT_DESCRIPTION,
-                text=[u"333"]))
+                text=["333"]))
         test_mp3.tags.add(mutagen.id3.TXXX(
                 desc=constants.TXXX_FRAME_SIZE_DESCRIPTION,
                 text=["444"]))
-        for tag in test_mp3.tags.values():
+        for tag in list(test_mp3.tags.values()):
             id3_text.standardize(tag)
         test_mp3.info.sample_rate = 5555
         test_mp3.info.bitrate = 6666

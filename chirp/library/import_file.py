@@ -38,7 +38,7 @@ def _fix_file_tags(au_file):
 
     # Build up a list of tags, stripping out ones that are not on our
     # whitelist.
-    for tag in au_file.mutagen_id3.values():
+    for tag in list(au_file.mutagen_id3.values()):
         if tag.FrameID in constants.ID3_TAG_BLACKLIST:
             raise ImportFileError(["Found blacklisted tag: %r" % tag])
         if not (tag.FrameID in constants.ID3_TAG_WHITELIST
@@ -51,21 +51,21 @@ def _fix_file_tags(au_file):
         # Standardize TPE tags, filtering out unknown artists at
         # TPE2 or lower.
         if tag.FrameID.startswith("TPE"):
-            name_std = artists.standardize(unicode(tag))
+            name_std = artists.standardize(str(tag))
             if name_std is None:
                 if tag.FrameID != "TPE1":
                     sys.stderr.write("*** Filtering %s %s\n" % (
-                            tag.FrameID, unicode(tag).encode("utf-8")))
+                            tag.FrameID, str(tag).encode("utf-8")))
                     continue
                 raise ImportFileError(
-                    [u"Unknown artist %r in %s" % (unicode(tag), tag.FrameID)])
+                    ["Unknown artist %r in %s" % (str(tag), tag.FrameID)])
             else:
                 tag.text = [name_std]
         # If the TBPM tag is present and contains a string of the form
         # "xxx BPM", strip off the suffix.  If xxx is not an integer,
         # round it off.  If it is <= 0, discard the tag entirely.
         if tag.FrameID == "TBPM":
-            tbpm = unicode(tag)
+            tbpm = str(tag)
             if tbpm.endswith(" BPM"):
                 tbpm = tbpm[:-4]
             try:
@@ -74,12 +74,12 @@ def _fix_file_tags(au_file):
                 continue
             if tbpm <= 0:
                 continue
-            tag.text = [unicode(tbpm)]
+            tag.text = [str(tbpm)]
 
         new_id3.add(tag)
 
     # Add our own TLEN tag.
-    tlen_tag = mutagen.id3.TLEN(text=[unicode(au_file.duration_ms)],
+    tlen_tag = mutagen.id3.TLEN(text=[str(au_file.duration_ms)],
                                 encoding=constants.DEFAULT_ID3_TEXT_ENCODING)
     new_id3.add(tlen_tag)
 
@@ -87,24 +87,24 @@ def _fix_file_tags(au_file):
 
     frame_count_tag = mutagen.id3.TXXX(
         desc=constants.TXXX_FRAME_COUNT_DESCRIPTION,
-        text=[unicode(au_file.frame_count)],
+        text=[str(au_file.frame_count)],
         encoding=constants.DEFAULT_ID3_TEXT_ENCODING)
     new_id3.add(frame_count_tag)
 
     frame_size_tag = mutagen.id3.TXXX(
         desc=constants.TXXX_FRAME_SIZE_DESCRIPTION,
-        text=[unicode(au_file.frame_size)],
+        text=[str(au_file.frame_size)],
         encoding=constants.DEFAULT_ID3_TEXT_ENCODING)
     new_id3.add(frame_size_tag)
 
     # Add a TXXX tag with the album ID.
     txxx = mutagen.id3.TXXX(encoding=constants.DEFAULT_ID3_TEXT_ENCODING,
                             desc=constants.TXXX_ALBUM_ID_DESCRIPTION,
-                            text=[unicode(au_file.album_id)])
+                            text=[str(au_file.album_id)])
     new_id3.add(txxx)
 
     # Add a TFLT tag indicating that this is an MP3.
-    tflt_tag = mutagen.id3.TFLT(text=[u"MPG/3"],
+    tflt_tag = mutagen.id3.TFLT(text=["MPG/3"],
                                 encoding=constants.DEFAULT_ID3_TEXT_ENCODING)
     new_id3.add(tflt_tag)
 
@@ -152,7 +152,7 @@ def write_file(au_file, prefix):
     # Make sure the canonical directory exists.
     try:
         os.makedirs(au_file.canonical_directory(prefix))
-    except OSError, ex:
+    except OSError as ex:
         if ex.errno != errno.EEXIST:
             raise
 

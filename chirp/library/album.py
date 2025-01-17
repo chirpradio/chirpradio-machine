@@ -58,7 +58,7 @@ def _standardize_tags(all_au_files, new_album_name=None):
             raise AlbumError("Mising TIT2 in %s" % au_file.path)
 
     # Check that the album names all match.
-    all_talb = set(unicode(au_file.mutagen_id3["TALB"])
+    all_talb = set(str(au_file.mutagen_id3["TALB"])
                    for au_file in all_au_files)
     if len(all_talb) != 1:
         # Is the inconsistency only an issue of upper vs. lower case?
@@ -67,7 +67,7 @@ def _standardize_tags(all_au_files, new_album_name=None):
             freq = {}
             for x in all_talb:
                 freq[x] = freq.get(x, 0) + 1
-            all_talb = set([sorted((n, x) for x, n in freq.items())[0][1]])
+            all_talb = set([sorted((n, x) for x, n in list(freq.items()))[0][1]])
         else:
             raise AlbumError("Inconsistent album names: %s" %
                               " / ".join(all_talb))
@@ -86,20 +86,20 @@ def _standardize_tags(all_au_files, new_album_name=None):
     all_trck = [au_file.mutagen_id3["TRCK"] for au_file in all_au_files]
     try:
         order.verify_and_standardize(all_trck)
-    except order.BadOrderError, ex:
+    except order.BadOrderError as ex:
         raise AlbumError(str(ex))
 
     # Construct a set of all of the artist names attached to these
     # tracks.
-    all_tpe1 = set(unicode(au_file.mutagen_id3["TPE1"])
+    all_tpe1 = set(str(au_file.mutagen_id3["TPE1"])
                    for au_file in all_au_files)
 
     for au_file in all_au_files:
-        tit2 = unicode(au_file.mutagen_id3["TIT2"])
+        tit2 = str(au_file.mutagen_id3["TIT2"])
         # If artist name's don't all match, attempt to extract
         # guest artists and move them into the song titles.
         if len(all_tpe1) > 1:
-            tpe1 = unicode(au_file.mutagen_id3["TPE1"])
+            tpe1 = str(au_file.mutagen_id3["TPE1"])
             new_tpe1, guest = artists.split_and_standardize(tpe1)
             if new_tpe1 is None:
                 raise AlbumError("Bad TPE1: %s" % repr(tpe1))
@@ -177,13 +177,13 @@ class Album(object):
     def title(self):
         """Returns the album's title."""
         title, _ = titles.split_tags(
-            unicode(self.all_au_files[0].mutagen_id3["TALB"]))
+            str(self.all_au_files[0].mutagen_id3["TALB"]))
         return title
 
     def tags(self):
         """Returns the album's tags."""
         _, tags = titles.split_tags(
-            unicode(self.all_au_files[0].mutagen_id3["TALB"]))
+            str(self.all_au_files[0].mutagen_id3["TALB"]))
         return tags
 
 
@@ -191,10 +191,10 @@ class Album(object):
         if self._tpe1_breakdown is None:
             count = {}
             for au in self.all_au_files:
-                tpe1 = unicode(au.mutagen_id3["TPE1"])
+                tpe1 = str(au.mutagen_id3["TPE1"])
                 count[tpe1] = count.get(tpe1, 0) + 1
             self._tpe1_breakdown = [
-                (n, tpe1) for tpe1, n in count.iteritems()]
+                (n, tpe1) for tpe1, n in count.items()]
             self._tpe1_breakdown.sort()
             self._tpe1_breakdown.reverse()
         return self._tpe1_breakdown
@@ -220,7 +220,7 @@ class Album(object):
         return self.all_au_files[0].import_timestamp
 
     def __str__(self):
-        prefix = u'%x:%d "%s", ' % (
+        prefix = '%x:%d "%s", ' % (
             self.album_id, len(self.all_au_files), self.title())
         if self.is_compilation():
             suffix = "-compilation-"
@@ -266,5 +266,5 @@ def from_directory(dirpath, fast=False):
         talb = au_file.mutagen_id3["TALB"].text[0]
         by_talb.setdefault(talb, []).append(au_file)
 
-    return [Album(all_au_files) for all_au_files in by_talb.values()]
+    return [Album(all_au_files) for all_au_files in list(by_talb.values())]
             

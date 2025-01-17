@@ -36,7 +36,7 @@ class CheckerTest(unittest.TestCase):
         for err_msg in errors:
             if err_msg.startswith(prefix):
                 return
-        print errors
+        print(errors)
         self.fail()
 
     def assertNoTagError(self, prefix):
@@ -167,15 +167,15 @@ class CheckerTest(unittest.TestCase):
                 encoding=constants.DEFAULT_ID3_TEXT_ENCODING))
         self.au_file.mutagen_id3.add(mutagen.id3.TXXX(
                 desc=constants.TXXX_FRAME_SIZE_DESCRIPTION,
-                text=[unicode(TEST_FRAME_SIZE)],
+                text=[str(TEST_FRAME_SIZE)],
                 encoding=constants.DEFAULT_ID3_TEXT_ENCODING))
         self.au_file.mutagen_id3.add(mutagen.id3.TXXX(
                 desc=constants.TXXX_FRAME_COUNT_DESCRIPTION,
-                text=[unicode(TEST_FRAME_COUNT)],
+                text=[str(TEST_FRAME_COUNT)],
                 encoding=constants.DEFAULT_ID3_TEXT_ENCODING))
         self.au_file.mutagen_id3.add(mutagen.id3.TXXX(
                 desc=constants.TXXX_ALBUM_ID_DESCRIPTION,
-                text=[unicode(TEST_ALBUM_ID)],
+                text=[str(TEST_ALBUM_ID)],
                 encoding=constants.DEFAULT_ID3_TEXT_ENCODING))
 
 

@@ -20,10 +20,10 @@ def main():
                 cursor.execute(
                     'select * from audio_files where fingerprint=?', [base])
                 if not cursor.fetchone():
-                    print ' * CATALOG MISSING %s' % base
+                    print(' * CATALOG MISSING %s' % base)
                 else:
                     found += 1
-    print 'FOUND=%s' % found
+    print('FOUND=%s' % found)
 
 if __name__ == '__main__':
     main()

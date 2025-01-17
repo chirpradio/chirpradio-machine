@@ -31,7 +31,7 @@ class ID3HeaderTest(unittest.TestCase):
         test_file = "/tmp/id3_header_test.data"
         fh = open(test_file, "w")
         fh.write(data)
-        raw_hdr, hdr = mp3_header_test.VALID_MP3_HEADERS.items()[0]
+        raw_hdr, hdr = list(mp3_header_test.VALID_MP3_HEADERS.items())[0]
         frame_data = raw_hdr.ljust(hdr.frame_size, "a")
         fh.write(frame_data * 2)
         fh.close()
@@ -44,7 +44,7 @@ class ID3HeaderTest(unittest.TestCase):
         self.assertTrue("TIT2" in mp3)
         self.assertTrue("TALB" in mp3)
         # Everything should be encoded as utf-8.
-        for val in mp3.values():
+        for val in list(mp3.values()):
             self.assertEqual(3, val.encoding)
         # All tags should have the expected values.
         self.assertEqual([tpe1], mp3["TPE1"].text)

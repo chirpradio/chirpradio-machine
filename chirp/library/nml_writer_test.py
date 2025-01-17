@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import cStringIO
+import io
 import unittest
 import xml.dom.minidom
 
@@ -19,7 +19,7 @@ class NMLWriterTest(unittest.TestCase):
         xml.dom.minidom.parseString(xml_str)
 
     def test_empty(self):
-        output = cStringIO.StringIO()
+        output = io.StringIO()
         writer = nml_writer.NMLWriter("test_file_volume", "/lib", output)
         writer.close()
         output_str = output.getvalue()
@@ -27,9 +27,9 @@ class NMLWriterTest(unittest.TestCase):
         self.assertTrue("<COLLECTION ENTRIES=\"%10d\"" % 0 in output_str)
 
     def test_simple(self):
-        output = cStringIO.StringIO()
+        output = io.StringIO()
         writer = nml_writer.NMLWriter("test_file_volume", "/lib", output)
-        for i in xrange(10):
+        for i in range(10):
             writer.write(audio_file_test.get_test_audio_file(i))
         writer.close()
         output_str = output.getvalue()

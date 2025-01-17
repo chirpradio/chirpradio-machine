@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import codecs
-import cStringIO
+import io
 import os
 import sys
 import unittest
@@ -26,7 +26,7 @@ Tom Petty and his heartbreakers SEP Tom Petty & the Heartbreakers
 
 
 def _unicode_stringio(text):
-    return codecs.iterdecode(cStringIO.StringIO(text.encode("utf-8")),
+    return codecs.iterdecode(io.StringIO(text.encode("utf-8")),
                              "utf-8")
 
 
@@ -175,36 +175,36 @@ class ArtistsTest(unittest.TestCase):
 
         if whitelist != artists._global_whitelist:
             test_should_succeed = False
-            print "\n\n"
-            print "*" * 70
-            print "***"
-            print "*** Whitelist is not properly normalized"
-            print "***"
-            print "*** Diff:"
+            print("\n\n")
+            print("*" * 70)
+            print("***")
+            print("*** Whitelist is not properly normalized")
+            print("***")
+            print("*** Diff:")
             out = codecs.open(fixed_whitelist_filename, "w", "utf-8")
-            for white in sorted(whitelist.values(),
+            for white in sorted(list(whitelist.values()),
                                 key=artists.sort_key):
-                out.write(u"%s\n" % white)
+                out.write("%s\n" % white)
             out.close()
             diff_cmd = "diff -u %s %s" % (artists._WHITELIST_FILE,
                                           fixed_whitelist_filename)
             sys.stdout.flush()
             os.system(diff_cmd)
             sys.stdout.flush()
-            print "*" * 70
-            print "\n\n"
+            print("*" * 70)
+            print("\n\n")
 
         if mappings != artists._global_raw_mappings:
             test_should_succeed = False
-            print "\n\n"
-            print "*" * 70
-            print "***"
-            print "*** Mappings are not properly normalized"
-            print "***"
-            print "*** Diff:"
+            print("\n\n")
+            print("*" * 70)
+            print("***")
+            print("*** Mappings are not properly normalized")
+            print("***")
+            print("*** Diff:")
             out = codecs.open(fixed_mappings_filename, "w", "utf-8")
             for before in sorted(mappings, key=artists.sort_key):
-                out.write(u"%s %s %s\n" % (before,
+                out.write("%s %s %s\n" % (before,
                                            artists._MAPPINGS_SEP,
                                            mappings[before]))
             out.close()
@@ -213,8 +213,8 @@ class ArtistsTest(unittest.TestCase):
             sys.stdout.flush()
             os.system(diff_cmd)
             sys.stdout.flush()
-            print "*" * 70
-            print "\n\n"
+            print("*" * 70)
+            print("\n\n")
 
         self.assertTrue(test_should_succeed)
 

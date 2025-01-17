@@ -23,20 +23,20 @@ _UNKNOWN_SONG = "* Title Not Known *"
 # Boilerplate that goes at the beginning of every NML file.  The one
 # format parameter is an integer giving the total number of entries to
 # be found in the file.
-_NML_PREFIX = u"""<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+_NML_PREFIX = """<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <NML VERSION="14"><HEAD COMPANY="www.native-instruments.com" PROGRAM="Traktor - Native Instruments"></HEAD>
 <MUSICFOLDERS></MUSICFOLDERS>
 <COLLECTION ENTRIES="%10d">"""
 
 # A template for producing individual song entries.
-_NML_ENTRY = u"""<ENTRY MODIFIED_DATE=%(modified_date)s MODIFIED_TIME=%(modified_time)s TITLE=%(song)s ARTIST=%(artist)s><LOCATION DIR=%(dir)s FILE=%(file)s VOLUME=%(volume)s VOLUME_ID=""></LOCATION>
+_NML_ENTRY = """<ENTRY MODIFIED_DATE=%(modified_date)s MODIFIED_TIME=%(modified_time)s TITLE=%(song)s ARTIST=%(artist)s><LOCATION DIR=%(dir)s FILE=%(file)s VOLUME=%(volume)s VOLUME_ID=""></LOCATION>
 <ALBUM OF_TRACKS=%(total_num)s TITLE=%(album)s TRACK=%(order_num)s></ALBUM>
 <INFO BITRATE=%(bitrate)s GENRE=%(genre)s PLAYTIME=%(duration_s)s IMPORT_DATE=%(import_date)s FILESIZE=%(size_in_kb)s></INFO>
 </ENTRY>
 """
 
 # Boilerplate that goes at the end of every NML file.
-_NML_SUFFIX = u"""</COLLECTION>
+_NML_SUFFIX = """</COLLECTION>
 <PLAYLISTS><NODE TYPE="FOLDER" NAME="$ROOT"><SUBNODES COUNT="1">
 <NODE TYPE="PLAYLIST" NAME="_RECORDINGS"><PLAYLIST ENTRIES="0" TYPE="LIST"></PLAYLIST>
 </NODE>
@@ -117,8 +117,8 @@ class NMLWriter(object):
 
         # Clean up any XML-unsafe characters and wrap each value in
         # quotes.
-        for k, v in entry_data.items():
-            new_v = xml.sax.saxutils.quoteattr(unicode(v))
+        for k, v in list(entry_data.items()):
+            new_v = xml.sax.saxutils.quoteattr(str(v))
             if new_v != v:
                 entry_data[k] = new_v
 

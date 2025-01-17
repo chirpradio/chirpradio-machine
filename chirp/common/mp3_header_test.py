@@ -49,7 +49,7 @@ class ParseHeaderTest(unittest.TestCase):
         self.assertFalse(hdr.is_complete())
 
     def test_parse(self):
-        for valid, expected_hdr in VALID_MP3_HEADERS.items():
+        for valid, expected_hdr in list(VALID_MP3_HEADERS.items()):
             hdr = mp3_header.parse(valid)
             self.assertTrue(hdr)
             self.assertTrue(hdr.is_complete())
@@ -82,7 +82,7 @@ class ParseHeaderTest(unittest.TestCase):
 
         # Check that we can find a valid header that occurs near
         # a bogus 0xff synch byte.
-        for raw_hdr, hdr in VALID_MP3_HEADERS.items():
+        for raw_hdr, hdr in list(VALID_MP3_HEADERS.items()):
             for test_data in (
                 raw_hdr,
                 '\xff' + raw_hdr,

@@ -54,7 +54,7 @@ class AudioFile(object):
 
     def __eq__(self, other):
         def _mutagen_id3_set(obj):
-            return set(repr(x) for x in obj.mutagen_id3.itervalues())
+            return set(repr(x) for x in obj.mutagen_id3.values())
         return (self.volume == other.volume
                 and self.import_timestamp == other.import_timestamp
                 and self.fingerprint == other.fingerprint
@@ -95,7 +95,7 @@ class AudioFile(object):
         tpe1_tag = self.mutagen_id3.get("TPE1")
         if tpe1_tag is None:
             return None
-        return unicode(tpe1_tag)
+        return str(tpe1_tag)
 
     def talb(self):
         """Returns this file's TALB tag as a unicode string, or None."""
@@ -104,7 +104,7 @@ class AudioFile(object):
         talb_tag = self.mutagen_id3.get("TALB")
         if talb_tag is None:
             return None
-        return unicode(talb_tag)
+        return str(talb_tag)
 
     def tit2(self):
         """Returns this file's TIT2 tag as a unicode string, or None."""
@@ -113,7 +113,7 @@ class AudioFile(object):
         tit2_tag = self.mutagen_id3.get("TIT2")
         if tit2_tag is None:
             return None
-        return unicode(tit2_tag)
+        return str(tit2_tag)
 
     def canonical_directory(self, prefix=""):
         """Returns the storage directory for this file.
@@ -164,7 +164,7 @@ def _get_mp3(path):
             struct.error):
         return None
     # Automatically clean up the text tags.
-    for tag in mp3.itervalues():
+    for tag in mp3.values():
         id3_text.standardize(tag)
     return mp3
 

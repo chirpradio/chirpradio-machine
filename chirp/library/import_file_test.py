@@ -35,7 +35,7 @@ class ImportFileTest(unittest.TestCase):
         os.system("rm -rf %s" % self.temp_dir)
     
     def create_test_file(self, tag_list):
-        raw_hdr, hdr = mp3_header_test.VALID_MP3_HEADERS.items()[0]
+        raw_hdr, hdr = list(mp3_header_test.VALID_MP3_HEADERS.items())[0]
         num_frames = 1000
         frame_data = raw_hdr.ljust(hdr.frame_size, "!")
         payload = num_frames * frame_data
@@ -68,7 +68,7 @@ class ImportFileTest(unittest.TestCase):
 
         import_file.standardize_file(au_file)
         # Do some basic checks
-        for tag in au_file.mutagen_id3.values():
+        for tag in list(au_file.mutagen_id3.values()):
             self.assertTrue(
                 (tag.FrameID in constants.ID3_TAG_WHITELIST
                  or tag.HashKey in constants.ID3_TAG_WHITELIST))
@@ -82,7 +82,7 @@ class ImportFileTest(unittest.TestCase):
         new_au_file = audio_file.scan(new_path)
         self.assertEqual(sorted(au_file.mutagen_id3.keys()),
                          sorted(new_au_file.mutagen_id3.keys()))
-        for key in au_file.mutagen_id3.keys():
+        for key in list(au_file.mutagen_id3.keys()):
             self.assertEqual(repr(au_file.mutagen_id3[key]),
                              repr(new_au_file.mutagen_id3[key]))
         self.assertEqual(au_file.fingerprint, new_au_file.fingerprint)

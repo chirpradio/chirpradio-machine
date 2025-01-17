@@ -14,7 +14,7 @@ def main_generator(rewrite):
         try:
             tpe1 = au_file.mutagen_id3["TPE1"].text[0]
         except:
-            cprint(u'** file: %r' % au_file.path)
+            cprint('** file: %r' % au_file.path)
             raise
         if artists.standardize(tpe1) is None:
             new_artists.add(tpe1)

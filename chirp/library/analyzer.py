@@ -1,6 +1,6 @@
 """Analyzes an MP3 file, gathering statistics and looking for errors."""
 
-import cStringIO
+import io
 import hashlib
 import os
 from chirp.common import mp3_frame
@@ -39,7 +39,7 @@ def analyze(file_obj, au_file, compute_fingerprint=True, get_payload=True):
     au_file.frame_size = 0
     au_file.duration_ms = 0
     sha1_calc = hashlib.sha1()  # unused if compute_fingerprint is False.
-    payload = cStringIO.StringIO()  # unused if get_payload is False.
+    payload = io.StringIO()  # unused if get_payload is False.
 
     bit_rate_kbps_sum = 0
     expected_hdr = None

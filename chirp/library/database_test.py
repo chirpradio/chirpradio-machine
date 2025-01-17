@@ -40,7 +40,7 @@ class DatabaseTest(unittest.TestCase):
 
     def test_add(self):
         all_au_files = [audio_file_test.get_test_audio_file(i)
-                        for i in xrange(1000)]
+                        for i in range(1000)]
 
         self.assertTrue(self.db.create_tables())
 
@@ -116,7 +116,7 @@ class DatabaseTest(unittest.TestCase):
         mod_tag = test_au_file.mutagen_id3["TPE1"]
         mod_tag.text[0] += "arbitrary change"
         # Add a new tag.
-        new_tag = mutagen.id3.TPUB(text=[u"TPUB"])
+        new_tag = mutagen.id3.TPUB(text=["TPUB"])
         test_au_file.mutagen_id3.add(new_tag)
         # Delete a tag.
         del test_au_file.mutagen_id3["TALB"]

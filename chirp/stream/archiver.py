@@ -33,7 +33,7 @@ class Archiver(message.MessageConsumer):
         dirname = self._dirname(ts_ms)
         try:
             os.makedirs(dirname)
-        except OSError, ex:
+        except OSError as ex:
             if ex.errno != errno.EEXIST:
                 raise ex
         prefix = os.path.join(dirname, self.FILE_PREFIX)

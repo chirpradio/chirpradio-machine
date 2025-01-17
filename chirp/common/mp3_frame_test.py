@@ -1,6 +1,6 @@
 #!/usr/bin/python2.5
 
-import cStringIO
+import io
 import unittest
 
 from chirp.common import id3_header
@@ -12,7 +12,7 @@ from chirp.common import mp3_header_test
 class SplitTest(unittest.TestCase):
 
     def test_split(self):
-        raw_hdr, hdr = mp3_header_test.VALID_MP3_HEADERS.items()[0]
+        raw_hdr, hdr = list(mp3_header_test.VALID_MP3_HEADERS.items())[0]
         frame_data = raw_hdr.ljust(hdr.frame_size, "a")
         # Set up a fragment of a header
         partial_header = raw_hdr[:3]
@@ -54,7 +54,7 @@ class SplitTest(unittest.TestCase):
             500 * [ "junk", frame_data, id3_data, frame_data ]
             ):
             data = ''.join(seq)
-            stream = cStringIO.StringIO(data)
+            stream = io.StringIO(data)
             split_stream = list(mp3_frame.split(stream))
             split_stream_from_blocks = list(mp3_frame.split_blocks(iter(seq)))
             split_stream_from_one_block = mp3_frame.split_one_block(data)

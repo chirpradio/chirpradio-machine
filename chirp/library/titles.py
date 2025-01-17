@@ -40,11 +40,11 @@ def standardize(text):
     # Always use a double-quote as our "inch" marker.
     # \u201d = unicode double-quote
     # \u2019 = unicode single-quote
-    text = text.replace(u"\u201d", '"')
-    text = text.replace(u"\u2019\u2019", '"')
-    text = text.replace(u"''", '"')
+    text = text.replace("\u201d", '"')
+    text = text.replace("\u2019\u2019", '"')
+    text = text.replace("''", '"')
     # Always use the ASCII single-quote
-    text = text.replace(u"\u2019", "'")
+    text = text.replace("\u2019", "'")
     
     # Remove leading and trailing whitespace inside of tags.
     text = re.sub(r"\[\s+", "[", text)

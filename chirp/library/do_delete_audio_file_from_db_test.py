@@ -26,7 +26,7 @@ class DeleteFingerprintTest(unittest.TestCase):
 
         # populate some dummy audiofiles into the database
         all_au_files = [audio_file_test.get_test_audio_file(i)
-                        for i in xrange(10)]
+                        for i in range(10)]
         add_txn = self.db.begin_add(test_volume, test_import_timestamp)
 
         for au_file in all_au_files:
@@ -50,7 +50,7 @@ class DeleteFingerprintTest(unittest.TestCase):
 
         # quick confirmation that the audiofile that we want to test exists.
         af = self.db.get_by_fingerprint(test_fingerprint)
-        self.assertEquals(af.fingerprint, test_fingerprint)
+        self.assertEqual(af.fingerprint, test_fingerprint)
 
         afm = do_delete_audio_file_from_db.AudioFileManager(
             library_db_file=self.name)
@@ -61,7 +61,7 @@ class DeleteFingerprintTest(unittest.TestCase):
         # RESULTS
         # verify audiofile doesn't exist
         af = self.db.get_by_fingerprint(test_fingerprint)
-        self.assertEquals(af, None)
+        self.assertEqual(af, None)
 
         # make sure only 9 records exist now
         self.assertEqual(len(list(self.db.get_all())), 9)
@@ -80,9 +80,9 @@ class DeleteFingerprintTest(unittest.TestCase):
 
         # quick confirmation that the audiofiles that we want to test exists.
         af = self.db.get_by_fingerprint(test_fingerprint_1)
-        self.assertEquals(af.fingerprint, test_fingerprint_1)
+        self.assertEqual(af.fingerprint, test_fingerprint_1)
         af = self.db.get_by_fingerprint(test_fingerprint_2)
-        self.assertEquals(af.fingerprint, test_fingerprint_2)
+        self.assertEqual(af.fingerprint, test_fingerprint_2)
 
         afm = do_delete_audio_file_from_db.AudioFileManager(
             library_db_file=self.name)
@@ -93,10 +93,10 @@ class DeleteFingerprintTest(unittest.TestCase):
         # RESULTS
         # verify audiofiles don't exist
         af = self.db.get_by_fingerprint(test_fingerprint_1)
-        self.assertEquals(af, None)
+        self.assertEqual(af, None)
 
         af = self.db.get_by_fingerprint(test_fingerprint_2)
-        self.assertEquals(af, None)
+        self.assertEqual(af, None)
 
         # make sure only 8 records exist now
         self.assertEqual(len(list(self.db.get_all())), 8)
@@ -226,5 +226,5 @@ class DeleteFingerprintTest(unittest.TestCase):
             library_db_file=self.name
         )
         afm.print_rows([
-            [u'non-ascii string with a \xf8 character'],
+            ['non-ascii string with a \xf8 character'],
         ])

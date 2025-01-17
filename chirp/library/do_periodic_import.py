@@ -34,36 +34,36 @@ def import_albums(dry_run):
         for alb in inbox.albums():
             alb.drop_payloads()
             album_count += 1
-            cprint(u'#{num} "{title}"'.format(num=album_count, title=alb.title()))
+            cprint('#{num} "{title}"'.format(num=album_count, title=alb.title()))
             if alb.tags():
-                cprint(u"(%s)" % ", ".join(alb.tags()))
+                cprint("(%s)" % ", ".join(alb.tags()))
             else:
-                print
+                print()
             duration_ms = sum(au.duration_ms for au in alb.all_au_files)
             if alb.is_compilation():
                 cprint("Compilation")
                 for i, au in enumerate(alb.all_au_files):
                     artist = au.mutagen_id3["TPE1"]
-                    cprint(u"  {:02d}: {}".format(i+1, artist))
+                    cprint("  {:02d}: {}".format(i+1, artist))
             else:
                 cprint(alb.artist_name())
-            cprint(u"{} tracks / {} minutes".format(
+            cprint("{} tracks / {} minutes".format(
                 len(alb.all_au_files), int(duration_ms / 60000)))
-            cprint(u"ID=%015x" % alb.album_id)
+            cprint("ID=%015x" % alb.album_id)
             sys.stdout.flush()
 
             # Check that the album isn't already in library.
             collision = False
             for au in alb.all_au_files:
                 if au.fingerprint in seen_fp:
-                    cprint(u"***** ERROR: DUPLICATE TRACK WITHIN IMPORT", type='error')
-                    cprint(u"This one is at %s" % au.path)
-                    cprint(u"Other one is at %s" % seen_fp[au.fingerprint].path)
+                    cprint("***** ERROR: DUPLICATE TRACK WITHIN IMPORT", type='error')
+                    cprint("This one is at %s" % au.path)
+                    cprint("Other one is at %s" % seen_fp[au.fingerprint].path)
                     collision = True
                     break
                 fp_au_file = db.get_by_fingerprint(au.fingerprint)
                 if fp_au_file is not None:
-                    cprint(u"***** ERROR: TRACK ALREADY IN LIBRARY", type='error')
+                    cprint("***** ERROR: TRACK ALREADY IN LIBRARY", type='error')
                     cprint(fp_au_file.mutagen_id3)
                     collision = True
                     break
@@ -78,7 +78,7 @@ def import_albums(dry_run):
             try:
                 alb.standardize()
                 cprint("OK!\n")
-            except (import_file.ImportFileError, album.AlbumError), ex:
+            except (import_file.ImportFileError, album.AlbumError) as ex:
                 cprint("***** IMPORT ERROR")
                 cprint("*****   %s\n" % str(ex))
                 error_count += 1

@@ -26,7 +26,7 @@ _MAPPINGS_FILE = os.path.join(_LIBRARY_DATA_PREFIX, "artist-mappings")
 
 # The separator used between the key/value pairs in a file of mappings.
 # Unicode char \xbb is the double-greater-than sign.
-_MAPPINGS_SEP = u"\xbb\xbb\xbb"
+_MAPPINGS_SEP = "\xbb\xbb\xbb"
 
 # A dict containing the data parsed from _WHITELIST_FILE.
 # This is populated at module import-time by calling _init().
@@ -45,7 +45,7 @@ def all():
     """Returns an iterable sequence of all known artists."""
     _global_lock.acquire()
     try:
-        return _global_whitelist.values()
+        return list(_global_whitelist.values())
     finally:
         _global_lock.release()
 
@@ -377,9 +377,9 @@ def merge_whitelist_and_mappings(whitelist, raw_mappings):
       correcting any inconsistencies.
     """
     new_whitelist = dict(whitelist)
-    inv_whitelist = dict((v, k) for k, v in whitelist.iteritems())
+    inv_whitelist = dict((v, k) for k, v in whitelist.items())
     new_raw_mappings = {}
-    for before, after in raw_mappings.iteritems():
+    for before, after in raw_mappings.items():
         std_before = _standardize(before, whitelist, {})
         std_after = _standardize(after, whitelist, {})
         # Every "after" should exactly match a whitelist item.

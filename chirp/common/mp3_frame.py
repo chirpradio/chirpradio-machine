@@ -68,7 +68,7 @@ def split_blocks(block_iter, expected_hdr=None):
             # next block.
             if not buffered:
                 try:
-                    buffered = block_iter.next()
+                    buffered = next(block_iter)
                 except StopIteration:
                     sys.stderr.write(
                         "Stream ended while skipping data "
@@ -97,7 +97,7 @@ def split_blocks(block_iter, expected_hdr=None):
             buffered_size = len(buffered)
             while buffered_size < _READ_SIZE:
                 try:
-                    next_block = block_iter.next()
+                    next_block = next(block_iter)
                 except StopIteration:
                     at_end_of_stream = True
                     break
