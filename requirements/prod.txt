@@ -1,5 +1,5 @@
-mutagen==1.16
+mutagen
 simplejson
 # This is used by the do_push_artists_to_chirpradio command (maybe?)
 # when it loads the App Engine SDK.
-PyCrypto
+pycryptodome
