@@ -54,4 +54,5 @@ MOUNT_BY_HDSN_ROOT = "/mnt/by_hdsn/"
 GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/.chirpradio_service_account_key.json')
 
 # This is the location where Traktor users expect to find the new NML file:
-TRAKTOR_NML_FILE = '/mnt/disk_array/traktor/TraktorProRootDirectory/new-collection.nml'
+#TRAKTOR_NML_FILE = '/mnt/disk_array/traktor/TraktorProRootDirectory/new-collection.nml'
+TRAKTOR_NML_FILE = "./new-collection.nml"
