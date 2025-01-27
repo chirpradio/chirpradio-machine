@@ -168,3 +168,6 @@ cython_debug/
 settings_local.py
 *.egg-info
 output.nml
+
+#database
+*.sqlite3_db
