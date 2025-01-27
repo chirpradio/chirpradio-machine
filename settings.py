@@ -4,7 +4,8 @@ import os.path as op
 # For importing files:
 SAMBA = "/samba"
 LIBRARY_PREFIX = op.join(SAMBA, "traktor/Library")
-LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
+#LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
+LIBRARY_DB = op.join("catalog.sqlite3_db")
 LIBRARY_TMP_PREFIX = op.join(LIBRARY_PREFIX, "tmp")
 MUSIC_DROPBOX = op.join(SAMBA,
                  "public/public/Departments/Music Dept/New Music Dropbox/")
