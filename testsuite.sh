@@ -1,6 +1,7 @@
 #! /bin/bash
 
 #to run tests of speciifc directory, replace "**/*/*_test.py" with "**/directory/*_test.py"
+#to see error messages delete "2> /dev/null"
 
 for filename in **/*/*_test.py; do
     path=${filename//\//.}
