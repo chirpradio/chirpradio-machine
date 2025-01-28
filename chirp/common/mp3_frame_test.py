@@ -13,48 +13,48 @@ class SplitTest(unittest.TestCase):
 
     def test_split(self):
         raw_hdr, hdr = list(mp3_header_test.VALID_MP3_HEADERS.items())[0]
-        frame_data = raw_hdr.ljust(hdr.frame_size, "a")
+        frame_data = raw_hdr.ljust(hdr.frame_size, b"j")
         # Set up a fragment of a header
         partial_header = raw_hdr[:3]
         short_frame = frame_data[:25]
         assert len(short_frame) < len(frame_data)
 
-        id3_data = id3_header.create_test_header(77).ljust(77, "b")
+        id3_data = id3_header.create_test_header(77).ljust(77, b"j")
 
         # An ID3 tag with a valid frame tag stashed inside.
         evil_id3_data = id3_header.create_test_header(50) + raw_hdr
-        evil_id3_data = evil_id3_data.ljust(50, "c")
+        evil_id3_data = evil_id3_data.ljust(50, b"j")
 
         for seq in (
             [ frame_data ],
             [ frame_data, frame_data ],
-            [ 'junk', frame_data ],
-            [ 'junk', frame_data, frame_data ],
-            [ 'junk', frame_data, frame_data, 'junk' ],
-            [ 'junk', frame_data, frame_data, 'junk', frame_data ],
+            [ b'junk', frame_data ],
+            [ b'junk', frame_data, frame_data ],
+            [ b'junk', frame_data, frame_data, b'junk' ],
+            [ b'junk', frame_data, frame_data, b'junk', frame_data ],
             # Check handling of truncated headers and frames.
             [ partial_header ],
-            [ 'junk', partial_header ],
-            [ 'junk', short_frame ],
+            [ b'junk', partial_header ],
+            [ b'junk', short_frame ],
             [ frame_data, partial_header ],
             [ frame_data, short_frame ],
-            [ frame_data, 'junk', short_frame ],
-            [ frame_data, 'junk', partial_header],
+            [ frame_data, b'junk', short_frame ],
+            [ frame_data, b'junk', partial_header],
             # ID3 headers mixed in
             [ id3_data, frame_data ],
             [ frame_data, id3_data ],
             [ id3_data, frame_data ],
             [ id3_data, frame_data, id3_data ],
-            [ evil_id3_data, frame_data, "junk" ],
-            [ "junk", frame_data, evil_id3_data, frame_data ],
-            [ "junk", frame_data, evil_id3_data, frame_data, "junk" ],
-            [ "junk" + evil_id3_data, id3_data, frame_data, evil_id3_data ],
+            [ evil_id3_data, frame_data, b"junk" ],
+            [ b"junk", frame_data, evil_id3_data, frame_data ],
+            [ b"junk", frame_data, evil_id3_data, frame_data, b"junk" ],
+            [ b"junk" + evil_id3_data, id3_data, frame_data, evil_id3_data ],
             # Some longer sequences
             500 * [ frame_data ],
-            500 * [ "junk", frame_data, id3_data, frame_data ]
+            500 * [ b"junk", frame_data, id3_data, frame_data ]
             ):
-            data = ''.join(seq)
-            stream = io.StringIO(data)
+            data = b''.join(seq)
+            stream = io.BytesIO(data)
             split_stream = list(mp3_frame.split(stream))
             split_stream_from_blocks = list(mp3_frame.split_blocks(iter(seq)))
             split_stream_from_one_block = mp3_frame.split_one_block(data)
