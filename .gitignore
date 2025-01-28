@@ -167,7 +167,7 @@ cython_debug/
 .DS_Store
 settings_local.py
 *.egg-info
-output.nml
+*.nml
 
 #database
 *.sqlite3_db
