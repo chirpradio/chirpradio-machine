@@ -103,7 +103,10 @@ def split_blocks(block_iter, expected_hdr=None):
                     break
                 buffered_list.append(next_block)
                 buffered_size += len(next_block)
-            buffered = b''.join(buffered_list)
+            # somehwere in code, a non-byte string is added to buffered
+            # this ensures everything in buffered_list is converted to bytes
+            buffered = b''.join(item if isinstance(item, bytes) else \
+                                item.encode('utf-8') for item in buffered_list)
 
         # Are we at the end of the file?  If so, break out of the
         # "while True:" loop

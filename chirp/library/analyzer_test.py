@@ -23,7 +23,7 @@ class AnalyzerTest(unittest.TestCase):
     def test_known(self):
         f = os.path.join(ROOT_DIR,
                          "library/testdata/analyzer_test/test001.mp3")
-        stream = open(f)
+        stream = open(f, 'rb')
         au_file = audio_file.AudioFile()
         analyzer.analyze(stream, au_file)
         stream.close()
