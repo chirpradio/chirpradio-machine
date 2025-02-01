@@ -30,7 +30,7 @@ def _compute_album_id(all_au_files):
         return None
     hasher = hashlib.new("md5")
     for fp in sorted(au_file.fingerprint for au_file in all_au_files):
-        hasher.update(fp)
+        hasher.update(fp.encode())
     return int(hasher.hexdigest()[:15], 16)
 
 

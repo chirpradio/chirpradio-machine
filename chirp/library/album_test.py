@@ -62,5 +62,8 @@ class AlbumTest(unittest.TestCase):
                           album._standardize_tags, test_alb)
 
 
+def main():
+    pass
+
 if __name__ == "__main__":
     unittest.main()
