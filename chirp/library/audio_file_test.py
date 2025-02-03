@@ -166,7 +166,7 @@ class AudioFileTest(unittest.TestCase):
         fp = slow_au_file.mutagen_id3.get("UFID:test").data
         self.assertEqual(None, slow_au_file.volume)
         self.assertEqual(None, slow_au_file.import_timestamp)
-        self.assertEqual(fp, slow_au_file.fingerprint)
+        self.assertEqual(fp, slow_au_file.fingerprint.encode())
         # Test file contains 150 frames for a total of 137,173 bytes.
         self.assertEqual(150, slow_au_file.frame_count)
         self.assertEqual(137173, slow_au_file.frame_size)
