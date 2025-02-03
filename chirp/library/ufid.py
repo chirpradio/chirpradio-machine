@@ -53,10 +53,10 @@ def ufid_tag(volume, import_timestamp, fingerprint):
       fingerprint: A string containing a fingerprint
 
     Returns:
-      A populated mutagen.id3.UFID instance.
+      A populated mutagen.id3.UFID instance. Its data is stored as bytes.
     """
     return mutagen.id3.UFID(owner=constants.UFID_OWNER_IDENTIFIER,
-                            data=ufid(volume, import_timestamp, fingerprint))
+                            data=ufid(volume, import_timestamp, fingerprint).encode())
     
 
 def parse(ufid_str):

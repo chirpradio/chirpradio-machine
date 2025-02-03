@@ -39,7 +39,7 @@ def analyze(file_obj, au_file, compute_fingerprint=True, get_payload=True):
     au_file.frame_size = 0
     au_file.duration_ms = 0
     sha1_calc = hashlib.sha1()  # unused if compute_fingerprint is False.
-    payload = io.StringIO()  # unused if get_payload is False.
+    payload = io.BytesIO()  # unused if get_payload is False. + works with bytes
 
     bit_rate_kbps_sum = 0
     expected_hdr = None
