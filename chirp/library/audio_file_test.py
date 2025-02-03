@@ -16,6 +16,8 @@ from chirp.library import ufid
 TESTDATA = os.path.join(ROOT_DIR, "library/testdata/audio_file_test")
 
 
+
+
 # This is used in other tests.
 def get_test_audio_file(n):
     """Generates a test AudioFile object.
@@ -90,8 +92,8 @@ class AudioFileTest(unittest.TestCase):
 
         self.assertTrue(TEST_FP + ".mp3", au_file.canonical_filename())
 
-        self.assertTrue(TEST_UFID + ".mp3", au_file.canonical_path())
-        self.assertTrue("foo/" + TEST_UFID + ".mp3",
+        self.assertTrue(TEST_UFID + b".mp3", au_file.canonical_path())
+        self.assertTrue(b"foo/" + TEST_UFID + b".mp3",
                         au_file.canonical_path(prefix="foo"))
 
     def test_tag_accessors(self):
@@ -164,11 +166,12 @@ class AudioFileTest(unittest.TestCase):
         fp = slow_au_file.mutagen_id3.get("UFID:test").data
         self.assertEqual(None, slow_au_file.volume)
         self.assertEqual(None, slow_au_file.import_timestamp)
-        self.assertEqual(fp, slow_au_file.fingerprint)
+        self.assertEqual(fp, slow_au_file.fingerprint.encode())
         # Test file contains 150 frames for a total of 137,173 bytes.
         self.assertEqual(150, slow_au_file.frame_count)
         self.assertEqual(137173, slow_au_file.frame_size)
         self.assertEqual(path, slow_au_file.path)
+
 
     def test_scan_has_chirp_tags(self):
         path = os.path.join(TESTDATA, "has_chirp_tags.mp3")

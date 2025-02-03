@@ -105,6 +105,8 @@ def find_size(data):
             return None, len(data)-2
         else:
             return None, len(data)
+
+
     if len(data) < i + 10:
         return None, i
     size = parse_size(data, offset=i)

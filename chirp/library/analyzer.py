@@ -39,12 +39,13 @@ def analyze(file_obj, au_file, compute_fingerprint=True, get_payload=True):
     au_file.frame_size = 0
     au_file.duration_ms = 0
     sha1_calc = hashlib.sha1()  # unused if compute_fingerprint is False.
-    payload = io.StringIO()  # unused if get_payload is False.
+    payload = io.BytesIO()  # unused if get_payload is False. + works with bytes
 
     bit_rate_kbps_sum = 0
     expected_hdr = None
     first_bit_rate_kbps = None
     is_vbr = False
+
 
     for hdr, data_buffer in mp3_frame.split(file_obj):
         if hdr is None:
@@ -85,6 +86,7 @@ def analyze(file_obj, au_file, compute_fingerprint=True, get_payload=True):
             # You'd think that this would be constant, but MP3s
             # encountered in the wild prove otherwise.
             expected_hdr.protected = None
+
 
     if au_file.frame_count < _MINIMUM_FRAMES:
         raise InvalidFileError("Found only %d MPEG frames"
