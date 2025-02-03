@@ -19,7 +19,7 @@ class UFIDTest(unittest.TestCase):
                          ufid.ufid_prefix(test_vol, test_ts))
         # The UFID should equal the UFID prefix + the fingerprint.
         test_ufid = ufid.ufid(test_vol, test_ts, test_fp)
-        self.assertEqual(ufid.ufid_prefix(test_vol, test_ts) + test_fp,
+        self.assertEqual((ufid.ufid_prefix(test_vol, test_ts) + test_fp).encode(),
                          test_ufid)
         # We should be able to make a tag too.
         test_tag = ufid.ufid_tag(test_vol, test_ts, test_fp)
@@ -32,11 +32,11 @@ class UFIDTest(unittest.TestCase):
         self.assertEqual(test_ts, ts)
         self.assertEqual(test_fp, fp)
         # Raise ValueError if we try to parse a bad UFID.
-        self.assertRaises(ValueError, ufid.parse, "bad")
+        self.assertRaises(ValueError, ufid.parse, b"bad")
         self.assertRaises(ValueError, ufid.parse, 
-                          "vol01/20091399-666666/" + "1"*40)
+                          b"vol01/20091399-666666/" + b"1"*40)
         self.assertRaises(ValueError, ufid.parse, 
-                          "vol01/20991001-123456" + "1"*40)
+                          b"vol01/20991001-123456" + b"1"*40)
 
 
 if __name__ == "__main__":
