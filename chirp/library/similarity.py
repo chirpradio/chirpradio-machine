@@ -109,7 +109,9 @@ def get_levenshtein_distance(string_1, string_2, max_value=None):
         new_distance_vec = []
         for j, c_j in enumerate(string_2):
             # cost is 0 if c_i == c_j, 1 otherwise.
-            cost = abs(cmp(c_i, c_j))
+            # Python 2 code, deprecated
+            # cost = abs(cmp(c_i, c_j))
+            cost = 0 if c_i == c_j else 1
             delete_dist = prev_distance_vec[j] + 1
             if j == 0:
                 insert_dist  = i + 2
