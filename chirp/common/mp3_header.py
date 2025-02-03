@@ -79,7 +79,7 @@ class MP3Header(object):
         if (bit_rate_kbps is not None
             and sampling_rate_hz is not None
             and padding is not None):
-            self.frame_size = 144000 * bit_rate_kbps / sampling_rate_hz
+            self.frame_size = int(144000 * bit_rate_kbps / sampling_rate_hz)
             if padding:
                 self.frame_size += 1
 
@@ -141,10 +141,14 @@ def parse(data, offset=0):
       An MP3Header object, or None if 'data' is not prefixed by a
       valid header.
     """
+    
     if len(data) < offset + 4:
         return None
+    
+    if isinstance(data, str):
+      data = data.encode()
 
-    frame_data = struct.unpack_from('>I', data, offset=offset)[0]
+    frame_data = struct.unpack_from(b'>I', data, offset=offset)[0]
     # 0xff is used as the frame synch byte in MPEG audio.
     # This particular condition identifies the frame as being part
     # of MPEG version 1 and layer III.
@@ -201,6 +205,8 @@ def find(data, expected_hdr=None):
         Otherwise hdr is an MP3Header object describing the frame that begins
         at the offset.
     """
+    if isinstance(data, str):
+        data = data.encode()
     i = 0
     len_data = len(data)
     while i < len_data:

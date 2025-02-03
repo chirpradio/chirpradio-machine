@@ -47,7 +47,7 @@ class CheckerTest(unittest.TestCase):
 
     def test_general_tag_checks(self):
         self.assertTagError(checker.ERROR_TAG_MISSING_REQUIRED + "UFID")
-        
+
         self.au_file.mutagen_id3["TALB"] = mutagen.id3.TALB(
             text="Album Name", encoding=0)  # latin-1, which is wrong
         self.assertTagError(checker.ERROR_TAG_WRONG_ENCODING)
@@ -84,7 +84,7 @@ class CheckerTest(unittest.TestCase):
         town_tag = mutagen.id3.TOWN(text=["Incorrect"])
         self.au_file.mutagen_id3["TOWN"] = town_tag
         self.assertTagError(checker.ERROR_TOWN_INCORRECT)
-        
+
         town_tag.text = [constants.TOWN_FILE_OWNER]
         self.assertNoTagError(checker.ERROR_TOWN_INCORRECT)
 
@@ -109,7 +109,7 @@ class CheckerTest(unittest.TestCase):
                 checker.ERROR_ORDER_MALFORMED + tag.FrameID)
 
     def test_ufid_tag_checks(self):
-        ufid_tag = mutagen.id3.UFID(owner="bad", data="bad")
+        ufid_tag = mutagen.id3.UFID(owner="bad", data=b"bad") #MAKE SURE THAT DATA IS A BYTE SEQUENCE
         self.au_file.mutagen_id3.add(ufid_tag)
         self.assertTagError(checker.ERROR_TAG_MISSING_REQUIRED + "UFID")
 
@@ -186,4 +186,4 @@ if __name__ == "__main__":
     unittest.main()
 
 
-        
+

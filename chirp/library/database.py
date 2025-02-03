@@ -95,7 +95,10 @@ def _get_tags(conn, au_file, cutoff_timestamp):
             max_timestamp = this_timestamp
         elif max_timestamp != this_timestamp:
             break
-        tag = eval(this_repr, mutagen.id3.__dict__, {})
+        #TODO: parse mutagen_repr for its arguments and call mutagen directly
+        #TODO: do not call eval, it is slowing down nml writer (see prof.txt)
+        this_repr = this_repr.replace("data='", "data=b'")
+        tag = eval(this_repr.encode(), mutagen.id3.__dict__, {})
         au_file.mutagen_id3.add(tag)
     # max_timestamp is None if and only if we didn't find any
     # matching rows.

@@ -255,14 +255,13 @@ def scan(path, _read_id3_hook=None):
     """
     au_file = AudioFile()
     au_file.path = path
-    au_file.mutagen_id3 = (_read_id3_hook or _get_mp3)(path)
+    au_file.mutagen_id3 = mutagen.id3.ID3(path)
+
     if au_file.mutagen_id3 is None:
         return None
 
-    file_obj = open(path, "rb")
-    try:
+    with open(path, "rb") as file_obj: 
         analyzer.analyze(file_obj, au_file)
-    finally:
-        file_obj.close()
 
     return au_file
+

@@ -161,7 +161,7 @@ def write_file(au_file, prefix):
         raise ImportFileError(["File exists: " + path])
     au_file.mutagen_id3.save(path)
     assert au_file.payload is not None
-    out_fh = open(path, "a")
+    out_fh = open(path, "ab")
     out_fh.write(au_file.payload)
     out_fh.close()
 

@@ -12,18 +12,22 @@ import mutagen.id3
 
 
 def _create_text_frame(frame_tag, value):
+    if isinstance(frame_tag, str):
+        frame_tag = frame_tag.encode()
     assert len(frame_tag) == 4
-    assert frame_tag[0] == "T"
-    value_encoded = value.encode("utf-8")
+    assert frame_tag[0] == b"T"[0]
+    value_encoded = value
+    if isinstance(value, str):
+      value_encoded = value.encode("utf-8")
     # We add two to the length of the encoded string to account for
     # the encoding byte and the null termination.
     size_str = mutagen.id3.BitPaddedInt.to_str(len(value_encoded)+2, width=4)
-    return "".join([frame_tag,
+    return b"".join([frame_tag,
                     size_str,
-                    "\0\0",  # Flags are all 0
-                    "\x03",  # 3 = utf-8 encoding
+                    b"\0\0",  # Flags are all 0
+                    b"\x03",  # 3 = utf-8 encoding
                     value_encoded,
-                    "\0",  # The utf-8 string must be null-terminated
+                    b"\0",  # The utf-8 string must be null-terminated
                     ]
                    )
 
@@ -40,9 +44,10 @@ def create(tag_list):
       A string containing an ID3v2.4 tag that encoded the passed-in tags.
     """
     assert len(tag_list) > 0
-    all_frames = "".join(_create_text_frame(tag, value)
+    all_frames = b"".join(_create_text_frame((lambda x: x.encode() if isinstance(x, str) else x)(tag),
+                                            value)
                          for tag, value in tag_list)
-    return "".join(["ID3\x04\0\0",  # Always create v2.4 frames with flags=0
+    return b"".join([b"ID3\x04\0\0",  # Always create v2.4 frames with flags=0
                     mutagen.id3.BitPaddedInt.to_str(len(all_frames), width=4),
                     all_frames,
                     ])
@@ -63,11 +68,13 @@ def parse_size(data, offset=0):
       An integer containing the size of the ID3 frame, as extracted from
       the ID3 header.  If no valid header is found, None is returned.
     """
+    if isinstance(data, str):
+      data = data.encode()
     if len(data) < offset + 10:
         return None
     id3, vmaj, unused_vrev, unused_flags, raw_size = struct.unpack_from(
-        ">3sBBB4s", data, offset=offset)
-    if id3 == "ID3" and 2 <= vmaj <= 4:
+        b">3sBBB4s", data, offset=offset)
+    if id3 == b"ID3" and 2 <= vmaj <= 4:
         size = mutagen.id3.BitPaddedInt(raw_size)
         # Skip ID3 tags that claim to have size 0.
         if size > 0:
@@ -88,8 +95,9 @@ def find_size(data):
         offset.  Otherwise a frame of size "size" (in bytes) begins at
         the given offset.
     """
+    if isinstance(data, str):
+        data = data.encode()
     i = data.find(b"ID3")
-
     if i == -1:
         if data.endswith(b"I"):
             return None, len(data)-1
@@ -121,5 +129,5 @@ def create_test_header(size):
     """
     flags = 0  # Just 0 for now
     encoded_size = mutagen.id3.BitPaddedInt.to_str(size, width=4)
-    return struct.pack(">3sBBB4s", "ID3", 4, 0, flags, encoded_size)
+    return struct.pack(b">3sBBB4s", b"ID3", 4, 0, flags, encoded_size)
 

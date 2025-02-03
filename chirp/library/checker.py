@@ -130,7 +130,7 @@ def find_tags_errors(au_file):
     this_ufid = au_file.mutagen_id3.get(constants.MUTAGEN_UFID_KEY)
     if this_ufid:
         try:
-            vol, ts, fp = ufid.parse(this_ufid.data)
+            vol, ts, fp = ufid.parse(this_ufid.data.decode())
             if au_file.volume != vol:
                 errors.append(ERROR_UFID_BAD_VOLUME)
             if au_file.import_timestamp != ts:
@@ -142,7 +142,7 @@ def find_tags_errors(au_file):
 
     # We made it!  Return the list of errors.
     return errors
-    
-    
 
-    
+
+
+

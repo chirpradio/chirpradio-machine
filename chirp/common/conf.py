@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.getcwd()))
 
 try:
     from settings import *
-    from settings_local import *
+    #from settings_local import *
 except ImportError as exc:
     sys.stderr.write(
             '** Trying to import settings.py or settings_local.py in %s\n'

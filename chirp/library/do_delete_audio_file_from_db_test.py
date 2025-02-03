@@ -1,7 +1,7 @@
 import os
 import time
 import unittest
-from mock import patch
+from unittest.mock import patch
 
 from chirp.library import audio_file_test
 from chirp.library import do_delete_audio_file_from_db
