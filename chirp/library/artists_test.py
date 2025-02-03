@@ -26,8 +26,7 @@ Tom Petty and his heartbreakers SEP Tom Petty & the Heartbreakers
 
 
 def _unicode_stringio(text):
-    return codecs.iterdecode(io.StringIO(text.encode("utf-8")),
-                             "utf-8")
+    return io.StringIO(text)
 
 
 class ArtistsTest(unittest.TestCase):
