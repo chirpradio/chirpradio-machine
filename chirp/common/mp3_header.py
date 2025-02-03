@@ -204,7 +204,7 @@ def find(data, expected_hdr=None):
     i = 0
     len_data = len(data)
     while i < len_data:
-        i = data.find('\xff', i)
+        i = data.find(b'\xff', i)
         # No frame synch byte found
         if i == -1:
             return None, len_data

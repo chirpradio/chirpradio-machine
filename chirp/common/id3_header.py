@@ -88,14 +88,17 @@ def find_size(data):
         offset.  Otherwise a frame of size "size" (in bytes) begins at
         the given offset.
     """
-    i = data.find("ID3")
+    i = data.find(b"ID3")
+
     if i == -1:
-        if data.endswith("I"):
+        if data.endswith(b"I"):
             return None, len(data)-1
-        elif data.endswith("ID"):
+        elif data.endswith(b"ID"):
             return None, len(data)-2
         else:
             return None, len(data)
+
+
     if len(data) < i + 10:
         return None, i
     size = parse_size(data, offset=i)

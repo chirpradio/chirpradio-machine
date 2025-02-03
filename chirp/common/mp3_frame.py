@@ -35,9 +35,12 @@ def split(file_obj, expected_hdr=None):
                 break
             yield block
 
+
     for hdr, data_buffer in split_blocks(block_generator(),
                                          expected_hdr=expected_hdr):
         yield hdr, data_buffer
+    
+    
 
 
 def split_blocks(block_iter, expected_hdr=None):
@@ -55,7 +58,7 @@ def split_blocks(block_iter, expected_hdr=None):
       was found inside the stream.  Otherwise 'hdr' is an MP3Header object
       and 'data_buffer' contains the MP3 frame.
     """
-    buffered = ''
+    buffered = b''
     current_hdr = None
     at_end_of_stream = False
     to_be_skipped = 0
@@ -87,13 +90,14 @@ def split_blocks(block_iter, expected_hdr=None):
                 yield None, buffered[:to_be_skipped]
                 buffered = buffered[to_be_skipped:]
                 to_be_skipped = 0
+        
 
         # We try to have at least _READ_SIZE bytes of data buffered.
         if len(buffered) < _READ_SIZE:
             # To avoid excess string copies, we collect data in a list
             # until we have the desired amount, then concatenate it all
             # at the end.
-            buffered_list = [ buffered ]
+            buffered_list = [ buffered]
             buffered_size = len(buffered)
             while buffered_size < _READ_SIZE:
                 try:
@@ -103,7 +107,12 @@ def split_blocks(block_iter, expected_hdr=None):
                     break
                 buffered_list.append(next_block)
                 buffered_size += len(next_block)
-            buffered = ''.join(buffered_list)
+
+            for i, item in enumerate(buffered_list):
+                if isinstance(item, str):
+                    buffered_list[i] = item.encode()  # Convert str to bytes
+                buffered = b''.join(buffered_list)
+
 
         # Are we at the end of the file?  If so, break out of the
         # "while True:" loop
@@ -113,7 +122,7 @@ def split_blocks(block_iter, expected_hdr=None):
         # Do we have an MP3 header?  If so, yield the frame and then
         # slice it off of our buffer.
         if current_hdr:
-            current_frame = buffered[:current_hdr.frame_size]
+            current_frame = buffered[:int(current_hdr.frame_size)]
             # If we found a full-length frame, yield it.  Otherwise
             # return the truncated frame as junk.  (We can be sure not
             # to throw away a valid frame since we buffer at least the

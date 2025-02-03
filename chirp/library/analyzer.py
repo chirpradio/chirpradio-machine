@@ -46,6 +46,7 @@ def analyze(file_obj, au_file, compute_fingerprint=True, get_payload=True):
     first_bit_rate_kbps = None
     is_vbr = False
 
+
     for hdr, data_buffer in mp3_frame.split(file_obj):
         if hdr is None:
             continue
@@ -85,6 +86,7 @@ def analyze(file_obj, au_file, compute_fingerprint=True, get_payload=True):
             # You'd think that this would be constant, but MP3s
             # encountered in the wild prove otherwise.
             expected_hdr.protected = None
+
 
     if au_file.frame_count < _MINIMUM_FRAMES:
         raise InvalidFileError("Found only %d MPEG frames"

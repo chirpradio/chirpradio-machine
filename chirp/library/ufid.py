@@ -41,7 +41,7 @@ def ufid(volume, import_timestamp, fingerprint):
     Returns:
       A string containing a UFID.
     """
-    return ufid_prefix(volume, import_timestamp) + fingerprint
+    return ufid_prefix(volume, import_timestamp).encode() + fingerprint.encode()
 
 
 def ufid_tag(volume, import_timestamp, fingerprint):
@@ -71,7 +71,7 @@ def parse(ufid_str):
     Raises:
       ValueError: if ufid_str is invalid.
     """
-    match = _UFID_RE.match(ufid_str)
+    match = _UFID_RE.match(ufid_str.decode())
     if match:
         vol = int(match.group(1), 16)
         ts = timestamp.parse_human_readable(match.group(2))

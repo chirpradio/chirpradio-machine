@@ -259,7 +259,7 @@ def scan(path, _read_id3_hook=None):
     if au_file.mutagen_id3 is None:
         return None
 
-    file_obj = open(path)
+    file_obj = open(path, "rb")
     try:
         analyzer.analyze(file_obj, au_file)
     finally:
