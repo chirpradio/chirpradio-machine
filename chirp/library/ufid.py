@@ -66,7 +66,7 @@ def parse(ufid_str):
     """Extract information from a UFID string.
 
     Args:
-      ufid_str: A string, probably produced by a prior call to ufid()
+      ufid_str: A byte string, probably produced by a prior call to ufid()
 
     Returns:
       A (volume number, deposit timestamp, fingerprint) 3-tuple.
