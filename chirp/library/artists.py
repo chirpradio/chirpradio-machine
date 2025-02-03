@@ -231,13 +231,16 @@ def split_and_standardize(artist_name):
     return best_head, best_tail
 
 
-def suggest(name):
+def suggest(name, whitelist = None):
     canon_name = similarity.canonicalize_string(name)
-    _global_lock.acquire()
-    try:
-        canon_whitelist = list(_global_whitelist)
-    finally:
-        _global_lock.release()
+    if whitelist:
+        canon_whitelist = whitelist
+    else:
+        _global_lock.acquire()
+        try:
+            canon_whitelist = list(_global_whitelist)
+        finally:
+            _global_lock.release()
     best_guess = None
     # We ignore any items that are more than 10 edits away from our
     # original name.
