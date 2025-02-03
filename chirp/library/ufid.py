@@ -26,6 +26,7 @@ def ufid_prefix(volume, import_timestamp):
     Returns:
       The leading substring of all UFIDs with the given volume and timestamp.
     """
+    #TODO: See if this needs to be encoded
     return "vol%02x/%s/" % (volume,
                             timestamp.get_human_readable(import_timestamp))
 
@@ -39,9 +40,11 @@ def ufid(volume, import_timestamp, fingerprint):
       fingerprint: A string containing a fingerprint
 
     Returns:
-      A string containing a UFID.
+      A string containing a UFID encoded to a UTF-8 byte sequence.
     """
-    return ufid_prefix(volume, import_timestamp) + fingerprint
+
+    return (ufid_prefix(volume, import_timestamp) + fingerprint).encode()
+
 
 
 def ufid_tag(volume, import_timestamp, fingerprint):
@@ -56,15 +59,15 @@ def ufid_tag(volume, import_timestamp, fingerprint):
       A populated mutagen.id3.UFID instance. Its data is stored as bytes.
     """
     return mutagen.id3.UFID(owner=constants.UFID_OWNER_IDENTIFIER,
-                            data=ufid(volume, import_timestamp, fingerprint).encode())
-    
+                            data=ufid(volume, import_timestamp, fingerprint))
+
 
 def parse(ufid_str):
     """Extract information from a UFID string.
-    
+
     Args:
       ufid_str: A string, probably produced by a prior call to ufid()
-      
+
     Returns:
       A (volume number, deposit timestamp, fingerprint) 3-tuple.
 
@@ -79,4 +82,4 @@ def parse(ufid_str):
         if vol > 0 and timestamp.is_valid(ts) and fingerprint.is_valid(fp):
             return vol, ts, fp
     raise ValueError("Bad UFID string \"%s\"" % ufid_str)
-                              
+
