@@ -10,7 +10,12 @@ class CustomInput():
     def __init__(self):
         self.input = self.default_input
 
-    def __call__(self, choices: list[str] = None, allow_custom: bool = True):
+    def __call__(self, prompt: str, choices: list[str] = None, allow_custom: bool = True):
+        if not isinstance(prompt, str):
+            raise Exception("Must have prompt")
+        
+        cprint(prompt)
+
         if not choices:
             choices = ["yes", "no"]
             allow_custom = False
@@ -30,4 +35,4 @@ class CustomInput():
 cinput = CustomInput()
 
 if __name__ == "__main__":
-    cprint( cinput(["hey", "HI"], False))
+    cprint( cinput("Hello?", ["hey", "HI"], False))
