@@ -79,11 +79,21 @@ class NMLWriter2(object):
         self._overwrite_fh.write(_NML_PREFIX % 0)
         self._all_entries = []
     
-    # modify audio file
+    # def modify audio file
+        # takes a specific audio file fingerprint
+        # search for it in the NML file
+        # edit its relevant entries
+
+    # def append new files
+        # call get_timestamp
+        # query all audio files that have been modified since this timestamp
+        # if the file already exists, modify it
+        # else if it doesn't, append it to the end
     
     def get_timestamp(self):
         # actually just gets first song title right now to see if parsing works
         root = self._tree.getroot()
+        # this one we can probably just call tree.find on
         return root.tag
 
 class NMLWriter(object):
