@@ -6,6 +6,8 @@ NML version 11, which is used by Traktor Pro.
 
 import time
 import xml.sax.saxutils
+# from what I've found, lxml might be faster depending on usage; might be worth trying
+import xml.etree.ElementTree as ET
 
 from chirp.common import timestamp
 from chirp.common import unicode_util
@@ -49,6 +51,40 @@ _NML_SUFFIX = """</COLLECTION>
 def _traktor_path_quote(path):
     return path.replace("/", "/:")
 
+
+class NMLWriter2(object):
+    """Generates an NML file for a collection of AudioFile objects with optimizations to reduce writing."""
+
+    def __init__(self, file_volume, root_dir, overwrite_fh):
+        """Constructor.
+
+        Args:
+          file_volume: The SMB-style file volume containing the files.
+            This volume will need to be visible to the PC running Traktor
+            that the NML file will ultimately be used from.
+          root_dir: The root directory of the library, as seen by the
+            machine that is running Traktor.
+          overwrite_fh: The file handle to write to. It can optionally
+            be a previous NML file to minimize writes.
+        """
+        self.num_entries = 0
+        self._file_volume = file_volume
+        self._file_volume_quoted = _traktor_path_quote(file_volume)
+        self._root_dir = root_dir
+        self._overwrite_fh = overwrite_fh
+        self._tree = ET.parse(overwrite_fh)
+        # Make sure we are at the beginning of the file.
+        # self._overwrite_fh.seek(0)
+        # Write out a prefix for 0 entries.
+        self._overwrite_fh.write(_NML_PREFIX % 0)
+        self._all_entries = []
+    
+    # modify audio file
+    
+    def get_timestamp(self):
+        # actually just gets first song title right now to see if parsing works
+        root = self._tree.getroot()
+        return root.tag
 
 class NMLWriter(object):
     """Generates an NML file for a collection of AudioFile objects."""
