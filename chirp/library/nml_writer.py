@@ -12,8 +12,8 @@ import xml.etree.ElementTree as ET
 from chirp.common import timestamp
 from chirp.common import unicode_util
 from chirp.library import artists
-from chirp.library import order
-
+from chirp.library import order, database
+from chirp.common.conf import LIBRARY_DB
 
 _UNKNOWN_ARTIST = "* Artist Not Known *"
 _UNKNOWN_ALBUM = "* Album Not Known *"
@@ -72,29 +72,62 @@ class NMLWriter2(object):
         self._file_volume_quoted = _traktor_path_quote(file_volume)
         self._root_dir = root_dir
         self._overwrite_fh = overwrite_fh
-        self._tree = ET.parse(overwrite_fh)
+        self._et_tree = ET.parse(overwrite_fh)
         # Make sure we are at the beginning of the file.
         # self._overwrite_fh.seek(0)
         # Write out a prefix for 0 entries.
-        self._overwrite_fh.write(_NML_PREFIX % 0)
+        # self._overwrite_fh.write(_NML_PREFIX % 0)
         self._all_entries = []
     
-    # def modify audio file
-        # takes a specific audio file fingerprint
-        # search for it in the NML file
-        # edit its relevant entries
+    def _get_timestamp(self):
+        for playlist in self._et_tree.iter("PLAYLIST"):
+            timestamp = playlist.get("UUID")
+            if timestamp is not None:
+                return timestamp
 
-    # def append new files
-        # call get_timestamp
+    # def modify audio file
+    def _modify_nml_entry(self, entry):
+        # TODO: this whole function. I'm not sure what attributes in the nml file we are modifying
+        pass
+
+    def _au_file_to_nml_entry(au_file):
+        # TODO: this whole function. Construct an "ENTRY" node in the NML format based on the given au_file
+        pass
+
+    def add_new_files(self):
+        timestamp = self._get_timestamp()
         # query all audio files that have been modified since this timestamp
-        # if the file already exists, modify it
-        # else if it doesn't, append it to the end
-    
-    def get_timestamp(self):
-        # actually just gets first song title right now to see if parsing works
-        root = self._tree.getroot()
-        # this one we can probably just call tree.find on
-        return root.tag
+        db = database.Database(LIBRARY_DB)
+        # TODO: create a function, probably in database.py, that returns an iterator
+            # over all fingerprints in the new table that have a modified timestamp greater
+            # than the given value
+        new_audio_files = None # this will probably be an iterator/generator over audio file objects
+
+        # The plan is to loop through all audio files in the NML file and for each,
+        # check if its fingerprint exists in the new_audio_files list. If it does, then modify its entry with the new data.
+        # This should be faster if we store the fingerprints in a set or dict.
+        # For now, I'm going with a set, but if we need to access the audio file object, a hash would be better.
+        # I'm concerned that this might be a memory issue since there are a lot of audio files,
+        # but I think the original writer has all files in the whole db in memory at a time so it's probably fine
+        new_fingerprints_set = {}
+        for au_file in new_audio_files:
+            new_fingerprints_set.add(au_file.fingerprint)
+        
+        collection = self._et_tree.find("COLLECTION") # this might fail and might require use of iter instead of find; haven't tested
+        if collection is not None:
+            for location in collection.iter("LOCATION"):
+                file_name = location.get("FILE")
+                if file_name is None:
+                    continue
+                fingerprint = file_name.split(".")[0]
+                if fingerprint in new_fingerprints_set:
+                    self._modify_nml_entry(location) # TODO: decide what value to pass in instead of location. It depends on what attributes we want to modify
+                    new_fingerprints_set.remove(fingerprint)
+        
+        # TODO: If any fingerprints are still in the set, it means they are brand new,
+        # so we will append them to the end. Maybe sort them so album order is maintained
+        entries_to_append = map(NMLWriter2._au_file_to_nml_entry, new_fingerprints_set)
+        collection.extend(entries_to_append)
 
 class NMLWriter(object):
     """Generates an NML file for a collection of AudioFile objects."""
