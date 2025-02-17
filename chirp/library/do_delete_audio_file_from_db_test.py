@@ -41,8 +41,6 @@ class DeleteFingerprintTest(unittest.TestCase):
         # SETUP
         test_fingerprint = "0000000000000007"
 
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
         self._add_test_audiofiles()
 
         # make sure 10 records exist
@@ -71,8 +69,6 @@ class DeleteFingerprintTest(unittest.TestCase):
         test_fingerprint_1 = "0000000000000005"
         test_fingerprint_2 = "0000000000000007"
 
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
         self._add_test_audiofiles()
 
         # make sure 10 records exist
@@ -105,8 +101,6 @@ class DeleteFingerprintTest(unittest.TestCase):
         # SETUP
         test_fingerprint_1 = "0000000000000020"
 
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
         self._add_test_audiofiles()
 
         # make sure 10 records exist
@@ -126,8 +120,6 @@ class DeleteFingerprintTest(unittest.TestCase):
         # SETUP
         test_fingerprint_1 = "0000000000000007"
 
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
         self._add_test_audiofiles()
 
         # make sure 10 records exist
@@ -150,8 +142,6 @@ class DeleteFingerprintTest(unittest.TestCase):
         # SETUP
         test_fingerprint = "0000000000000007"
 
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
         self._add_test_audiofiles()
 
         afm = do_delete_audio_file_from_db.AudioFileManager(
@@ -169,8 +159,6 @@ class DeleteFingerprintTest(unittest.TestCase):
         # SETUP
         test_fingerprint_1 = "0000000000000020"
 
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
         self._add_test_audiofiles()
 
         afm = do_delete_audio_file_from_db.AudioFileManager(
@@ -187,8 +175,6 @@ class DeleteFingerprintTest(unittest.TestCase):
         # SETUP
         test_fingerprint_1 = "0000000000000005"
 
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
         self._add_test_audiofiles()
 
         afm = do_delete_audio_file_from_db.AudioFileManager(
@@ -207,8 +193,6 @@ class DeleteFingerprintTest(unittest.TestCase):
         # SETUP
         test_fingerprint_1 = "0000000000000020"
 
-        # Create db tables
-        self.assertTrue(self.db.create_tables())
         self._add_test_audiofiles()
 
         afm = do_delete_audio_file_from_db.AudioFileManager(

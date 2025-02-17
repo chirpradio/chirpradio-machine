@@ -195,22 +195,6 @@ class Database(object):
         cprint("Migrated successfully.")
         return True
 
-    def create_tables(self):
-        """Create a new set of database tables.
-
-        Returns:
-          True if the operation succeeds, False otherwise.
-        """
-        conn = self._get_connection()
-        try:
-            conn.execute(schema.create_audio_files_table)
-            conn.execute(schema.create_audio_files_index)
-            conn.execute(schema.create_id3_tags_table)
-            conn.execute(schema.create_id3_tags_index)
-        except sqlite3.OperationalError as ex:
-            return False
-        return True
-
     def get_all(self):
         """Returns a generator over all audio files in the library.
 

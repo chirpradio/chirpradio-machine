@@ -30,19 +30,9 @@ class DatabaseTest(unittest.TestCase):
         for key in dict_a:
             self.assertEqual(dict_a[key], dict_b[key])
 
-    def test_create_tables(self):
-        # Should succeed the first time.
-        self.assertTrue(self.db.create_tables())
-        # Should fail second time.
-        self.assertFalse(self.db.create_tables())
-        # Should start out empty.
-        self.assertEqual([], list(self.db.get_all()))
-
     def test_add(self):
         all_au_files = [audio_file_test.get_test_audio_file(i)
                         for i in range(1000)]
-
-        self.assertTrue(self.db.create_tables())
 
         test_volume = 17
         test_import_timestamp = 1230959520
@@ -97,8 +87,6 @@ class DatabaseTest(unittest.TestCase):
             self.assertEqual(au_file, fetched_au_file)
 
     def test_update(self):
-        self.assertTrue(self.db.create_tables())
-
         test_au_file = audio_file_test.get_test_audio_file(123)
         test_au_file.volume = None
         test_au_file.import_timestamp = None
