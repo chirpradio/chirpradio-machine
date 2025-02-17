@@ -3,7 +3,7 @@
 This API is designed to be extremely simple.  The only supported
 operations are:
 
-  * Create the database tables (Database.create_tables)
+  * Migrate the database tables (Database.auto_migrate, Database.migrate)
   * Walk across all all audio files (Database.get_all)
   * Get a list of all valid imports (Database.get_all_imports)
   * Get all audio files that were part of a particular import
