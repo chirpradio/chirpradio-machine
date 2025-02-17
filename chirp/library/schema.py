@@ -11,6 +11,7 @@ import re
 from chirp.common import mp3_header
 from chirp.library import audio_file
 
+# Schema version 0 (legacy tables)
 
 create_audio_files_table = """
 CREATE TABLE audio_files (
@@ -49,6 +50,27 @@ create_id3_tags_index = """
 CREATE INDEX id3_tags_index_fingerprint
 ON id3_tags ( fingerprint, timestamp DESC )
 """
+
+# Schema version 1
+
+# List of database migrations to run when creating the database.
+# Each item in this list is a list of SQLite queries to run to migrate
+# to a new version of the database. The version number is saved in
+# the SQLite user_version pragma.
+MIGRATIONS = [
+        [create_audio_files_table,
+         create_audio_files_index,
+         create_id3_tags_table,
+         create_id3_tags_index]] # schema version 0 (original)
+LATEST_VERSION = len(MIGRATIONS) - 1
+
+# Names of legacy (unversioned) tables to check for;
+# if these do not exist, migration will start at schema version 0.
+# If these do exist, migration will start at schema version 1.
+LEGACY_TABLES = ["id3_tags", "audio_files"]
+
+# Application ID to use in the sqlite3 header.
+APPLICATION_ID = int.from_bytes(b"CHRP")
 
 
 def audio_file_to_tuple(au_file):

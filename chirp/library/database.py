@@ -29,8 +29,11 @@ import sqlite3
 import mutagen.id3
 
 from chirp.common import timestamp
+from chirp.common.printing import cprint
 from chirp.library import audio_file
 from chirp.library import schema
+from os.path import exists, join, basename, dirname
+from shutil import copyfile
 
 
 def _insert(target, table_name, insert_tuple):
@@ -130,10 +133,66 @@ class Database(object):
         # All database reads use this shared connection.  Each transaction
         # writes via its own private connection.
         self._shared_conn = self._get_connection()
+        # Get the CHIRP database version.
+        self._user_version = self._shared_conn.execute("PRAGMA user_version;").fetchone()[0]
+        # If the database version is 0,
+        # this is either a newly-created database or
+        # an unmigrated (old) database.
+        if self._user_version == 0:
+            # Check if the CHIRP tables already exist; if so,
+            # skip initial table creation.
+            legacy_table_count = 0
+            for table in schema.LEGACY_TABLES:
+                cursor = self._shared_conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='%s';" % table)
+                if cursor.fetchone(): legacy_table_count += 1
+            if legacy_table_count == len(schema.LEGACY_TABLES):
+                self.migrate(0)
+            else:
+                # recreate original tables
+                self.migrate(-1)
+        # Otherwise, migrate only if the schema version is outdated.
+        elif self._user_version != schema.LATEST_VERSION:
+            self.migrate(self._user_version)
+
 
     def _get_connection(self):
         """Construct a new database connection."""
         return sqlite3.connect(self._name)
+
+    def migrate(self, from_version):
+        """Migrate the database schema from an old version
+        to the newest version.
+
+        Args:
+          from_version: An integer specifying the current
+          version of the database schema (PRAGMA user_version).
+
+        Returns:
+          True if the operation succeeds, False otherwise.
+        """
+        conn = self._get_connection()
+        cprint("Migrating database from version %s to version %s" %
+               (from_version, schema.LATEST_VERSION))
+        # Backup old version, if applicable.
+        if from_version != -1:
+            if exists(self._name):
+                cprint("Backing up old database...")
+                copyfile(self._name, join(dirname(self._name),
+                                          "OLD_VERSION_%s_%s" %
+                                          (from_version,
+                                           basename(self._name))))
+        cprint("Running migration...")
+        try:
+            migrations = schema.MIGRATIONS[from_version + 1:]
+            for migration in migrations:
+                for query in migration: conn.execute(query)
+        except sqlite3.OperationalError as ex:
+            return False
+        conn.execute("PRAGMA application_id = %s;" % schema.APPLICATION_ID)
+        conn.execute("PRAGMA user_version = %s;" % schema.LATEST_VERSION)
+        self._user_version = schema.LATEST_VERSION
+        cprint("Migrated successfully.")
+        return True
 
     def create_tables(self):
         """Create a new set of database tables.
