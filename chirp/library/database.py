@@ -123,7 +123,7 @@ def _audio_file_generator(conn, sql):
 class Database(object):
     """Abstract database access for the music library."""
 
-    def __init__(self, name):
+    def __init__(self, name, auto_migrate=True):
         """Constructor.
 
         Args:
@@ -135,10 +135,22 @@ class Database(object):
         self._shared_conn = self._get_connection()
         # Get the CHIRP database version.
         self._user_version = self._shared_conn.execute("PRAGMA user_version;").fetchone()[0]
-        # If the database version is 0,
-        # this is either a newly-created database or
-        # an unmigrated (old) database.
+        if auto_migrate: self.auto_migrate()
+
+    def close(self):
+        self = None
+
+    def _get_connection(self):
+        """Construct a new database connection."""
+        return sqlite3.connect(self._name)
+
+    def auto_migrate(self):
+        """Determine whether the database schema is outdated.
+        If so, migrate to the newest version. Otherwise, do nothing"""
         if self._user_version == 0:
+            # If the database version is 0,
+            # this is either a newly-created database or
+            # an unmigrated (old) database.
             # Check if the CHIRP tables already exist; if so,
             # skip initial table creation.
             legacy_table_count = 0
@@ -153,11 +165,6 @@ class Database(object):
         # Otherwise, migrate only if the schema version is outdated.
         elif self._user_version != schema.LATEST_VERSION:
             self.migrate(self._user_version)
-
-
-    def _get_connection(self):
-        """Construct a new database connection."""
-        return sqlite3.connect(self._name)
 
     def migrate(self, from_version):
         """Migrate the database schema from an old version
@@ -301,6 +308,7 @@ class _AddTransaction(object):
         """
         assert self._conn is not None
         self._conn.commit()
+        self._conn.close()
         self._conn = None
 
     def revert(self):
@@ -311,4 +319,5 @@ class _AddTransaction(object):
         """
         assert self._conn is not None
         self._conn.rollback()
+        self._conn.close()
         self._conn = None
