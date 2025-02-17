@@ -53,6 +53,29 @@ ON id3_tags ( fingerprint, timestamp DESC )
 
 # Schema version 1
 
+enable_foreign_keys = """
+PRAGMA foreign_keys = ON;
+"""
+
+create_last_modified = """
+CREATE TABLE last_modified (
+    fingerprint TEXT UNIQUE,           /* fingerprint of corresponding file */
+    modified_timestamp INTEGER,        /* seconds since the epoch,
+                                          time the metadata was last modified */
+    FOREIGN KEY(fingerprint) REFERENCES audio_files(fingerprint)
+)
+"""
+
+create_last_modified_index = """
+CREATE UNIQUE INDEX last_modified_index_fingerprint
+ON last_modified ( fingerprint )
+"""
+
+populate_last_modified = """
+INSERT INTO last_modified (fingerprint, modified_timestamp)
+    SELECT fingerprint, import_timestamp FROM audio_files;
+"""
+
 # List of database migrations to run when creating the database.
 # Each item in this list is a list of SQLite queries to run to migrate
 # to a new version of the database. The version number is saved in
@@ -61,7 +84,11 @@ MIGRATIONS = [
         [create_audio_files_table,
          create_audio_files_index,
          create_id3_tags_table,
-         create_id3_tags_index]] # schema version 0 (original)
+         create_id3_tags_index], # schema version 0 (original)
+        [enable_foreign_keys,
+         create_last_modified,
+         create_last_modified_index,
+         populate_last_modified]] # schema version 1 (adds last_modified table)
 LATEST_VERSION = len(MIGRATIONS) - 1
 
 # Names of legacy (unversioned) tables to check for;
