@@ -4,35 +4,46 @@ class CustomInput():
     """
     Defines a callable object that works similarly to input.
     Allows specification of different input methods for
-    command line and web interface
+    the command line interface and web interface
     """
 
     def __init__(self):
         self.input = self.default_input
 
-    def __call__(self, prompt: str, choices: list[str] = None, allow_custom: bool = True):
-        if not isinstance(prompt, str):
-            raise Exception("Must have prompt")
-        
+    def __call__(self, prompt: str, choices: list[str], allow_custom: bool = True):
+        return self.input(prompt, choices, allow_custom)
+    
+    def default_input(self, prompt, choices: list[str], allow_custom: bool) -> str:
+        """
+        Prints the prompt, then the list of choices enumerated
+        User types the number assigned to a choice to select it
+        If allow_custon, user is allowed to give custom input
+        Returns string corresponding to user's choice
+        """
         cprint(prompt)
 
-        if not choices:
-            choices = ["yes", "no"]
-            allow_custom = False
         index = 1
         for choice in choices:
             cprint(f"{index}. {choice}")
             index += 1
         if allow_custom:
             cprint(f"{index}. [custom input]")
-        return self.input()
-    
-    def default_input(self):
-        return input()
 
+        while True:
+            inp = input()
+            if inp.isdigit():
+                inp = int(inp)
+                if inp in range(1, len(choices) + 1):
+                    cprint(f"Continuing with \'{choices[inp-1]}\'")
+                    return choices[inp - 1]
+                elif allow_custom and inp == len(choices) + 1:
+                    ci = input("[type custom input here]: ")
+                    cprint(f"Continuing with \'{ci}\'")
+                    return ci
+            cprint(f"Please type a number between 1 and {len(choices) + allow_custom}")
 
 
 cinput = CustomInput()
 
 if __name__ == "__main__":
-    cprint( cinput("Hello?", ["hey", "HI"], False))
+    cprint(cinput("Hello?", ["aaa"], True))
