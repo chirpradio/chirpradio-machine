@@ -191,6 +191,7 @@ class Database(object):
         conn.execute("PRAGMA application_id = %s;" % schema.APPLICATION_ID)
         conn.execute("PRAGMA user_version = %s;" % schema.LATEST_VERSION)
         self._user_version = schema.LATEST_VERSION
+        conn.commit()
         cprint("Migrated successfully.")
         return True
 
