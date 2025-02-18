@@ -104,7 +104,7 @@ def _standardize(artist_name, whitelist, mappings):
 
     if std:
         bp_inpt = input.cinput.__call__(f"Correct {artist_name} to {std}", ["Yes (default)","No"],allow_custom=False)
-        if(bp_inpt != "2"): #Breakpoint passed
+        if(bp_inpt != "No"): #Breakpoint passed
           return std
     # Since that didn't work, we now try to find a corresponding item
     # in the whitelist by shuffling the order of the words.
@@ -116,7 +116,7 @@ def _standardize(artist_name, whitelist, mappings):
         std = _standardize_simple(" ".join(parts), whitelist, mappings)
         if std:
           bp_inpt = input.cinput.__call__(f"Correct {artist_name} to {std}", ["Yes (default)","No"],allow_custom=False)
-          if(bp_inpt != "2"): #Breakpoint passed
+          if(bp_inpt != "No"): #Breakpoint passed
             return std
     # Try swapping the first two words.
     # This handles cases like "Cave, Nick & the Bad Seeds" ->
@@ -127,7 +127,7 @@ def _standardize(artist_name, whitelist, mappings):
         std = _standardize_simple(" ".join(parts), whitelist, mappings)
         if std:
           bp_inpt = input.cinput.__call__(f"Correct {artist_name} to {std}", ["Yes (default)","No"],allow_custom=False)
-          if(bp_inpt != "2"): #Breakpoint passed
+          if(bp_inpt != "No"): #Breakpoint passed
             return std
     # Nothing worked, so we just return None.
     return None
