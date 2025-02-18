@@ -44,6 +44,12 @@ class NMLWriterTest(unittest.TestCase):
     #         writer = nml_writer.NMLWriter2("test_file_volume", "/lib", output2)
     #         print(writer.get_timestamp())
 
+    # def test_write2(self):
+    #     nml_file = os.path.join(os.getcwd(), 'output.nml')
+    #     with codecs.open(nml_file, "r+", "utf-8") as output2:
+    #         writer = nml_writer.NMLWriter2("test_file_volume", "/lib", output2)
+    #         writer.test_write()
+
 
 if __name__ == "__main__":
     unittest.main()

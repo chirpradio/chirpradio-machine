@@ -85,14 +85,126 @@ class NMLWriter2(object):
             if timestamp is not None:
                 return timestamp
 
-    # def modify audio file
-    def _modify_nml_entry(self, entry):
-        # TODO: this whole function. I'm not sure what attributes in the nml file we are modifying
-        pass
+    def _au_file_to_nml_entry(self, au_file):
+        entry_data = {}
 
-    def _au_file_to_nml_entry(au_file):
-        # TODO: this whole function. Construct an "ENTRY" node in the NML format based on the given au_file
-        pass
+        entry_data["order_num"], entry_data["total_num"] = order.decode(
+            str(au_file.mutagen_id3.get("TRCK")))
+        if entry_data["total_num"] is None:
+            entry_data["total_num"] = 100
+
+        entry_data["artist"] = unicode_util.simplify(
+            au_file.mutagen_id3.get("TPE1", _UNKNOWN_ARTIST))
+        entry_data["album"] = unicode_util.simplify(
+            au_file.mutagen_id3.get("TALB", _UNKNOWN_ALBUM))
+        entry_data["song"] = unicode_util.simplify(
+            au_file.mutagen_id3.get("TIT2", _UNKNOWN_SONG))
+        
+        # TODO(trow): Set this somehow.
+        entry_data["genre"] = "Unknown"
+
+        entry_data["dir"] = _traktor_path_quote(
+            au_file.canonical_directory(prefix=self._root_dir))
+        entry_data["file"] = au_file.canonical_filename()
+        entry_data["volume"] = self._file_volume_quoted
+
+        entry_data["bitrate"] = int(
+            au_file.mp3_header.bit_rate_kbps * 1000)
+        entry_data["size_in_kb"] = int(au_file.frame_size / 1024)
+        entry_data["duration_s"] = int(au_file.duration_ms / 1000)
+            
+        entry_data["import_date"] = time.strftime(
+            "%Y/%m/%d", time.gmtime(au_file.import_timestamp))
+        entry_data["modified_date"] = entry_data["import_date"]
+        entry_data["modified_time"] = "35364"
+
+        # order_num = int(entry_data["order_num"])
+
+        # Clean up any XML-unsafe characters and wrap each value in
+        # quotes.
+        for k, v in list(entry_data.items()):
+            new_v = xml.sax.saxutils.quoteattr(str(v))
+            if new_v != v:
+                entry_data[k] = new_v
+        
+        return _NML_ENTRY % entry_data
+
+    # def modify audio file
+    def _modify_nml_entry(self, entry_elem, au_file):
+        """Modifies a pre-existing entry in the NML file
+
+        Args: 
+          entry: An element tree element corresponding to the entry we want to modify
+          au_file: The audio file with the new values we want to write in entry
+        """
+        # Make this in an object first so we can run the XLM quoteattr cleanup loop on it
+        modified_attrs = {}
+
+        modified_attrs["order_num"], modified_attrs["total_num"] = order.decode(
+            str(au_file.mutagen_id3.get("TRCK")))
+        if modified_attrs["total_num"] is None:
+            modified_attrs["total_num"] = 100
+        
+        modified_attrs["artist"] = unicode_util.simplify(
+            au_file.mutagen_id3.get("TPE1", _UNKNOWN_ARTIST))
+        modified_attrs["album"] = unicode_util.simplify(
+            au_file.mutagen_id3.get("TALB", _UNKNOWN_ALBUM))
+        modified_attrs["song"] = unicode_util.simplify(
+            au_file.mutagen_id3.get("TIT2", _UNKNOWN_SONG))
+        
+        modified_attrs["size_in_kb"] = int(au_file.frame_size / 1024)
+
+        # Assuming genre field doesn't get modified
+
+        # Not allowing dir or volume to change because all files should have the same values for these anyway
+
+        # Not allowing file name to change because this is the fingerprint that we
+        # treat as a unique key for the audio file. Changing it would cause problems
+
+        # Not allowing bitrate or duration to be modified
+        # because this would change the fingerprint which would cause problems
+
+        modified_attrs["import_date"] = time.strftime(
+            "%Y/%m/%d", time.gmtime(au_file.import_timestamp))
+        modified_attrs["modified_date"] = modified_attrs["import_date"]
+        
+        # Modified time is a hardset value so I'm not modifying it
+
+        # Clean up any XML-unsafe characters and wrap each value in
+        # quotes.
+        for k, v in list(modified_attrs.items()):
+            new_v = xml.sax.saxutils.quoteattr(str(v))
+            if new_v != v:
+                modified_attrs[k] = new_v
+
+        entry_elem.set("ARTIST", modified_attrs["artist"])
+        entry_elem.set("TITLE", modified_attrs["song"])
+        entry_elem.set("MODIFIED_DATE", modified_attrs["modified_date"])
+
+        album_elem = entry_elem.find("ALBUM")
+        album_elem.set("OF_TRACKS", modified_attrs["total_num"])
+        album_elem.set("TRACK", modified_attrs["order_num"])
+        album_elem.set("TITLE", modified_attrs["album"])
+
+        info_elem = entry_elem.find("INFO")
+        info_elem.set("FILESIZE", modified_attrs["size_in_kb"])
+        info_elem.set("IMPORT_DATE", modified_attrs["modified_date"])
+
+    # def test_write(self):
+    #     for playlist in self._et_tree.iter("PLAYLIST"):
+    #         uuid = playlist.get("UUID")
+    #         if uuid:
+    #             if uuid == "12345":
+    #                 playlist.set("UUID", "123")
+    #                 self._overwrite_fh.seek(0)
+    #                 self._et_tree.write(self._overwrite_fh, "unicode")
+    #                 self._overwrite_fh.truncate()
+    #                 print("set the thing")
+    #             else:
+    #                 print("uuid number wrong")
+    #         else:
+    #             print("no uuid found")
+
 
     def add_new_files(self):
         timestamp = self._get_timestamp()
@@ -109,24 +221,37 @@ class NMLWriter2(object):
         # For now, I'm going with a set, but if we need to access the audio file object, a hash would be better.
         # I'm concerned that this might be a memory issue since there are a lot of audio files,
         # but I think the original writer has all files in the whole db in memory at a time so it's probably fine
-        new_fingerprints_set = {}
+        new_au_files_dict = {}
         for au_file in new_audio_files:
-            new_fingerprints_set.add(au_file.fingerprint)
+            new_au_files_dict[au_file.fingerprint] = au_file
         
         collection = self._et_tree.find("COLLECTION") # this might fail and might require use of iter instead of find; haven't tested
         if collection is not None:
-            for location in collection.iter("LOCATION"):
-                file_name = location.get("FILE")
-                if file_name is None:
-                    continue
-                fingerprint = file_name.split(".")[0]
-                if fingerprint in new_fingerprints_set:
-                    self._modify_nml_entry(location) # TODO: decide what value to pass in instead of location. It depends on what attributes we want to modify
-                    new_fingerprints_set.remove(fingerprint)
+            print("Could not find collection")
+            return
+
+        for entry in collection.iter("ENTRY"):
+            location = entry.find("LOCATION")
+            file_name = location.get("FILE")
+            if file_name is None:
+                continue
+            fingerprint = file_name.split(".")[0]
+            au_file = new_au_files_dict.get(fingerprint)
+            if au_file is not None:
+                self._modify_nml_entry(entry, au_file)
+                new_au_files_dict.remove(fingerprint)
         
-        # TODO: If any fingerprints are still in the set, it means they are brand new,
-        # so we will append them to the end. Maybe sort them so album order is maintained
-        entries_to_append = map(NMLWriter2._au_file_to_nml_entry, new_fingerprints_set)
+        # Sort new audio files so album order is maintained
+        order_nums = {}
+        def get_order_key(au_file):
+            order_num = order_nums.get(au_file.fingerprint)
+            if order_num is None:
+                order_num, _ = order.decode(str(au_file.mutagen_id3.get("TRCK")))
+                order_nums[au_file.fingerprint] = order_num
+            return (au_file.album_id, order_num)
+        sorted_new_au_files = sorted(new_au_files_dict.values(), key=get_order_key)
+
+        entries_to_append = map(self._au_file_to_nml_entry, sorted_new_au_files)
         collection.extend(entries_to_append)
 
 class NMLWriter(object):
