@@ -1,3 +1,4 @@
+setuptools
 mutagen
 simplejson
 # This is used by the do_push_artists_to_chirpradio command (maybe?)

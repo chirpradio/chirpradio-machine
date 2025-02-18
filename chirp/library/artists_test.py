@@ -24,6 +24,13 @@ John Hooker SEP John Lee Hooker
 Tom Petty and his heartbreakers SEP Tom Petty & the Heartbreakers
 """.replace("SEP", artists._MAPPINGS_SEP)
 
+TEST_SUGGEST = """
+Bob Dylan
+Big Boys
+Booker T. & the M.G.'s
+N.W.A.
+"""
+
 
 def _unicode_stringio(text):
     return io.StringIO(text)
@@ -130,13 +137,16 @@ class ArtistsTest(unittest.TestCase):
         pass
 
     def test_suggest(self):
+        file_obj = _unicode_stringio(TEST_SUGGEST)
+        names = artists._read_artist_whitelist_from_file(file_obj)
+        whitelist = artists._seq_to_whitelist(names)
         # Suggest should handle simple typos.
-        self.assertEqual("Bob Dylan", artists.suggest("Bo Dylann"))
-        self.assertEqual("Big Boys", artists.suggest("Bigg Boy"))
+        self.assertEqual("Bob Dylan", artists.suggest("Bo Dylann", whitelist))
+        self.assertEqual("Big Boys", artists.suggest("Bigg Boy", whitelist))
         # Suggest should handle simple variations.
         self.assertEqual("Booker T. & the M.G.'s",
-                         artists.suggest("Booker T and the MGs"))
-        self.assertEqual("N.W.A.", artists.suggest("The NWA"))
+                         artists.suggest("Booker T and the MGs", whitelist))
+        self.assertEqual("N.W.A.", artists.suggest("The NWA", whitelist))
         # Something truly weird will not yield any suggestions.
         self.assertTrue(artists.suggest("x"*100) is None)
 

@@ -6,6 +6,7 @@ Our data model is extremely simple:
   * Each audio file has many ID3 tags.
   * ID3 tags are partitioned into sets by a timestamp.
 """
+import re
 
 from chirp.common import mp3_header
 from chirp.library import audio_file
@@ -90,7 +91,14 @@ def tuple_to_audio_file(au_file_tuple):
 
 def id3_tag_to_tuple(fingerprint, timestamp, tag):
     """Turn a Mutagen ID3 tag object into an insertable tuple."""
-    value = ""
+
     if hasattr(tag, "text"):
         value = str(tag)
-    return (fingerprint, timestamp, tag.FrameID, value, repr(tag))
+
+    tag_repr = repr(tag)
+    index = tag_repr.find(">")
+    if index > -1:
+        encoding = tag_repr[index - 1]
+        tag_repr = re.sub("encoding=<.+>", f"encoding={encoding}", tag_repr)
+
+    return (fingerprint, timestamp, tag.FrameID, value, tag_repr)

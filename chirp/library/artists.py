@@ -12,6 +12,8 @@ import threading
 
 from chirp.common import ROOT_DIR
 from chirp.library import similarity
+from chirp.common import input
+from chirp.common import printing
 
 
 # The directory containing the library data.
@@ -19,7 +21,7 @@ _LIBRARY_DATA_PREFIX = os.path.join(ROOT_DIR, "library", "data")
 
 # The file containing the official artist list.
 _WHITELIST_FILE = os.path.join(_LIBRARY_DATA_PREFIX, "artist-whitelist")
- 
+
 # The file containing mappings from alternative forms of an artist name
 # to the official form.
 _MAPPINGS_FILE = os.path.join(_LIBRARY_DATA_PREFIX, "artist-mappings")
@@ -93,11 +95,17 @@ def _standardize(artist_name, whitelist, mappings):
       A string containing the standardized form of the artist name,
       or None if the name is not recognized.
     """
+
     artist_name = artist_name.strip()
     # First just try standardization based on the whitelist and mappings.
     # If that works, return the standardized string.
     std = _standardize_simple(artist_name, whitelist, mappings)
-    if std: return std
+    #TODO: ADD BREAKPOINT
+
+    if std:
+        bp_inpt = input.cinput.__call__(f"Correct {artist_name} to {std}", ["Yes (default)","No"],allow_custom=False)
+        if(bp_inpt != "2"):
+          return std
     # Since that didn't work, we now try to find a corresponding item
     # in the whitelist by shuffling the order of the words.
     artist_name_split = artist_name.split()
@@ -106,7 +114,11 @@ def _standardize(artist_name, whitelist, mappings):
     if len(artist_name_split) > 1:
         parts = [artist_name_split[-1]] + artist_name_split[:-1]
         std = _standardize_simple(" ".join(parts), whitelist, mappings)
-        if std: return std
+        #TODO: ADD BREAKPOINT
+        if std:
+          bp_inpt = input.cinput.__call__(f"Correct {artist_name} to {std}", ["Yes (default)","No"],allow_custom=False)
+          if(bp_inpt != "2"):
+            return std
     # Try swapping the first two words.
     # This handles cases like "Cave, Nick & the Bad Seeds" ->
     # "Nick Cave & the Bad Seeds"
@@ -114,7 +126,11 @@ def _standardize(artist_name, whitelist, mappings):
         parts = ([artist_name_split[1], artist_name_split[0]]
                  + artist_name_split[2:])
         std = _standardize_simple(" ".join(parts), whitelist, mappings)
-        if std: return std
+        #TODO: ADD BREAKPOINT
+        if std:
+          bp_inpt = input.cinput.__call__(f"Correct {artist_name} to {std}", ["Yes (default)","No"],allow_custom=False)
+          if(bp_inpt != "2"):
+            return std
     # Nothing worked, so we just return None.
     return None
 
@@ -124,7 +140,7 @@ def standardize(artist_name):
 
     Args:
       artist_name: A unicode string containing an artist's name
-      
+
     Returns:
       A string containing the standardized form of the artist name
       according to the official artist list stored in chirp/library/data,
@@ -231,13 +247,16 @@ def split_and_standardize(artist_name):
     return best_head, best_tail
 
 
-def suggest(name):
+def suggest(name, whitelist = None):
     canon_name = similarity.canonicalize_string(name)
-    _global_lock.acquire()
-    try:
-        canon_whitelist = list(_global_whitelist)
-    finally:
-        _global_lock.release()
+    if whitelist:
+        canon_whitelist = whitelist
+    else:
+        _global_lock.acquire()
+        try:
+            canon_whitelist = list(_global_whitelist)
+        finally:
+            _global_lock.release()
     best_guess = None
     # We ignore any items that are more than 10 edits away from our
     # original name.
@@ -289,7 +308,7 @@ def reset_artist_whitelist(seq_of_names):
         return True
     finally:
         _global_lock.release()
-            
+
 
 ###
 ### The below is code related to initializing the artist whitelist.
@@ -369,7 +388,7 @@ def merge_whitelist_and_mappings(whitelist, raw_mappings):
     Args:
       whitelist: A whitelist dict
       raw_mappings: A raw mappings dict
-      
+
     Returns:
       A (whitelist, raw_mapping) pair that is equivalent to the args
       but with certain normalizations applied that take information

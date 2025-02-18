@@ -11,6 +11,8 @@ from chirp.library import audio_file
 from chirp.library import audio_file_test
 from chirp.library import nml_writer
 
+import codecs
+import os
 
 
 class NMLWriterTest(unittest.TestCase):
@@ -35,6 +37,12 @@ class NMLWriterTest(unittest.TestCase):
         output_str = output.getvalue()
         self.assert_is_valid_xml(output_str)
         self.assertTrue("<COLLECTION ENTRIES=\"%10d\"" % 10 in output_str)
+    
+    # def test_parse(self):
+    #     nml_file = os.path.join(os.getcwd(), 'output.nml')
+    #     with codecs.open(nml_file, "r+", "utf-8") as output2:
+    #         writer = nml_writer.NMLWriter2("test_file_volume", "/lib", output2)
+    #         print(writer.get_timestamp())
 
 
 if __name__ == "__main__":

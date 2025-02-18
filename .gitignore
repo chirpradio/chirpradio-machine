@@ -129,6 +129,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+myenv/
 
 # Spyder project settings
 .spyderproject
@@ -167,14 +168,9 @@ cython_debug/
 .DS_Store
 settings_local.py
 *.egg-info
-<<<<<<< HEAD
-output.nml
-
-#database
-*.sqlite3_db
-=======
 *.nml
 
 #database
 *.sqlite3_db
->>>>>>> 408cd0cb6eae7e5ea3d0d6487abcec68237ac8cf
+
+id3_header_test.data
