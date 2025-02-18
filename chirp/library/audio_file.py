@@ -67,6 +67,18 @@ class AudioFile(object):
                 and self.path == other.path
                 and self.payload == other.payload)
 
+    def __repr__(self):
+        tpe1 = self.tpe1()
+        tit2 = self.tit2()
+        if (tpe1 and tit2):
+            talb = self.talb()
+            if talb:
+                return f"{tpe1} - {tit2} - {talb} ({self.fingerprint})"
+            else:
+                return f"{tpe1} - {tit2} ({self.fingerprint})"
+        else:
+            return self.fingerprint
+
     def has_ufid(self):
         """Return True if we have enough info to construct a complete UFID."""
         return (self.volume is not None
