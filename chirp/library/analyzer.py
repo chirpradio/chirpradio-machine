@@ -3,6 +3,7 @@
 import io
 import hashlib
 import os
+from chirp.common import input
 from chirp.common import mp3_frame
 
 
@@ -89,7 +90,13 @@ def analyze(file_obj, au_file, compute_fingerprint=True, get_payload=True):
 
 
     if au_file.frame_count < _MINIMUM_FRAMES:
-        raise InvalidFileError("Found only %d MPEG frames"
+        bp_inpt = input.cinput.__call__(("Error: File is too short"
+                                        f" Found only {au_file.frame_count} MPEG"
+                                        " frames. "
+                                        "Ignore the error and continue anyway?"),
+                                        ["Do nothing (default)","Ignore error and continue"],allow_custom=False)
+        if (bp_inpt != "2"):  #Pass breakpoint
+          raise InvalidFileError("Found only %d MPEG frames"
                                % au_file.frame_count)
 
     # Add the bit rate back into the template header, then return it.
@@ -116,7 +123,7 @@ def sample_and_analyze(au_file, mp3_path_list):
 
     Args:
       mp3_path_list: A list of paths to MP3 files.
-    
+
     Returns:
       A representative MP3 header from a file whose size
       is approximately equal to the the median of those in the list.
@@ -130,8 +137,11 @@ def sample_and_analyze(au_file, mp3_path_list):
     # Complain if file is < 100k or > 20M
     if (size < _MINIMUM_REASONABLE_FILE_SIZE
         or size > _MAXIMUM_REASONABLE_FILE_SIZE):
-        raise InvalidFileError("Sample file has bad size: %s %d" % (
-            sample_path, size))
+        bp_inpt = input.cinput.__call__(f"Error: Sample file {sample_path} has an invalid size {size}. Ignore the error and continue anyway?",
+                                         ["Do nothing (default)","Ignore error and continue"],allow_custom=False)
+        if (bp_inpt != "2"): #Pass breakpoint
+          raise InvalidFileError("Sample file has bad size: %s %d" % (
+              sample_path, size))
     f_in = open(sample_path)
     try:
         analyze(f_in, au_file, compute_fingerprint=False)
