@@ -93,6 +93,8 @@ def _modify_tag(conn, fingerprint, frame_id: str, val: str) -> bool:
           "UPDATE id3_tags SET value = ? mutagen_repr = ?"
           "WHERE fingerprint = ? AND frame_id = ?")
     conn.execute(sql, (val, fingerprint, frame_id, newrep))
+    conn.commit()
+    cursor.close()
     return True
     
     
