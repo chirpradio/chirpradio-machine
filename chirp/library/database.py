@@ -59,16 +59,13 @@ def _insert_tags(conn, fingerprint, timestamp, mutagen_id3):
         _insert(conn, "id3_tags", tag_tuple)
 
 
-def _modify_tag(conn, fingerprint, timestamp, frame_id: str, val: str) -> bool:
+def _modify_tag(conn, fingerprint, frame_id: str, val: str) -> bool:
     '''
     Update a tag value of a given audio file into the database.
 
     Args:
       conn: The database connection.
       fingerprint: The audio file's fingerprint.
-      timestamp: A timestamp associated with these tags.  When initially
-        importing a file into the library, this should be equal to the
-        import timestamp.
       frame_id: the frame that need to be modified
       val: the new value of the frame
     
