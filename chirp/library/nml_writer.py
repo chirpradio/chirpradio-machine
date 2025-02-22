@@ -48,6 +48,10 @@ _NML_SUFFIX = """</COLLECTION>
 </NML>
 """
 
+# Custom playlist hidden on Traktor Pro to track when we last edited this file
+_NML_TIMESTAMP = """<NODE TYPE="PLAYLIST" NAME="_CHIRP"><PLAYLIST ENTRIES="0" TYPE="LIST" UUID="%10d" />
+</NODE>"""
+
 def _traktor_path_quote(path):
     return path.replace("/", "/:")
 
@@ -55,7 +59,7 @@ def _traktor_path_quote(path):
 class NMLWriter2(object):
     """Generates an NML file for a collection of AudioFile objects with optimizations to reduce writing."""
 
-    def __init__(self, file_volume, root_dir, overwrite_fh):
+    def __init__(self, file_volume, root_dir, overwrite_fh, db):
         """Constructor.
 
         Args:
@@ -66,24 +70,32 @@ class NMLWriter2(object):
             machine that is running Traktor.
           overwrite_fh: The file handle to write to. It can optionally
             be a previous NML file to minimize writes.
+          db: An instance of the database object we will compare modified
+            timestamps with
         """
-        self.num_entries = 0
+        self._num_new_entries = 0
         self._file_volume = file_volume
         self._file_volume_quoted = _traktor_path_quote(file_volume)
         self._root_dir = root_dir
         self._overwrite_fh = overwrite_fh
         self._et_tree = ET.parse(overwrite_fh)
+        self._db = db
         # Make sure we are at the beginning of the file.
         # self._overwrite_fh.seek(0)
         # Write out a prefix for 0 entries.
         # self._overwrite_fh.write(_NML_PREFIX % 0)
-        self._all_entries = []
     
-    def _get_timestamp(self):
+    def _update_timestamp(self):
         for playlist in self._et_tree.iter("PLAYLIST"):
-            timestamp = playlist.get("UUID")
-            if timestamp is not None:
-                return timestamp
+            old_timestamp = playlist.get("UUID")
+            if old_timestamp is not None:
+                # TODO: update timestamp to current timestamp
+                new_timestamp = timestamp.now()
+                playlist.set("UUID", str(new_timestamp))
+                return (old_timestamp, new_timestamp)
+
+        # If timestamp is not found, consider every file to be new
+        return (0, timestamp.now())
 
     def _au_file_to_nml_entry(self, au_file):
         entry_data = {}
@@ -118,8 +130,6 @@ class NMLWriter2(object):
         entry_data["modified_date"] = entry_data["import_date"]
         entry_data["modified_time"] = "35364"
 
-        # order_num = int(entry_data["order_num"])
-
         # Clean up any XML-unsafe characters and wrap each value in
         # quotes.
         for k, v in list(entry_data.items()):
@@ -127,7 +137,8 @@ class NMLWriter2(object):
             if new_v != v:
                 entry_data[k] = new_v
         
-        return _NML_ENTRY % entry_data
+        # TODO: make this an XML element from the start instead of using fromstring
+        return ET.fromstring(_NML_ENTRY % entry_data)
 
     # def modify audio file
     def _modify_nml_entry(self, entry_elem, au_file):
@@ -205,15 +216,15 @@ class NMLWriter2(object):
     #         else:
     #             print("no uuid found")
 
+    # TODO: add a function to add an individual file as opposed to auto detecting from db
 
     def add_new_files(self):
-        timestamp = self._get_timestamp()
+        (last_modified, new_timestamp) = self._update_timestamp()
         # query all audio files that have been modified since this timestamp
-        db = database.Database(LIBRARY_DB)
         # TODO: create a function, probably in database.py, that returns an iterator
             # over all fingerprints in the new table that have a modified timestamp greater
             # than the given value
-        new_audio_files = None # this will probably be an iterator/generator over audio file objects
+        new_audio_files = self._db.get_au_files_after(last_modified) # TODO: change function name to whatever it ends up actually being
 
         # The plan is to loop through all audio files in the NML file and for each,
         # check if its fingerprint exists in the new_audio_files list. If it does, then modify its entry with the new data.
@@ -226,7 +237,7 @@ class NMLWriter2(object):
             new_au_files_dict[au_file.fingerprint] = au_file
         
         collection = self._et_tree.find("COLLECTION") # this might fail and might require use of iter instead of find; haven't tested
-        if collection is not None:
+        if collection is None:
             print("Could not find collection")
             return
 
@@ -251,8 +262,20 @@ class NMLWriter2(object):
             return (au_file.album_id, order_num)
         sorted_new_au_files = sorted(new_au_files_dict.values(), key=get_order_key)
 
-        entries_to_append = map(self._au_file_to_nml_entry, sorted_new_au_files)
+        entries_to_append = list(map(self._au_file_to_nml_entry, sorted_new_au_files))
+        self._num_new_entries += len(sorted_new_au_files)
         collection.extend(entries_to_append)
+
+        return new_timestamp
+    
+    def close(self):
+        self._overwrite_fh.seek(0)
+        collection = self._et_tree.find("COLLECTION")
+        if collection is not None:
+            old_num_entries = int(collection.get("ENTRIES", 0).lstrip())
+            collection.set("ENTRIES", str(old_num_entries + self._num_new_entries))
+        self._et_tree.write(self._overwrite_fh, "unicode")
+        self._overwrite_fh.truncate()
 
 class NMLWriter(object):
     """Generates an NML file for a collection of AudioFile objects."""
