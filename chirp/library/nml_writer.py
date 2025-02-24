@@ -78,8 +78,14 @@ class NMLReadWriter(object):
         self._file_volume_quoted = _traktor_path_quote(file_volume)
         self._root_dir = root_dir
         self._overwrite_fh = overwrite_fh
-        self._et_tree = ET.parse(overwrite_fh)
         self._db = db
+        is_empty = self._overwrite_fh.read(1) is None
+        self._overwrite_fh.seek(0)
+        if is_empty:
+            self._et_tree = None
+        else:
+            self._et_tree = ET.parse(overwrite_fh)
+        # self._et_tree = ET.parse(overwrite_fh)
         # Make sure we are at the beginning of the file.
         # self._overwrite_fh.seek(0)
         # Write out a prefix for 0 entries.
@@ -218,7 +224,40 @@ class NMLReadWriter(object):
 
     # TODO: add a function to add an individual file as opposed to auto detecting from db
 
-    def add_new_files(self):
+    def _add_from_scratch(self):
+        # create prefix
+        self._et_tree = ET.Element("NML", { "VERSION": "\"14\"" })
+        ET.SubElement(self._et_tree, "MUSICFOLDERS")
+        collection_elem = ET.SubElement(self._et_tree, "COLLECTION", { "ENTRIES": "\"0\""}) #TODO: maybe don't write this until the end when we know the value of entries?
+        # create suffix
+        playlists_elem = ET.SubElement(self._et_tree, "PLAYLISTS")
+        folder_node_elem = ET.SubElement(playlists_elem, "NODE", {
+            "TYPE": "\"FOLDER\"",
+            "NAME": "\"$ROOT\"",
+        })
+        subnodes_elem = ET.SubElement(folder_node_elem, "SUBNODES", { "COUNT": "\"1\""}) # Should this value stay 1 even though we added the second one (timestamp)?
+        recordings_node_elem = ET.SubElement(subnodes_elem, "NODE", {
+            "TYPE": "\"PLAYLIST\"",
+            "NAME": "\"_RECORDINGS\"",
+        })
+        ET.SubElement(recordings_node_elem, "PLAYLIST", {
+            "ENTRIES": "\"0\"",
+            "TYPE": "\"LIST\"",
+        })
+        timestamp_node_elem = ET.SubElement(subnodes_elem, "NODE", {
+            "TYPE": "\"PLAYLIST\"",
+            "NAME": "\"_CHIRP\"",
+        })
+        ET.SubElement(timestamp_node_elem, "PLAYLIST", {
+            "ENTRIES": "\"0\"",
+            "TYPE": "\"LIST\"",
+            "UUID": f'"{timestamp.now()}"',
+        })
+        # TODO: add each entry in the database
+        for au_file in self._db.get_all():
+            pass
+
+    def _add_from_pre_existing(self):
         (last_modified, new_timestamp) = self._update_timestamp()
         # query all audio files that have been modified since this timestamp
         # TODO: create a function, probably in database.py, that returns an iterator
@@ -267,6 +306,60 @@ class NMLReadWriter(object):
         collection.extend(entries_to_append)
 
         return new_timestamp
+
+    def add_new_files(self):
+        if self._et_tree is None:
+            return self._add_from_scratch()
+        else:
+            return self._add_from_pre_existing()
+        # (last_modified, new_timestamp) = self._update_timestamp()
+        # # query all audio files that have been modified since this timestamp
+        # # TODO: create a function, probably in database.py, that returns an iterator
+        #     # over all fingerprints in the new table that have a modified timestamp greater
+        #     # than the given value
+        # new_audio_files = self._db.get_au_files_after(last_modified) # TODO: change function name to whatever it ends up actually being
+
+        # # The plan is to loop through all audio files in the NML file and for each,
+        # # check if its fingerprint exists in the new_audio_files list. If it does, then modify its entry with the new data.
+        # # This should be faster if we store the fingerprints in a set or dict.
+        # # For now, I'm going with a set, but if we need to access the audio file object, a hash would be better.
+        # # I'm concerned that this might be a memory issue since there are a lot of audio files,
+        # # but I think the original writer has all files in the whole db in memory at a time so it's probably fine
+        # new_au_files_dict = {}
+        # for au_file in new_audio_files:
+        #     new_au_files_dict[au_file.fingerprint] = au_file
+        
+        # collection = self._et_tree.find("COLLECTION") # this might fail and might require use of iter instead of find; haven't tested
+        # if collection is None:
+        #     print("Could not find collection")
+        #     return
+
+        # for entry in collection.iter("ENTRY"):
+        #     location = entry.find("LOCATION")
+        #     file_name = location.get("FILE")
+        #     if file_name is None:
+        #         continue
+        #     fingerprint = file_name.split(".")[0]
+        #     au_file = new_au_files_dict.get(fingerprint)
+        #     if au_file is not None:
+        #         self._modify_nml_entry(entry, au_file)
+        #         del new_au_files_dict[fingerprint]
+        
+        # # Sort new audio files so album order is maintained
+        # order_nums = {}
+        # def get_order_key(au_file):
+        #     order_num = order_nums.get(au_file.fingerprint)
+        #     if order_num is None:
+        #         order_num, _ = order.decode(str(au_file.mutagen_id3.get("TRCK")))
+        #         order_nums[au_file.fingerprint] = order_num
+        #     return (au_file.album_id, order_num)
+        # sorted_new_au_files = sorted(new_au_files_dict.values(), key=get_order_key)
+
+        # entries_to_append = list(map(self._au_file_to_nml_entry, sorted_new_au_files))
+        # self._num_new_entries += len(sorted_new_au_files)
+        # collection.extend(entries_to_append)
+
+        # return new_timestamp
     
     def close(self):
         self._overwrite_fh.seek(0)

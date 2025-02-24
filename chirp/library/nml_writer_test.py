@@ -241,7 +241,6 @@ class NMLWriterTest(unittest.TestCase):
                      NMLWriterTest._au_file_to_nml_entry(files_to_modify[1], root_dir, file_volume))
         self.assertTrue(ordered_entries in output_str)
 
-    # TODO: add test to check added order is correct
     def test_track_order(self):
         # Create mock data
         file_volume = "test_file_volume"
@@ -283,6 +282,32 @@ class NMLWriterTest(unittest.TestCase):
         self.assertTrue(expected_ordered_entries in output_str)
 
     # TODO: add test to make file from scratch
+    def test_new_file(self):
+        file_volume = "test_file_volume"
+        root_dir = "/lib"
+        output = io.StringIO()
+        test_au_files = []
+        for i in range(10):
+            test_au_file = audio_file_test.get_test_audio_file(i)
+            test_au_files.append(test_au_file)
+        # Very temporary way to make a database class with the needed function
+        db = type("TestDB", (), {
+            "get_au_files_after": lambda self, timestamp: test_au_files
+        })()
+
+        writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
+        new_timestamp = writer.add_new_files()
+        writer.close()
+
+        output_str = output.getvalue()
+        self.assert_is_valid_xml(output_str)
+        self.assertTrue(test_data.TEST_NML_PREFIX % 10 in output_str)
+        self.assertTrue(test_data.TEST_NML_SUFFIX % new_timestamp in output_str)
+        for i in range(10):
+            expected_entry = NMLWriterTest._au_file_to_nml_entry(test_au_files[i], root_dir, file_volume.replace("/", "/:"))
+            self.assertTrue(expected_entry in output_str)
+    
+    # TODO: test where you add from scratch and then add auto without closing
 
 
 if __name__ == "__main__":
