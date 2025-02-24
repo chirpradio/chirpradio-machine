@@ -56,7 +56,7 @@ def _traktor_path_quote(path):
     return path.replace("/", "/:")
 
 
-class NMLWriter2(object):
+class NMLReadWriter(object):
     """Generates an NML file for a collection of AudioFile objects with optimizations to reduce writing."""
 
     def __init__(self, file_volume, root_dir, overwrite_fh, db):
@@ -183,22 +183,22 @@ class NMLWriter2(object):
 
         # Clean up any XML-unsafe characters and wrap each value in
         # quotes.
-        for k, v in list(modified_attrs.items()):
-            new_v = xml.sax.saxutils.quoteattr(str(v))
-            if new_v != v:
-                modified_attrs[k] = new_v
+        # for k, v in list(modified_attrs.items()):
+        #     new_v = xml.sax.saxutils.quoteattr(str(v))
+        #     if new_v != v:
+        #         modified_attrs[k] = new_v
 
         entry_elem.set("ARTIST", modified_attrs["artist"])
         entry_elem.set("TITLE", modified_attrs["song"])
         entry_elem.set("MODIFIED_DATE", modified_attrs["modified_date"])
 
         album_elem = entry_elem.find("ALBUM")
-        album_elem.set("OF_TRACKS", modified_attrs["total_num"])
-        album_elem.set("TRACK", modified_attrs["order_num"])
+        album_elem.set("OF_TRACKS", str(modified_attrs["total_num"]))
+        album_elem.set("TRACK", str(modified_attrs["order_num"]))
         album_elem.set("TITLE", modified_attrs["album"])
 
         info_elem = entry_elem.find("INFO")
-        info_elem.set("FILESIZE", modified_attrs["size_in_kb"])
+        info_elem.set("FILESIZE", str(modified_attrs["size_in_kb"]))
         info_elem.set("IMPORT_DATE", modified_attrs["modified_date"])
 
     # def test_write(self):
@@ -250,7 +250,7 @@ class NMLWriter2(object):
             au_file = new_au_files_dict.get(fingerprint)
             if au_file is not None:
                 self._modify_nml_entry(entry, au_file)
-                new_au_files_dict.remove(fingerprint)
+                del new_au_files_dict[fingerprint]
         
         # Sort new audio files so album order is maintained
         order_nums = {}
