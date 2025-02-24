@@ -144,6 +144,7 @@ def tuple_to_audio_file(au_file_tuple):
 
 def id3_tag_to_tuple(fingerprint, timestamp, tag):
     """Turn a Mutagen ID3 tag object into an insertable tuple."""
+    value = ""
 
     if hasattr(tag, "text"):
         value = str(tag)
