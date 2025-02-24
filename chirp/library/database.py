@@ -212,6 +212,20 @@ class Database(object):
                " ORDER BY import_timestamp desc, album_id")
         return _audio_file_generator(self._shared_conn, sql)
 
+    def get_since(self, since_timestamp):
+        """Returns a generator over all audio file in the library
+        that were last modified since the given timestamp.
+
+        Audio files are returned in descending import timestamp order,
+        grouped by album.
+        """
+        sql = ('SELECT "volume", "import_timestamp", "fingerprint", "album_id",'
+               '"sampling_rate_hz", "bit_rate_kbps", "channels", "frame_count",'
+               '"frame_size", "duration_ms" FROM audio_files NATURAL JOIN'
+               ' last_modified WHERE modified_timestamp > %d'
+               ' ORDER BY import_timestamp desc, album_id;' % since_timestamp)
+        return _audio_file_generator(self._shared_conn, sql)
+
     def get_all_imports(self):
         """Returns all volume/import timestamp pairs."""
         sql = ("SELECT DISTINCT volume, import_timestamp FROM audio_files"
