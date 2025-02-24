@@ -113,6 +113,10 @@ def audio_file_to_tuple(au_file):
             au_file.frame_size,
             au_file.duration_ms)
 
+def audio_file_to_last_modified(au_file):
+    """Turn an AudioFile object into a tuple for the last_modified table."""
+    return (au_file.fingerprint, au_file.import_timestamp)
+
 
 def tuple_to_audio_file(au_file_tuple):
     """Convert a tuple into a new AudioFile object.

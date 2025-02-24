@@ -296,6 +296,8 @@ class _AddTransaction(object):
         au_file.import_timestamp = self._import_timestamp
 
         _insert(self._conn, "audio_files", schema.audio_file_to_tuple(au_file))
+        _insert(self._conn, "last_modified",
+                schema.audio_file_to_last_modified(au_file))
         _insert_tags(self._conn,
                      au_file.fingerprint, au_file.import_timestamp,
                      au_file.mutagen_id3)
