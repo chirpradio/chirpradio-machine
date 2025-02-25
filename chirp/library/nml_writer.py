@@ -79,7 +79,7 @@ class NMLReadWriter(object):
         self._root_dir = root_dir
         self._overwrite_fh = overwrite_fh
         self._db = db
-        is_empty = self._overwrite_fh.read(1) is None
+        is_empty = self._overwrite_fh.read(1) == ''
         self._overwrite_fh.seek(0)
         if is_empty:
             self._et_tree = None
@@ -216,11 +216,25 @@ class NMLReadWriter(object):
 
     # TODO: add a function to add an individual file as opposed to auto detecting from db
 
+    def _get_ordered_nml_entries(self, audio_files):
+        # Sort new audio files so album order is maintained
+        order_nums = {}
+        def get_order_key(au_file):
+            order_num = order_nums.get(au_file.fingerprint)
+            if order_num is None:
+                order_num, _ = order.decode(str(au_file.mutagen_id3.get("TRCK")))
+                order_nums[au_file.fingerprint] = order_num
+            return (au_file.album_id, order_num)
+        sorted_new_au_files = sorted(audio_files, key=get_order_key)
+
+        return map(self._au_file_to_nml_entry, sorted_new_au_files)
+
     def _add_from_scratch(self):
         # create prefix
         self._et_tree = ET.Element("NML", { "VERSION": "\"14\"" })
         ET.SubElement(self._et_tree, "MUSICFOLDERS")
         collection_elem = ET.SubElement(self._et_tree, "COLLECTION", { "ENTRIES": "\"0\""}) #TODO: maybe don't write this until the end when we know the value of entries?
+
         # create suffix
         playlists_elem = ET.SubElement(self._et_tree, "PLAYLISTS")
         folder_node_elem = ET.SubElement(playlists_elem, "NODE", {
@@ -240,20 +254,20 @@ class NMLReadWriter(object):
             "TYPE": "\"PLAYLIST\"",
             "NAME": "\"_CHIRP\"",
         })
+        new_timestamp = timestamp.now()
         ET.SubElement(timestamp_node_elem, "PLAYLIST", {
             "ENTRIES": "\"0\"",
             "TYPE": "\"LIST\"",
-            "UUID": f'"{timestamp.now()}"',
+            "UUID": f'"{new_timestamp}"',
         })
-        # TODO: add each entry in the database
-        for au_file in self._db.get_all():
-            # entry_elem = ET.SubElement(collection_elem, "ENTRY", {
-            #     "MODIFIED_DATE": ,
-            #     "MODIFIED_TIME": ,
-            #     "TITLE": ,
-            #     "ARTIST": ,
-            # })
-            pass
+
+        # add each entry in the database
+        new_entries = list(self._get_ordered_nml_entries(self._db.get_all()))
+        collection_elem.extend(new_entries)
+        # Update count of entries
+        self._num_new_entries += len(new_entries)
+
+        return new_timestamp
 
     def _add_from_pre_existing(self):
         (last_modified, new_timestamp) = self._update_timestamp()
@@ -289,19 +303,21 @@ class NMLReadWriter(object):
                 self._modify_nml_entry(entry, au_file)
                 del new_au_files_dict[fingerprint]
         
-        # Sort new audio files so album order is maintained
-        order_nums = {}
-        def get_order_key(au_file):
-            order_num = order_nums.get(au_file.fingerprint)
-            if order_num is None:
-                order_num, _ = order.decode(str(au_file.mutagen_id3.get("TRCK")))
-                order_nums[au_file.fingerprint] = order_num
-            return (au_file.album_id, order_num)
-        sorted_new_au_files = sorted(new_au_files_dict.values(), key=get_order_key)
+        # # Sort new audio files so album order is maintained
+        # order_nums = {}
+        # def get_order_key(au_file):
+        #     order_num = order_nums.get(au_file.fingerprint)
+        #     if order_num is None:
+        #         order_num, _ = order.decode(str(au_file.mutagen_id3.get("TRCK")))
+        #         order_nums[au_file.fingerprint] = order_num
+        #     return (au_file.album_id, order_num)
+        # sorted_new_au_files = sorted(new_au_files_dict.values(), key=get_order_key)
 
-        entries_to_append = list(map(self._au_file_to_nml_entry, sorted_new_au_files))
-        self._num_new_entries += len(sorted_new_au_files)
+        entries_to_append = list(self._get_ordered_nml_entries(new_au_files_dict.values()))
+        self._num_new_entries += len(entries_to_append)
         collection.extend(entries_to_append)
+
+        
 
         return new_timestamp
 

@@ -14,7 +14,7 @@ from chirp.common import timestamp
 from chirp.library import audio_file
 from chirp.library import audio_file_test
 from chirp.library import nml_writer
-from chirp.library import order
+from chirp.library import order, database
 
 from chirp.library import nml_writer_test_data as test_data
 
@@ -292,11 +292,15 @@ class NMLWriterTest(unittest.TestCase):
         test_au_files = []
         for i in range(10):
             test_au_file = audio_file_test.get_test_audio_file(i)
+            test_au_file.volume = None
+            test_au_file.import_timestamp = None
             test_au_files.append(test_au_file)
-        # Very temporary way to make a database class with the needed function
-        db = type("TestDB", (), {
-            "get_au_files_after": lambda self, timestamp: test_au_files
-        })()
+        db_name = "/tmp/chirp-library-db_test.%d.sqlite3_db" % int(time.time() * 1000000)
+        db = database.Database(db_name)
+        txn = db.begin_add(17, 1230959520)
+        for file in test_au_files:
+            txn.add(file)
+        txn.commit()
 
         writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
         new_timestamp = writer.add_new_files()
@@ -309,6 +313,8 @@ class NMLWriterTest(unittest.TestCase):
         for i in range(10):
             expected_entry = NMLWriterTest._au_file_to_nml_entry(test_au_files[i], root_dir, file_volume.replace("/", "/:"))
             self.assertTrue(expected_entry in output_str)
+        
+        # os.unlink(self.name)
     
     # TODO: test where you add from scratch and then add auto without closing
 
