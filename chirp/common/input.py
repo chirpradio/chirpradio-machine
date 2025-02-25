@@ -18,7 +18,7 @@ class CustomInput():
         Prints the prompt, then the list of choices enumerated
         User types the number assigned to a choice to select it
         If allow_custon, user is allowed to give custom input
-        Returns string corresponding to user's choice
+        Returns an item from choices, or custom input if given
         """
         cprint(prompt)
 
