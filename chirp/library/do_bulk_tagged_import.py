@@ -22,7 +22,7 @@ def load_dir_hash_map():
 
 
 def main():
-    db = database.Database("/home/trow/library/catalog.sqlite3_db")
+    db = database.Database(conf.LIBRARY_DB)
     
     def new_txn():
         # TODO(trow): Use a better /tmp directory.

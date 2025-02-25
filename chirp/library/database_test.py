@@ -1,4 +1,5 @@
 
+import sqlite3
 import os
 import time
 import unittest
@@ -7,8 +8,28 @@ import mutagen.id3
 
 from chirp.library import audio_file_test
 from chirp.library import database
+from chirp.library.schema import MIGRATIONS, LEGACY_TABLES, LATEST_VERSION
 
-TEST_DB_NAME_PATTERN = "/tmp/chirp-library-db_test.%d.sqlite"
+TEST_DB_NAME_PATTERN = "/tmp/chirp-library-db_test.%d.sqlite3_db"
+OLD_DB_NAME_PATTERN = "/tmp/chirp-library-db_old_test.%d.sqlite3_db"
+
+class DatabaseMigrationTest(unittest.TestCase):
+    def setUp(self):
+        self.name = TEST_DB_NAME_PATTERN % int(time.time() * 1000000)
+        self.db = database.Database(self.name, auto_migrate = False)
+
+    def tearDown(self):
+        os.unlink(self.name)
+
+    def test_migrate(self):
+        self.assertEqual(self.db._user_version, 0)
+        # Migrate to newest version
+        self.db.auto_migrate()
+        # Ensure version was updated
+        self.assertEqual(self.db._user_version, LATEST_VERSION)
+        # Ensure version in SQLite header matches
+        cursor = self.db._shared_conn.execute("PRAGMA user_version;")
+        self.assertEqual(cursor.fetchone()[0], self.db._user_version)
 
 class DatabaseTest(unittest.TestCase):
 
@@ -30,19 +51,9 @@ class DatabaseTest(unittest.TestCase):
         for key in dict_a:
             self.assertEqual(dict_a[key], dict_b[key])
 
-    def test_create_tables(self):
-        # Should succeed the first time.
-        self.assertTrue(self.db.create_tables())
-        # Should fail second time.
-        self.assertFalse(self.db.create_tables())
-        # Should start out empty.
-        self.assertEqual([], list(self.db.get_all()))
-
     def test_add(self):
         all_au_files = [audio_file_test.get_test_audio_file(i)
                         for i in range(1000)]
-
-        self.assertTrue(self.db.create_tables())
 
         test_volume = 17
         test_import_timestamp = 1230959520
@@ -97,8 +108,6 @@ class DatabaseTest(unittest.TestCase):
             self.assertEqual(au_file, fetched_au_file)
 
     def test_update(self):
-        self.assertTrue(self.db.create_tables())
-
         test_au_file = audio_file_test.get_test_audio_file(123)
         test_au_file.volume = None
         test_au_file.import_timestamp = None

@@ -3,7 +3,7 @@
 This API is designed to be extremely simple.  The only supported
 operations are:
 
-  * Create the database tables (Database.create_tables)
+  * Migrate the database tables (Database.auto_migrate, Database.migrate)
   * Walk across all all audio files (Database.get_all)
   * Get a list of all valid imports (Database.get_all_imports)
   * Get all audio files that were part of a particular import
@@ -31,8 +31,11 @@ import mutagen.id3
 import re
 
 from chirp.common import timestamp
+from chirp.common.printing import cprint
 from chirp.library import audio_file
 from chirp.library import schema
+from os.path import exists, join, basename, dirname
+from shutil import copyfile
 
 
 def _insert(target, table_name, insert_tuple):
@@ -165,7 +168,7 @@ def _audio_file_generator(conn, sql):
 class Database(object):
     """Abstract database access for the music library."""
 
-    def __init__(self, name):
+    def __init__(self, name, auto_migrate=True):
         """Constructor.
 
         Args:
@@ -175,25 +178,73 @@ class Database(object):
         # All database reads use this shared connection.  Each transaction
         # writes via its own private connection.
         self._shared_conn = self._get_connection()
+        # Get the CHIRP database version.
+        self._user_version = self._shared_conn.execute("PRAGMA user_version;").fetchone()[0]
+        if auto_migrate: self.auto_migrate()
+
+    def close(self):
+        self = None
 
     def _get_connection(self):
         """Construct a new database connection."""
         return sqlite3.connect(self._name)
 
-    def create_tables(self):
-        """Create a new set of database tables.
+    def auto_migrate(self):
+        """Determine whether the database schema is outdated.
+        If so, migrate to the newest version. Otherwise, do nothing"""
+        if self._user_version == 0:
+            # If the database version is 0,
+            # this is either a newly-created database or
+            # an unmigrated (old) database.
+            # Check if the CHIRP tables already exist; if so,
+            # skip initial table creation.
+            legacy_table_count = 0
+            for table in schema.LEGACY_TABLES:
+                cursor = self._shared_conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='%s';" % table)
+                if cursor.fetchone(): legacy_table_count += 1
+            if legacy_table_count == len(schema.LEGACY_TABLES):
+                self.migrate(0)
+            else:
+                # recreate original tables
+                self.migrate(-1)
+        # Otherwise, migrate only if the schema version is outdated.
+        elif self._user_version != schema.LATEST_VERSION:
+            self.migrate(self._user_version)
+
+    def migrate(self, from_version):
+        """Migrate the database schema from an old version
+        to the newest version.
+
+        Args:
+          from_version: An integer specifying the current
+          version of the database schema (PRAGMA user_version).
 
         Returns:
           True if the operation succeeds, False otherwise.
         """
         conn = self._get_connection()
+        cprint("Migrating database from version %s to version %s" %
+               (from_version, schema.LATEST_VERSION))
+        # Backup old version, if applicable.
+        if from_version != -1:
+            if exists(self._name):
+                cprint("Backing up old database...")
+                copyfile(self._name, join(dirname(self._name),
+                                          "OLD_VERSION_%s_%s" %
+                                          (from_version,
+                                           basename(self._name))))
+        cprint("Running migration...")
         try:
-            conn.execute(schema.create_audio_files_table)
-            conn.execute(schema.create_audio_files_index)
-            conn.execute(schema.create_id3_tags_table)
-            conn.execute(schema.create_id3_tags_index)
+            migrations = schema.MIGRATIONS[from_version + 1:]
+            for migration in migrations:
+                for query in migration: conn.execute(query)
         except sqlite3.OperationalError as ex:
             return False
+        conn.execute("PRAGMA application_id = %s;" % schema.APPLICATION_ID)
+        conn.execute("PRAGMA user_version = %s;" % schema.LATEST_VERSION)
+        self._user_version = schema.LATEST_VERSION
+        conn.commit()
+        cprint("Migrated successfully.")
         return True
 
     def get_all(self):
@@ -204,6 +255,20 @@ class Database(object):
         """
         sql = ("SELECT * FROM audio_files"
                " ORDER BY import_timestamp desc, album_id")
+        return _audio_file_generator(self._shared_conn, sql)
+
+    def get_since(self, since_timestamp):
+        """Returns a generator over all audio file in the library
+        that were last modified since the given timestamp.
+
+        Audio files are returned in descending import timestamp order,
+        grouped by album.
+        """
+        sql = ('SELECT "volume", "import_timestamp", "fingerprint", "album_id",'
+               '"sampling_rate_hz", "bit_rate_kbps", "channels", "frame_count",'
+               '"frame_size", "duration_ms" FROM audio_files NATURAL JOIN'
+               ' last_modified WHERE modified_timestamp > %d'
+               ' ORDER BY import_timestamp desc, album_id;' % since_timestamp)
         return _audio_file_generator(self._shared_conn, sql)
 
     def get_all_imports(self):
@@ -290,6 +355,8 @@ class _AddTransaction(object):
         au_file.import_timestamp = self._import_timestamp
 
         _insert(self._conn, "audio_files", schema.audio_file_to_tuple(au_file))
+        _insert(self._conn, "last_modified",
+                schema.audio_file_to_last_modified(au_file))
         _insert_tags(self._conn,
                      au_file.fingerprint, au_file.import_timestamp,
                      au_file.mutagen_id3)
@@ -302,6 +369,7 @@ class _AddTransaction(object):
         """
         assert self._conn is not None
         self._conn.commit()
+        self._conn.close()
         self._conn = None
 
     def revert(self):
@@ -312,4 +380,5 @@ class _AddTransaction(object):
         """
         assert self._conn is not None
         self._conn.rollback()
+        self._conn.close()
         self._conn = None
