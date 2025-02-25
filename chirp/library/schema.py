@@ -97,7 +97,7 @@ LATEST_VERSION = len(MIGRATIONS) - 1
 LEGACY_TABLES = ["id3_tags", "audio_files"]
 
 # Application ID to use in the sqlite3 header.
-APPLICATION_ID = int.from_bytes(b"CHRP")
+APPLICATION_ID = int.from_bytes(b"CHRP", byteorder="big")
 
 
 def audio_file_to_tuple(au_file):
