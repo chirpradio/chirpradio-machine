@@ -3,8 +3,10 @@
 import codecs
 import sys
 from chirp.common.printing import cprint
+from chirp.common.input import cinput
 from chirp.library import artists
 from chirp.library import dropbox
+
 
 
 def main_generator(rewrite):
@@ -16,8 +18,19 @@ def main_generator(rewrite):
         except:
             cprint('** file: %r' % au_file.path)
             raise
-        if artists.standardize(tpe1) is None:
+
+        if not rewrite:
             new_artists.add(tpe1)
+        else:
+            standardized_name = artists.standardize(tpe1)
+            if not standardized_name:
+                new_artists.add(tpe1)
+            elif standardized_name != tpe1:
+                bp_inpt = cinput(f"Correct {tpe1} to {standardized_name}?", ["Yes (default)","No"],allow_custom=False)
+                if(bp_inpt != "No"): #Breakpoint passed
+                    new_artists.add(tpe1)
+
+
 
     to_print = list(new_artists)
     if rewrite:
