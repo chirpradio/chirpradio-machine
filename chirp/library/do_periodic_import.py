@@ -7,6 +7,7 @@ from chirp.common import timestamp
 from chirp.common.conf import (LIBRARY_PREFIX, LIBRARY_DB,
                                    LIBRARY_TMP_PREFIX)
 from chirp.common.printing import cprint
+from chirp.common.input import cinput
 from chirp.library import album
 from chirp.library import analyzer
 from chirp.library import artists
@@ -94,8 +95,11 @@ def import_albums(dry_run):
     cprint("Found %d albums" % album_count)
     if error_count > 0:
         cprint("Saw %d errors" % error_count, type='failure')
-        return
-    cprint("No errors found")
+        response = cinput("Continue anyways?", ["Yes", "No"], False)
+        if response == "No":
+            return
+    else:
+        cprint("No errors found")
 
     if dry_run:
         cprint("Dry run --- terminating", type='success')
