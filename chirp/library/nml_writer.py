@@ -104,47 +104,39 @@ class NMLReadWriter(object):
         return (0, timestamp.now())
 
     def _au_file_to_nml_entry(self, au_file):
-        entry_data = {}
-
-        entry_data["order_num"], entry_data["total_num"] = order.decode(
-            str(au_file.mutagen_id3.get("TRCK")))
-        if entry_data["total_num"] is None:
-            entry_data["total_num"] = 100
-
-        entry_data["artist"] = unicode_util.simplify(
-            au_file.mutagen_id3.get("TPE1", _UNKNOWN_ARTIST))
-        entry_data["album"] = unicode_util.simplify(
-            au_file.mutagen_id3.get("TALB", _UNKNOWN_ALBUM))
-        entry_data["song"] = unicode_util.simplify(
-            au_file.mutagen_id3.get("TIT2", _UNKNOWN_SONG))
-        
-        # TODO(trow): Set this somehow.
-        entry_data["genre"] = "Unknown"
-
-        entry_data["dir"] = _traktor_path_quote(
-            au_file.canonical_directory(prefix=self._root_dir))
-        entry_data["file"] = au_file.canonical_filename()
-        entry_data["volume"] = self._file_volume_quoted
-
-        entry_data["bitrate"] = int(
-            au_file.mp3_header.bit_rate_kbps * 1000)
-        entry_data["size_in_kb"] = int(au_file.frame_size / 1024)
-        entry_data["duration_s"] = int(au_file.duration_ms / 1000)
-            
-        entry_data["import_date"] = time.strftime(
+        import_date = time.strftime(
             "%Y/%m/%d", time.gmtime(au_file.import_timestamp))
-        entry_data["modified_date"] = entry_data["import_date"]
-        entry_data["modified_time"] = "35364"
+        (order_num, total_num) = order.decode(str(au_file.mutagen_id3.get("TRCK")))
 
-        # Clean up any XML-unsafe characters and wrap each value in
-        # quotes.
-        for k, v in list(entry_data.items()):
-            new_v = xml.sax.saxutils.quoteattr(str(v))
-            if new_v != v:
-                entry_data[k] = new_v
-        
-        # TODO: make this an XML element from the start instead of using fromstring
-        return ET.fromstring(_NML_ENTRY % entry_data)
+        entry_elem = ET.Element("ENTRY", {
+            "MODIFIED_DATE": import_date,
+            "MODIFIED_TIME": "35364",
+            "TITLE": unicode_util.simplify(
+                au_file.mutagen_id3.get("TIT2", _UNKNOWN_SONG)),
+            "ARTIST": unicode_util.simplify(
+                au_file.mutagen_id3.get("TPE1", _UNKNOWN_ARTIST)),
+        })
+        ET.SubElement(entry_elem, "LOCATION", {
+            "DIR": _traktor_path_quote(
+                au_file.canonical_directory(prefix=self._root_dir)),
+            "FILE": au_file.canonical_filename(),
+            "VOLUME": self._file_volume_quoted,
+            "VOLUME_ID": "",
+        })
+        ET.SubElement(entry_elem, "ALBUM", {
+            "OF_TRACKS": str(total_num),
+            "TITLE": unicode_util.simplify(
+                au_file.mutagen_id3.get("TALB", _UNKNOWN_ALBUM)),
+            "TRACK": str(order_num),
+        })
+        ET.SubElement(entry_elem, "INFO", {
+            "BITRATE": str(int(au_file.mp3_header.bit_rate_kbps * 1000)),
+            "GENRE": "Unknown",
+            "PLAYTIME": str(int(au_file.duration_ms / 1000)),
+            "IMPORT_DATE": import_date,
+            "FILESIZE": str(int(au_file.frame_size / 1024)),
+        })
+        return entry_elem
 
     # def modify audio file
     def _modify_nml_entry(self, entry_elem, au_file):
@@ -255,6 +247,12 @@ class NMLReadWriter(object):
         })
         # TODO: add each entry in the database
         for au_file in self._db.get_all():
+            # entry_elem = ET.SubElement(collection_elem, "ENTRY", {
+            #     "MODIFIED_DATE": ,
+            #     "MODIFIED_TIME": ,
+            #     "TITLE": ,
+            #     "ARTIST": ,
+            # })
             pass
 
     def _add_from_pre_existing(self):
