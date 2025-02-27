@@ -135,6 +135,40 @@ class DatabaseTest(unittest.TestCase):
 
         fetched_au_file = self.db.get_by_fingerprint(test_au_file.fingerprint)
         self.assertEqual(test_au_file, fetched_au_file)
+    
+    def test_get_since(self):
+        test_volume = 19
+        audio_files_dict = {}
+        def add_test_files(range_start, range_stop, import_timestamp):
+            add_txn = self.db.begin_add(test_volume, import_timestamp)
+            for i in range(range_start, range_stop):
+                test_au_file = audio_file_test.get_test_audio_file(i)
+                test_au_file.volume = None
+                test_au_file.import_timestamp = None
+                audio_files_dict[test_au_file.fingerprint] = test_au_file
+                add_txn.add(test_au_file)
+            add_txn.commit()
+        def expect_num_since(num_expected, since_timestamp):
+            num_since = 0
+            for au_file in self.db.get_since(since_timestamp):
+                self.assertTrue(au_file.fingerprint in audio_files_dict)
+                self.assertEqual(au_file, audio_files_dict[au_file.fingerprint])
+                num_since += 1
+            self.assertEqual(num_since, num_expected)
+        
+        first_import_timestamp = 1230055555
+        add_test_files(0, 5, first_import_timestamp)
+        expect_num_since(5, first_import_timestamp - 55555)
+        expect_num_since(0, first_import_timestamp)
+        expect_num_since(0, first_import_timestamp + 55555)
+
+        second_import_timestamp = 1230077777
+        add_test_files(5, 11, second_import_timestamp)
+        expect_num_since(11, first_import_timestamp - 1)
+        expect_num_since(6, first_import_timestamp)
+        expect_num_since(6, second_import_timestamp - 1)
+        expect_num_since(0, second_import_timestamp)
+        expect_num_since(0, second_import_timestamp + 1)
 
 
 if __name__ == "__main__":

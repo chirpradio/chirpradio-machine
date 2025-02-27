@@ -308,13 +308,11 @@ class NMLWriterTest(unittest.TestCase):
 
         output_str = output.getvalue()
         self.assert_is_valid_xml(output_str)
-        self.assertTrue(test_data.TEST_NML_PREFIX % 10 in output_str)
-        self.assertTrue(test_data.TEST_NML_SUFFIX % new_timestamp in output_str)
+        self.assertTrue(test_data.TEST_NML_PREFIX.replace("\n", "") % 10 in output_str)
+        self.assertTrue(test_data.TEST_NML_SUFFIX.replace("\n", "") % new_timestamp in output_str)
         for i in range(10):
             expected_entry = NMLWriterTest._au_file_to_nml_entry(test_au_files[i], root_dir, file_volume.replace("/", "/:"))
-            self.assertTrue(expected_entry in output_str)
-        
-        # os.unlink(self.name)
+            self.assertTrue(expected_entry.replace("\n", "") in output_str)
     
     # TODO: test where you add from scratch and then add auto without closing
 

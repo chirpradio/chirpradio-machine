@@ -231,34 +231,38 @@ class NMLReadWriter(object):
 
     def _add_from_scratch(self):
         # create prefix
-        self._et_tree = ET.Element("NML", { "VERSION": "\"14\"" })
-        ET.SubElement(self._et_tree, "MUSICFOLDERS")
-        collection_elem = ET.SubElement(self._et_tree, "COLLECTION", { "ENTRIES": "\"0\""}) #TODO: maybe don't write this until the end when we know the value of entries?
+        root_elem = ET.Element("NML", { "VERSION": "14" })
+        ET.SubElement(root_elem, "HEAD", {
+            "COMPANY": "www.native-instruments.com",
+            "PROGRAM": "Traktor - Native Instruments",
+        })
+        ET.SubElement(root_elem, "MUSICFOLDERS")
+        collection_elem = ET.SubElement(root_elem, "COLLECTION", { "ENTRIES": "0"}) #TODO: maybe don't write this until the end when we know the value of entries?
 
         # create suffix
-        playlists_elem = ET.SubElement(self._et_tree, "PLAYLISTS")
+        playlists_elem = ET.SubElement(root_elem, "PLAYLISTS")
         folder_node_elem = ET.SubElement(playlists_elem, "NODE", {
-            "TYPE": "\"FOLDER\"",
-            "NAME": "\"$ROOT\"",
+            "TYPE": "FOLDER",
+            "NAME": "$ROOT",
         })
-        subnodes_elem = ET.SubElement(folder_node_elem, "SUBNODES", { "COUNT": "\"1\""}) # Should this value stay 1 even though we added the second one (timestamp)?
+        subnodes_elem = ET.SubElement(folder_node_elem, "SUBNODES", { "COUNT": "1"}) # Should this value stay 1 even though we added the second one (timestamp)?
         recordings_node_elem = ET.SubElement(subnodes_elem, "NODE", {
-            "TYPE": "\"PLAYLIST\"",
-            "NAME": "\"_RECORDINGS\"",
+            "TYPE": "PLAYLIST",
+            "NAME": "_RECORDINGS",
         })
         ET.SubElement(recordings_node_elem, "PLAYLIST", {
-            "ENTRIES": "\"0\"",
-            "TYPE": "\"LIST\"",
+            "ENTRIES": "0",
+            "TYPE": "LIST",
         })
         timestamp_node_elem = ET.SubElement(subnodes_elem, "NODE", {
-            "TYPE": "\"PLAYLIST\"",
-            "NAME": "\"_CHIRP\"",
+            "TYPE": "PLAYLIST",
+            "NAME": "_CHIRP",
         })
         new_timestamp = timestamp.now()
         ET.SubElement(timestamp_node_elem, "PLAYLIST", {
-            "ENTRIES": "\"0\"",
-            "TYPE": "\"LIST\"",
-            "UUID": f'"{new_timestamp}"',
+            "ENTRIES": "0",
+            "TYPE": "LIST",
+            "UUID": str(new_timestamp),
         })
 
         # add each entry in the database
@@ -266,6 +270,8 @@ class NMLReadWriter(object):
         collection_elem.extend(new_entries)
         # Update count of entries
         self._num_new_entries += len(new_entries)
+
+        self._et_tree = ET.ElementTree(root_elem)
 
         return new_timestamp
 
