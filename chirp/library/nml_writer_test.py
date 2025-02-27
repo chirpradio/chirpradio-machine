@@ -44,18 +44,9 @@ class NMLWriterTest(unittest.TestCase):
         output_str = output.getvalue()
         self.assert_is_valid_xml(output_str)
         self.assertTrue("<COLLECTION ENTRIES=\"%10d\"" % 10 in output_str)
-    
-    # def test_parse(self):
-    #     nml_file = os.path.join(os.getcwd(), 'output.nml')
-    #     with codecs.open(nml_file, "r+", "utf-8") as output2:
-    #         writer = nml_writer.NMLReadWriter("test_file_volume", "/lib", output2)
-    #         print(writer.get_timestamp())
 
-    # def test_write2(self):
-    #     nml_file = os.path.join(os.getcwd(), 'output.nml')
-    #     with codecs.open(nml_file, "r+", "utf-8") as output2:
-    #         writer = nml_writer.NMLReadWriter("test_file_volume", "/lib", output2)
-    #         writer.test_write()
+    # I compare strings to avoid dependency of ElementTree for these tests
+    # However, using ElementTree for the tests would make them more robust to format changes
 
     def _au_file_to_nml_entry(au_file, root_dir, file_volume_quoted):
         entry_data = {}
@@ -108,9 +99,9 @@ class NMLWriterTest(unittest.TestCase):
         for i in range(4):
             test_au_file = audio_file_test.get_test_audio_file(i)
             test_au_files.append(test_au_file)
-        # Very temporary way to make a database class with the needed function
+        # Avoid get_since dependency by using this mock object
         db = type("TestDB", (), {
-            "get_au_files_after": lambda self, timestamp: test_au_files
+            "get_since": lambda self, timestamp: test_au_files
         })()
 
         # Add new audio files to the NML file
@@ -139,9 +130,9 @@ class NMLWriterTest(unittest.TestCase):
         for i in range(10):
             test_au_file = audio_file_test.get_test_audio_file(i)
             test_au_files.append(test_au_file)
-        # Very temporary way to make a database class with the needed function
+        # Avoid get_since dependency by using this mock object
         db = type("TestDB", (), {
-            "get_au_files_after": lambda self, timestamp: test_au_files
+            "get_since": lambda self, timestamp: test_au_files
         })()
 
         # Add new audio files to the NML file
@@ -179,9 +170,9 @@ class NMLWriterTest(unittest.TestCase):
             file.volume = 1
             file.import_timestamp = timestamp.parse_human_readable("20230130-200020")
         output = io.StringIO(test_data.TEST_NML_PREFIX % 20 + test_data.TEST_NML_ENTRIES_20 + test_data.TEST_NML_SUFFIX % starting_timestamp)
-        # Very temporary way to make a database class with the needed function
+        # Avoid get_since dependency by using this mock object
         db = type("TestDB", (), {
-            "get_au_files_after": lambda self, timestamp: files_to_modify
+            "get_since": lambda self, timestamp: files_to_modify
         })()
 
         writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
@@ -218,9 +209,9 @@ class NMLWriterTest(unittest.TestCase):
             file.volume = 1
             file.import_timestamp = timestamp.parse_human_readable("20230130-200020")
         output = io.StringIO(test_data.TEST_NML_PREFIX % 20 + test_data.TEST_NML_ENTRIES_20 + test_data.TEST_NML_SUFFIX % starting_timestamp)
-        # Very temporary way to make a database class with the needed function
+        # Avoid get_since dependency by using this mock object
         db = type("TestDB", (), {
-            "get_au_files_after": lambda self, timestamp: files_to_modify
+            "get_since": lambda self, timestamp: files_to_modify
         })()
 
         writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
@@ -258,9 +249,9 @@ class NMLWriterTest(unittest.TestCase):
             test_au_files.append(test_au_file)
         shuffled_files = test_au_files.copy()
         random.shuffle(shuffled_files)
-        # Very temporary way to make a database class with the needed function
+        # Avoid get_since dependency by using this mock object
         db = type("TestDB", (), {
-            "get_au_files_after": lambda self, timestamp: shuffled_files
+            "get_since": lambda self, timestamp: shuffled_files
         })()
 
         # Add new audio files to the NML file
@@ -284,7 +275,7 @@ class NMLWriterTest(unittest.TestCase):
             expected_ordered_entries += NMLWriterTest._au_file_to_nml_entry(file, root_dir, file_volume.replace("/", "/:"))
         self.assertTrue(expected_ordered_entries.replace("\n", "") in output_str_no_newline)
 
-    # TODO: add test to make file from scratch
+    # Create new file from scratch
     def test_new_file(self):
         file_volume = "test_file_volume"
         root_dir = "/lib"
@@ -314,9 +305,134 @@ class NMLWriterTest(unittest.TestCase):
             expected_entry = NMLWriterTest._au_file_to_nml_entry(test_au_files[i], root_dir, file_volume.replace("/", "/:"))
             self.assertTrue(expected_entry.replace("\n", "") in output_str)
     
-    # TODO: test where you add from scratch and then add auto without closing
+    # Add from scratch and then add auto without closing
+    def test_create_then_add(self):
+        file_volume = "test_file_volume"
+        root_dir = "/lib"
+        output = io.StringIO()
+        db_name = "/tmp/chirp-library-db_test.%d.sqlite3_db" % int(time.time() * 1000000)
+        db = database.Database(db_name)
+        test_au_files = []
+        writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
+        def add_test_files_to_db(range_start, range_stop, import_timestamp):
+            txn = db.begin_add(17, import_timestamp)
+            for i in range(range_start, range_stop):
+                test_au_file = audio_file_test.get_test_audio_file(i)
+                test_au_file.volume = None
+                test_au_file.import_timestamp = None
+                test_au_files.append(test_au_file)
+                txn.add(test_au_file)
+            txn.commit()
+        
+        add_test_files_to_db(0, 5, 1230000001)
+        first_timestamp = writer.add_new_files()
 
-    # TODO: test for badly formatted file
+        time.sleep(1)
+
+        add_test_files_to_db(5, 11, first_timestamp + 1)
+        second_timestamp = writer.add_new_files()
+
+        self.assertGreater(second_timestamp, first_timestamp)
+
+        writer.close()
+
+        output_str = output.getvalue()
+        self.assert_is_valid_xml(output_str)
+        output_str_no_newline = output_str.replace("\n", "")
+        self.assertTrue((test_data.TEST_NML_PREFIX % 11).replace("\n", "")
+                        in output_str_no_newline)
+        self.assertTrue((test_data.TEST_NML_SUFFIX % second_timestamp).replace("\n", "")
+                        in output_str_no_newline)
+        for au_file in test_au_files:
+            expected_entry = NMLWriterTest._au_file_to_nml_entry(au_file, root_dir, file_volume.replace("/", "/:"))
+            self.assertTrue((expected_entry).replace("\n", "") in output_str_no_newline)
+    
+    # Add from scratch, then call close, then add new files
+    def test_create_close_add(self):
+        file_volume = "test_file_volume"
+        root_dir = "/lib"
+        output = io.StringIO()
+        db_name = "/tmp/chirp-library-db_test.%d.sqlite3_db" % int(time.time() * 1000000)
+        db = database.Database(db_name)
+        test_au_files = []
+        def add_test_files_to_db(range_start, range_stop, import_timestamp):
+            txn = db.begin_add(17, import_timestamp)
+            for i in range(range_start, range_stop):
+                test_au_file = audio_file_test.get_test_audio_file(i)
+                test_au_file.volume = None
+                test_au_file.import_timestamp = None
+                test_au_files.append(test_au_file)
+                txn.add(test_au_file)
+            txn.commit()
+        
+        add_test_files_to_db(0, 5, 1230000001)
+        writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
+        first_timestamp = writer.add_new_files()
+        writer.close()
+
+        time.sleep(1)
+
+        add_test_files_to_db(5, 11, first_timestamp + 1)
+        writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
+        second_timestamp = writer.add_new_files()
+        writer.close()
+
+        self.assertGreater(second_timestamp, first_timestamp)
+
+        output_str = output.getvalue()
+        self.assert_is_valid_xml(output_str)
+        output_str_no_newline = output_str.replace("\n", "")
+        self.assertTrue((test_data.TEST_NML_PREFIX % 11).replace("\n", "")
+                        in output_str_no_newline)
+        self.assertTrue((test_data.TEST_NML_SUFFIX % second_timestamp).replace("\n", "")
+                        in output_str_no_newline)
+        for au_file in test_au_files:
+            expected_entry = NMLWriterTest._au_file_to_nml_entry(au_file, root_dir, file_volume.replace("/", "/:"))
+            self.assertTrue((expected_entry).replace("\n", "") in output_str_no_newline)
+
+    # File without timestamp is given one after closing
+    def test_missing_timestamp(self):
+        file_volume = "test_file_volume"
+        root_dir = "/lib"
+        test_audio_file = audio_file_test.get_test_audio_file(0)
+        db = type("TestDB", (), {
+            "get_since": lambda self, timestamp: [test_audio_file]
+        })()
+        timestamp_no_newline = test_data.TEST_NML_TIMESTAMP_ELEM.replace("\n", "")
+        output = io.StringIO(test_data.TEST_NML_PREFIX % 1 + test_data.TEST_NML_ENTRIES_1 + test_data.TEST_NML_SUFFIX_NO_TIMESTAMP)
+        
+        output_str = output.getvalue()
+        self.assertFalse(timestamp_no_newline in output_str.replace("\n", ""))
+
+        writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
+        new_timestamp = writer.add_new_files()
+        writer.close()
+
+        output_str = output.getvalue()
+        output_str_no_newline = output_str.replace("\n", "")
+        self.assertTrue(timestamp_no_newline % new_timestamp in output_str_no_newline)
+        self.assertTrue((test_data.TEST_NML_PREFIX % 2).replace("\n", "") in output_str_no_newline)
+        self.assertTrue((test_data.TEST_NML_SUFFIX % new_timestamp).replace("\n", "") in output_str_no_newline)
+        self.assertTrue(test_data.TEST_NML_ENTRIES_1.replace("\n", "") in output_str_no_newline)
+        self.assertTrue(NMLWriterTest._au_file_to_nml_entry(test_audio_file, root_dir, file_volume)
+                        .replace("\n", "") in output_str_no_newline)
+
+    def test_invalid_file(self):
+        file_volume = "test_file_volume"
+        root_dir = "/lib"
+        db_name = "/tmp/chirp-library-db_test.%d.sqlite3_db" % int(time.time() * 1000000)
+        db = database.Database(db_name)
+
+        output = io.StringIO("<NML>")
+        self.assertRaises(ValueError, nml_writer.NMLReadWriter, file_volume,
+                          root_dir, output, db)
+        
+        output = io.StringIO("<NML />")
+        writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
+        self.assertRaises(ValueError, writer.add_new_files)
+        self.assertRaises(ValueError, writer.close)
+    
+    # TODO: add tests for manual adding
 
 
 if __name__ == "__main__":
