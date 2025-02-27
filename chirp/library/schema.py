@@ -76,6 +76,13 @@ INSERT INTO last_modified (fingerprint, modified_timestamp)
     SELECT fingerprint, import_timestamp FROM audio_files;
 """
 
+fix_burning_stars = '''
+UPDATE id3_tags
+SET value = "Burning Stars (featuring Alan Ruffin)"
+WHERE fingerprint = "8625c3610301c6949d20ea7400bc39c205703973"
+AND frame_id = "TIT2";
+'''
+
 # List of database migrations to run when creating the database.
 # Each item in this list is a list of SQLite queries to run to migrate
 # to a new version of the database. The version number is saved in
@@ -88,7 +95,8 @@ MIGRATIONS = [
         [enable_foreign_keys,
          create_last_modified,
          create_last_modified_index,
-         populate_last_modified]] # schema version 1 (adds last_modified table)
+         populate_last_modified], # schema version 1 (adds last_modified table)
+        [fix_burning_stars]] # schema version 2 (manually fix broken value fields)
 LATEST_VERSION = len(MIGRATIONS) - 1
 
 # Names of legacy (unversioned) tables to check for;

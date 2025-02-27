@@ -122,7 +122,7 @@ def _get_tags(conn, au_file, cutoff_timestamp):
     Returns:
       True if we found tags for this au_file, False otherwise.
     """
-    sql = ("SELECT timestamp, mutagen_repr FROM id3_tags"
+    sql = ("SELECT timestamp, mutagen_repr, value FROM id3_tags"
            " WHERE fingerprint=\"%s\"" % au_file.fingerprint)
     if cutoff_timestamp is not None:
         sql += " AND timestamp <= %d" % cutoff_timestamp
@@ -137,16 +137,36 @@ def _get_tags(conn, au_file, cutoff_timestamp):
         item = cursor.fetchone()
         if item is None:
             break
-        this_timestamp, this_repr = item
+        this_timestamp, this_repr, value = item
         # We only want to return tags from a single timestamp.
         if max_timestamp is None:
             max_timestamp = this_timestamp
         elif max_timestamp != this_timestamp:
             break
-        #TODO: parse mutagen_repr for its arguments and call mutagen directly
-        #TODO: do not call eval, it is slowing down nml writer (see prof.txt)
+
         this_repr = this_repr.replace("data='", "data=b'")
-        tag = eval(this_repr.encode(), mutagen.id3.__dict__, {})
+        frame_id = this_repr[0:4]
+        id3_class = getattr(mutagen.id3, frame_id)
+        tag = ""
+        if frame_id == "UFID":
+            owner = re.search("owner=u[\'|\"](.+?)[\'|\"]", this_repr).group(1)
+            data = b""
+            if owner != "http://www.cddb.com/id3/taginfo1.html":
+              data = re.search("data=b[\'|\"](.+?)[\'|\"]", this_repr).group(1).encode()
+            tag = id3_class(owner=owner, data=data)
+    
+
+        elif frame_id == "TXXX":
+            encoding = int(re.search("encoding=(.+?),", this_repr).group(1))
+            desc = re.search("desc=u[\'|\"](.+?)[\'|\"]", this_repr).group(1)
+            text = value
+            tag = id3_class(encoding=encoding,desc=desc,text=text)
+        
+        else:
+            encoding = int(re.search("encoding=(.+?),", this_repr).group(1))
+            text = value
+            tag = id3_class(encoding=encoding, text=text)
+            
         au_file.mutagen_id3.add(tag)
     # max_timestamp is None if and only if we didn't find any
     # matching rows.

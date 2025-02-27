@@ -12,7 +12,7 @@ import threading
 
 from chirp.common import ROOT_DIR
 from chirp.library import similarity
-from chirp.common import input
+from chirp.common.input import cinput
 from chirp.common import printing
 
 
@@ -100,12 +100,9 @@ def _standardize(artist_name, whitelist, mappings):
     # First just try standardization based on the whitelist and mappings.
     # If that works, return the standardized string.
     std = _standardize_simple(artist_name, whitelist, mappings)
-    #TODO: ADD BREAKPOINT
 
     if std:
-        bp_inpt = input.cinput.__call__(f"Correct {artist_name} to {std}", ["Yes (default)","No"],allow_custom=False)
-        if(bp_inpt != "No"): #Breakpoint passed
-          return std
+        return std
     # Since that didn't work, we now try to find a corresponding item
     # in the whitelist by shuffling the order of the words.
     artist_name_split = artist_name.split()
@@ -115,8 +112,6 @@ def _standardize(artist_name, whitelist, mappings):
         parts = [artist_name_split[-1]] + artist_name_split[:-1]
         std = _standardize_simple(" ".join(parts), whitelist, mappings)
         if std:
-          bp_inpt = input.cinput.__call__(f"Correct {artist_name} to {std}", ["Yes (default)","No"],allow_custom=False)
-          if(bp_inpt != "No"): #Breakpoint passed
             return std
     # Try swapping the first two words.
     # This handles cases like "Cave, Nick & the Bad Seeds" ->
@@ -126,8 +121,6 @@ def _standardize(artist_name, whitelist, mappings):
                  + artist_name_split[2:])
         std = _standardize_simple(" ".join(parts), whitelist, mappings)
         if std:
-          bp_inpt = input.cinput.__call__(f"Correct {artist_name} to {std}", ["Yes (default)","No"],allow_custom=False)
-          if(bp_inpt != "No"): #Breakpoint passed
             return std
     # Nothing worked, so we just return None.
     return None
