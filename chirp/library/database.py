@@ -37,6 +37,9 @@ from chirp.library import schema
 from os.path import exists, join, basename, dirname
 from shutil import copyfile
 
+"""A string unlikely to appear in any values that is used to separate concatenated tags"""
+TAGS_SEPARATOR = "^&*"
+
 
 def _insert(target, table_name, insert_tuple):
     """Shorthand for inserting a tuple of items into a table."""
@@ -105,6 +108,32 @@ def _modify_tag(conn, fingerprint, frame_id: str, val: str) -> bool:
 
 
 
+def _transform_tag_tuple_to_obj(this_repr, value):
+    this_repr = this_repr.replace("data='", "data=b'")
+    frame_id = this_repr[0:4]
+    id3_class = getattr(mutagen.id3, frame_id)
+    tag = ""
+    if frame_id == "UFID":
+        owner = re.search("owner=u[\'|\"](.+?)[\'|\"]", this_repr).group(1)
+        data = b""
+        if owner != "http://www.cddb.com/id3/taginfo1.html":
+            data = re.search("data=b[\'|\"](.+?)[\'|\"]", this_repr).group(1).encode()
+        tag = id3_class(owner=owner, data=data)
+
+
+    elif frame_id == "TXXX":
+        encoding = int(re.search("encoding=(.+?),", this_repr).group(1))
+        desc = re.search("desc=u[\'|\"](.+?)[\'|\"]", this_repr).group(1)
+        text = value
+        tag = id3_class(encoding=encoding,desc=desc,text=text)
+    
+    else:
+        encoding = int(re.search("encoding=(.+?),", this_repr).group(1))
+        text = value
+        tag = id3_class(encoding=encoding, text=text)
+    
+    return tag
+
 def _get_tags(conn, au_file, cutoff_timestamp):
     """Get the ID3 tags for a particular audio file.
 
@@ -144,34 +173,39 @@ def _get_tags(conn, au_file, cutoff_timestamp):
         elif max_timestamp != this_timestamp:
             break
 
-        this_repr = this_repr.replace("data='", "data=b'")
-        frame_id = this_repr[0:4]
-        id3_class = getattr(mutagen.id3, frame_id)
-        tag = ""
-        if frame_id == "UFID":
-            owner = re.search("owner=u[\'|\"](.+?)[\'|\"]", this_repr).group(1)
-            data = b""
-            if owner != "http://www.cddb.com/id3/taginfo1.html":
-              data = re.search("data=b[\'|\"](.+?)[\'|\"]", this_repr).group(1).encode()
-            tag = id3_class(owner=owner, data=data)
-    
-
-        elif frame_id == "TXXX":
-            encoding = int(re.search("encoding=(.+?),", this_repr).group(1))
-            desc = re.search("desc=u[\'|\"](.+?)[\'|\"]", this_repr).group(1)
-            text = value
-            tag = id3_class(encoding=encoding,desc=desc,text=text)
-        
-        else:
-            encoding = int(re.search("encoding=(.+?),", this_repr).group(1))
-            text = value
-            tag = id3_class(encoding=encoding, text=text)
+        tag = _transform_tag_tuple_to_obj(this_repr, value)
             
         au_file.mutagen_id3.add(tag)
     # max_timestamp is None if and only if we didn't find any
     # matching rows.
     return (max_timestamp is not None)
 
+def _audio_file_with_tags_generator(conn, sql):
+    """Executes a SQL Query that returns tuples of the format
+    (volume, import_timestamp, fingerprint, album_id, sampling_rate_hz,
+    bit_rate_kbps, channels, frame_count, frame_size, duration_ms,
+    concatenated_tags_mutagen_repr, concatenated_tags_value)
+    and returns a generator over the corresponding audio file objects."""
+    cursor = conn.execute(sql)
+    item = cursor.fetchone()
+    while item is not None:
+        au_file_components = item[:-2]
+        tag_components = item[-2:]
+        au_file = schema.tuple_to_audio_file(au_file_components)
+
+        reprs = tag_components[0].split(TAGS_SEPARATOR)
+        values = tag_components[1].split(TAGS_SEPARATOR)
+        # TODO: backup slower query if this one has unequal lengths
+        if len(reprs) != len(values):
+            raise ValueError("Repr or value included the delimiter")
+
+        au_file.mutagen_id3 = mutagen.id3.ID3()
+        for (mutagen_repr, value) in zip(reprs, values):
+            tag = _transform_tag_tuple_to_obj(mutagen_repr, value)
+            au_file.mutagen_id3.add(tag)
+
+        yield au_file
+        item = cursor.fetchone()
 
 def _audio_file_generator(conn, sql):
     """Turns a SQL query into a generator of AudioFile objects."""
@@ -290,6 +324,61 @@ class Database(object):
                ' last_modified WHERE modified_timestamp > %d'
                ' ORDER BY import_timestamp desc, album_id;' % since_timestamp)
         return _audio_file_generator(self._shared_conn, sql)
+    
+    def get_all_less_queries(self):
+        """Same behavior as get_all.
+
+        This version is a bit faster, but raises a ValueError if
+        one of the values contains TAGS_SEPARATOR"""
+        sql = ("WITH concat_tags AS ("
+                    "SELECT fingerprint, timestamp, "
+                        f"GROUP_CONCAT(mutagen_repr, '{TAGS_SEPARATOR}') AS concat_reprs, "
+                        f"GROUP_CONCAT(value, '{TAGS_SEPARATOR}') AS concat_vals "
+                    "FROM id3_tags "
+                    "GROUP BY fingerprint, timestamp "
+                ") "
+                "SELECT * FROM audio_files "
+                "NATURAL JOIN ("
+                    "SELECT fingerprint, concat_reprs, concat_vals "
+                    "FROM concat_tags AS a "
+                    "WHERE a.timestamp = ("
+                        "SELECT MAX(timestamp) "
+                        "FROM concat_tags AS b "
+                        "WHERE a.fingerprint = b.fingerprint"
+                    ")"
+                ") "
+                "ORDER BY import_timestamp DESC, album_id")
+        return _audio_file_with_tags_generator(self._shared_conn, sql)
+    
+    def get_since_less_queries(self, since_timestamp):
+        """Same behavior as get_since.
+
+        This version is a bit faster, but raises a ValueError if
+        one of the values contains TAGS_SEPARATOR"""
+        sql = ("WITH concat_tags AS ("
+                    "SELECT fingerprint, timestamp, "
+                        f"GROUP_CONCAT(mutagen_repr, '{TAGS_SEPARATOR}') AS concat_reprs, "
+                        f"GROUP_CONCAT(value, '{TAGS_SEPARATOR}') AS concat_vals "
+                    "FROM id3_tags "
+                    "GROUP BY fingerprint, timestamp "
+                ") "
+                "SELECT volume, import_timestamp, fingerprint, album_id, "
+                    "sampling_rate_hz, bit_rate_kbps, channels, frame_count, "
+                    "frame_size, duration_ms, concat_reprs, concat_vals "
+                "FROM audio_files "
+                "NATURAL JOIN last_modified "
+                "NATURAL JOIN ("
+                    "SELECT fingerprint, concat_reprs, concat_vals "
+                    "FROM concat_tags AS a "
+                    "WHERE a.timestamp = ("
+                        "SELECT MAX(timestamp) "
+                        "FROM concat_tags AS b "
+                        "WHERE a.fingerprint = b.fingerprint"
+                    ")"
+                ") "
+                f"WHERE modified_timestamp > {since_timestamp} "
+                "ORDER BY import_timestamp DESC, album_id")
+        return _audio_file_with_tags_generator(self._shared_conn, sql)
 
     def get_all_imports(self):
         """Returns all volume/import timestamp pairs."""

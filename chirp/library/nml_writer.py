@@ -5,8 +5,13 @@ NML version 11, which is used by Traktor Pro.
 """
 
 import time
+import copy
+import os
 import xml.sax.saxutils
-import xml.etree.ElementTree as ET
+# import xml.etree.ElementTree as ET
+from lxml import etree as ET
+import mmap
+import re
 
 from chirp.common import timestamp
 from chirp.common import unicode_util
@@ -72,15 +77,18 @@ class NMLReadWriter(object):
           db: An instance of the database object we will compare modified
             timestamps with
         """
+        self._num_modified_entries = 0
         self._num_new_entries = 0
+        self._new_entries = []
         self._file_volume = file_volume
         self._file_volume_quoted = _traktor_path_quote(file_volume)
         self._root_dir = root_dir
         self._overwrite_fh = overwrite_fh
         self._db = db
-        is_empty = self._overwrite_fh.read(1) == ''
         self._overwrite_fh.seek(0)
-        if is_empty:
+        self._is_file_empty = self._overwrite_fh.read(1) == ''
+        self._overwrite_fh.seek(0)
+        if self._is_file_empty:
             self._et_tree = None
         else:
             try:
@@ -203,9 +211,7 @@ class NMLReadWriter(object):
         if info_elem is None:
             raise ValueError(f'File format: No INFO subelement found in ENTRY element with fingerprint {au_file.fingerprint}')
         info_elem.set("FILESIZE", str(modified_attrs["size_in_kb"]))
-        info_elem.set("IMPORT_DATE", modified_attrs["modified_date"])\
-
-    # TODO: add a function to add an individual file as opposed to auto detecting from db
+        info_elem.set("IMPORT_DATE", modified_attrs["modified_date"])
 
     def _get_ordered_nml_entries(self, audio_files):
         # Sort new audio files so album order is maintained
@@ -219,8 +225,8 @@ class NMLReadWriter(object):
         sorted_new_au_files = sorted(audio_files, key=get_order_key)
 
         return map(self._au_file_to_nml_entry, sorted_new_au_files)
-
-    def _add_from_scratch(self):
+    
+    def _create_tree_prefix_suffix(self, import_timestamp):
         # create prefix
         root_elem = ET.Element("NML", { "VERSION": "14" })
         ET.SubElement(root_elem, "HEAD", {
@@ -228,7 +234,7 @@ class NMLReadWriter(object):
             "PROGRAM": "Traktor - Native Instruments",
         })
         ET.SubElement(root_elem, "MUSICFOLDERS")
-        collection_elem = ET.SubElement(root_elem, "COLLECTION", { "ENTRIES": "0"}) #TODO: maybe don't write this until the end when we know the value of entries?
+        collection_elem = ET.SubElement(root_elem, "COLLECTION", { "ENTRIES": "%10d" % 0}) #TODO: maybe don't write this until the end when we know the value of entries?
 
         # create suffix
         playlists_elem = ET.SubElement(root_elem, "PLAYLISTS")
@@ -236,7 +242,7 @@ class NMLReadWriter(object):
             "TYPE": "FOLDER",
             "NAME": "$ROOT",
         })
-        subnodes_elem = ET.SubElement(folder_node_elem, "SUBNODES", { "COUNT": "1"}) # Should this value stay 1 even though we added the second one (timestamp)?
+        subnodes_elem = ET.SubElement(folder_node_elem, "SUBNODES", { "COUNT": "2"}) # Should this value stay 1 even though we added the second one (timestamp)?
         recordings_node_elem = ET.SubElement(subnodes_elem, "NODE", {
             "TYPE": "PLAYLIST",
             "NAME": "_RECORDINGS",
@@ -249,12 +255,17 @@ class NMLReadWriter(object):
             "TYPE": "PLAYLIST",
             "NAME": "_CHIRP",
         })
-        new_timestamp = timestamp.now()
         ET.SubElement(timestamp_node_elem, "PLAYLIST", {
             "ENTRIES": "0",
             "TYPE": "LIST",
-            "UUID": str(new_timestamp),
+            "UUID": str(import_timestamp),
         })
+
+        return (root_elem, collection_elem)
+
+    def _add_from_scratch(self):
+        new_timestamp = timestamp.now()
+        (root_elem, collection_elem) = self._create_tree_prefix_suffix(new_timestamp)
 
         # Add each entry in the database
         new_entries = list(self._get_ordered_nml_entries(self._db.get_all()))
@@ -268,8 +279,16 @@ class NMLReadWriter(object):
 
     def _add_from_pre_existing(self):
         (last_modified, new_timestamp) = self._update_timestamp()
-        # query all audio files that have been modified since this timestamp
-        new_audio_files = self._db.get_since(int(last_modified))
+
+        try:
+            new_audio_files = self._db.get_since_less_queries(int(last_modified))
+        except ValueError as err:
+            # The delimiter was found in one of the tags' values, making the
+            # concatenated data impossible to parse
+            print(f"{err}\n"
+                  "Switching to slower database function.\n"
+                  "We recommend you change the TAG_SEPARATOR value to avoid this.")
+            new_audio_files = self._db.get_since(int(last_modified))
 
         # The plan is to loop through all audio files in the NML file and for each,
         # check if its fingerprint exists in the new_audio_files list. If it does, then modify its entry with the new data.
@@ -296,28 +315,139 @@ class NMLReadWriter(object):
             au_file = new_au_files_dict.get(fingerprint)
             if au_file is not None:
                 self._modify_nml_entry(entry, au_file)
+                self._num_modified_entries += 1
                 del new_au_files_dict[fingerprint]
 
         entries_to_append = list(self._get_ordered_nml_entries(new_au_files_dict.values()))
         self._num_new_entries += len(entries_to_append)
-        collection.extend(entries_to_append)
+        self._new_entries += entries_to_append
+        # collection.extend(entries_to_append)
 
         return new_timestamp
 
+    # TODO: Add a memory/file limit parameter
     def add_new_files(self):
         if self._et_tree is None:
             return self._add_from_scratch()
         else:
             return self._add_from_pre_existing()
     
+    # Option to add files manually without timestamp detection or sorting
+    def add_manual(self, au_files):
+        new_timestamp = time.now()
+        if self._et_tree is None:
+            (self._et_tree, collection_elem) = self._create_tree_prefix_suffix(new_timestamp)
+        else:
+            collection_elem = self._et_tree.find("COLLECTION")
+            if collection_elem is None:
+                raise ValueError("File format: No COLLECTION element found")
+        
+        new_entries = list(map(self._au_file_to_nml_entry, au_files))
+        self._new_entries += new_entries
+        # collection_elem.extend(new_entries)
+
+        return new_timestamp
+    
+    def _close_append_only(self):
+        print("yes doing the thing")
+        try:
+            mapped_file = mmap.mmap(self._overwrite_fh.fileno(), 0)
+        except:
+            return False
+        mapped_file.seek(0)
+        # TODO: change pattern so it works with Traktor Pro 4 format
+        matches = list(re.finditer(
+            br'<((\s*COLLECTION\s*ENTRIES\s*=\s*".{10}"\s*>)|(/\s*COLLECTION\s*>\s*<\s*PLAYLISTS\s*>[\S\s]*</\s*PLAYLISTS\s*>))',
+            mapped_file
+        ))
+        if len(matches) != 2:
+            return False
+
+        entries_val_offset = matches[0].group().find(b'"')
+        playlists_tag_offset = matches[1].group().find(b'>') + 1
+        is_valid_matches = entries_val_offset != -1 and playlists_tag_offset > 0
+        if not is_valid_matches:
+            return False
+
+        # Update entries attribute in COLLECTION tag
+        entries_seek_pos = matches[0].start() + entries_val_offset + 1
+        self._overwrite_fh.seek(entries_seek_pos)
+        num_old_entries = int(self._overwrite_fh.read(10))
+        num_total_entries = num_old_entries + self._num_new_entries
+
+        self._overwrite_fh.seek(entries_seek_pos)
+        self._overwrite_fh.write("%10d" % num_total_entries)
+
+        # Append new entries and update timestamp
+        playlists_match = matches[1]
+        playlists_seek_start = playlists_match.start()
+        playlists_seek_end = playlists_match.end()
+
+        self._overwrite_fh.seek(playlists_seek_end)
+        after_playlists_str = self._overwrite_fh.read()
+
+        playlists_str = playlists_match.group()[playlists_tag_offset:]
+        playlists_elem = ET.fromstring(playlists_str)
+        is_timestamp_present = False
+        for node_elem in playlists_elem.iter("NODE"):
+            node_type = node_elem.get("TYPE")
+            node_name = node_elem.get("NAME")
+            if node_type != "PLAYLIST" or node_name != "_CHIRP":
+                continue
+            playlist_elem = node_elem.find("PLAYLIST")
+            if playlist_elem is None:
+                continue
+            playlist_elem.set("UUID", str(timestamp.now()))
+            is_timestamp_present = True
+
+        if not is_timestamp_present:
+            subnodes_elem = playlists_elem.find("NODE/SUBNODES")
+            if subnodes_elem is None:
+                raise ValueError("File format: No SUBNODES element found")
+            node_elem = ET.SubElement(subnodes_elem, "NODE", {
+                "TYPE": "PLAYLIST",
+                "NAME": "_CHIRP",
+            })
+            ET.SubElement(node_elem, "PLAYLIST", {
+                "ENTRIES": "0",
+                "TYPE": "LIST",
+                "UUID": str(timestamp.now()),
+            })
+
+        append_str = ""
+
+        for entry in self._new_entries:
+            entry_str = ET.tostring(entry, encoding='unicode')
+            append_str += entry_str + "\n"
+
+        append_str += "</COLLECTION>\n"
+
+        append_str += ET.tostring(playlists_elem, encoding='unicode')
+
+        append_str += after_playlists_str
+
+        self._overwrite_fh.seek(playlists_seek_start)
+        self._overwrite_fh.write(append_str)
+
+        self._overwrite_fh.truncate()
+
+        return True
+    
     def close(self):
+        if self._num_modified_entries == 0 and not self._is_file_empty\
+            and self._close_append_only(): #_close_append_only returns True if it succeeds
+                return
+        print("not doing the thing")
+
         collection = self._et_tree.find("COLLECTION")
         if collection is None:
             raise ValueError("File format: No COLLECTION element found")
-        old_num_entries = int(collection.get("ENTRIES", 0).lstrip()) # TODO: remove this lstrip
-        collection.set("ENTRIES", str(old_num_entries + self._num_new_entries))
+        num_old_entries = int(collection.get("ENTRIES", 0).lstrip()) # TODO: remove this lstrip
+        collection.set("ENTRIES", "%10d" % (num_old_entries + self._num_new_entries))
+        collection.extend(self._new_entries)
+        # self._et_tree.write(self._overwrite_fh, "unicode")
         self._overwrite_fh.seek(0)
-        self._et_tree.write(self._overwrite_fh, "unicode")
+        self._overwrite_fh.write(ET.tostring(self._et_tree, encoding='unicode'))
         self._overwrite_fh.truncate()
 
 class NMLWriter(object):
