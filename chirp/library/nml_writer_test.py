@@ -335,7 +335,7 @@ class NMLWriterTest(unittest.TestCase):
             test_au_files.extend(
                 NMLWriterTest._add_test_files_to_db(db, range_start, range_stop, import_timestamp)
             )
-        
+
         add_test_files_to_db(0, 5, 1230000001)
         first_timestamp = writer.add_new_files()
 

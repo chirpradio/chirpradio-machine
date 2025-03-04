@@ -52,7 +52,6 @@ def main_generator():
     nml_file = os.path.join(os.getcwd(), 'output.nml')
     with codecs.open(nml_file, "r+", "utf-8") as out_fh:
         # TODO(trow): Don't hard-wire the drive letter.
-        # TODO: Replace this with the readwriter
         db = database.Database(conf.LIBRARY_DB)
         cprint('Writing Traktor file to {}'.format(nml_file))
 
