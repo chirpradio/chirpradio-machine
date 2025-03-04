@@ -65,8 +65,8 @@ def _insert_tags(conn, fingerprint, timestamp, mutagen_id3):
         _insert(conn, "id3_tags", tag_tuple)
 
 
+'''
 def _modify_tag(conn, fingerprint, frame_id: str, val: str) -> bool:
-    '''
     Update a tag value of a given audio file into the database.
 
     Args:
@@ -78,7 +78,7 @@ def _modify_tag(conn, fingerprint, frame_id: str, val: str) -> bool:
     Nothing will change if the frame_id is not found.
     Unsure about whether to update the timestamp, so haven't implemented it yet.
     Do I need to change the original ID3 file?
-    '''
+
     cursor = conn.cursor()
     sql = ("SELECT * FROM id3_tags"
            "WHERE fingerprint = ? AND frame_id = ?")
@@ -102,7 +102,7 @@ def _modify_tag(conn, fingerprint, frame_id: str, val: str) -> bool:
     conn.commit()
     cursor.close()
     return True
-    
+'''    
     
 
 
@@ -434,6 +434,47 @@ class Database(object):
         conn = self._get_connection()
         _insert_tags(conn, au_file.fingerprint, timestamp, au_file.mutagen_id3)
         conn.commit()
+
+
+    def _modify_tag(self, fingerprint, frame_id: str, val: str) -> bool:
+      '''
+      Update a tag value of a given audio file into the database.
+
+      Args:
+        conn: The database connection.
+        fingerprint: The audio file's fingerprint.
+        frame_id: the frame that need to be modified
+        val: the new value of the frame
+      
+      Nothing will change if the frame_id is not found.
+      Unsure about whether to update the timestamp, so haven't implemented it yet.
+      Do I need to change the original ID3 file?
+      '''
+      conn = self._get_connection()
+      cursor = conn.cursor()
+      sql = ("SELECT * FROM id3_tags"
+            "WHERE fingerprint = ? AND frame_id = ?")
+      cursor.execute(sql, (fingerprint, frame_id))
+      result = cursor.fetchall()
+
+      if not result:
+          return False
+      
+      if len(result) >= 2:
+          pass
+          # there exists duplication inside 
+      prevval: str = result[0][3]
+      prevrep: str = result[0][4]
+      newrep = re.sub(prevval, val, prevrep) # try to update the mutagenrepr
+
+      sql = (
+            "UPDATE id3_tags SET value = ? mutagen_repr = ?"
+            "WHERE fingerprint = ? AND frame_id = ?")
+      conn.execute(sql, (val, fingerprint, frame_id, newrep))
+      conn.commit()
+      cursor.close()
+      return True
+
 
 
 class _AddTransaction(object):
