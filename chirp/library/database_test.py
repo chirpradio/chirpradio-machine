@@ -106,6 +106,63 @@ class DatabaseTest(unittest.TestCase):
         for au_file in all_au_files:
             fetched_au_file = self.db.get_by_fingerprint(au_file.fingerprint)
             self.assertEqual(au_file, fetched_au_file)
+    
+    # This is the same as test_add but with get_all replaced with get_all_less_queries
+    def test_get_all_since(self):
+        all_au_files = [audio_file_test.get_test_audio_file(i)
+                        for i in range(1000)]
+
+        test_volume = 17
+        test_import_timestamp = 1230959520
+
+        # It is an error to add an audio file with the wrong volume or
+        # timestamp.
+        boom_txn = self.db.begin_add(test_volume, test_import_timestamp)
+        au_file = all_au_files[0]
+        au_file.volume = test_volume + 1
+        au_file.import_timestamp = test_import_timestamp
+        self.assertRaises(AssertionError, boom_txn.add, au_file)
+        au_file.volume = test_volume
+        au_file.import_timestamp = test_import_timestamp + 1
+        self.assertRaises(AssertionError, boom_txn.add, au_file)
+
+        # Committing an empty transaction is OK.
+        add_txn = self.db.begin_add(test_volume, test_import_timestamp)
+        add_txn.commit()
+
+        # Reverting an empty transaction is OK too.
+        add_txn = self.db.begin_add(test_volume, test_import_timestamp)
+        add_txn.revert()
+
+        for au_file in all_au_files:
+            au_file.volume = None
+            au_file.import_timestamp = None
+
+        add_txn = self.db.begin_add(test_volume, test_import_timestamp)
+        for au_file in all_au_files:
+            add_txn.add(au_file)
+        add_txn.revert()
+        # Should still be empty after reverting.
+        self.assertEqual([], list(self.db.get_all_less_queries()))
+
+        for au_file in all_au_files:
+            au_file.volume = None
+            au_file.import_timestamp = None
+
+        add_txn = self.db.begin_add(test_volume, test_import_timestamp)
+        for au_file in all_au_files:
+            add_txn.add(au_file)
+        add_txn.commit()
+
+        # Should be able to get_all_less_queries.
+        self.assert_same_audio_files(
+            all_au_files,
+            list(self.db.get_all_less_queries()))
+
+        # Should be able to get each file by fingerprint.
+        for au_file in all_au_files:
+            fetched_au_file = self.db.get_by_fingerprint(au_file.fingerprint)
+            self.assertEqual(au_file, fetched_au_file)
 
     def test_update(self):
         test_au_file = audio_file_test.get_test_audio_file(123)
@@ -135,8 +192,8 @@ class DatabaseTest(unittest.TestCase):
 
         fetched_au_file = self.db.get_by_fingerprint(test_au_file.fingerprint)
         self.assertEqual(test_au_file, fetched_au_file)
-    # TODO: tests for less queries versions
-    def test_get_since(self):
+
+    def _test_with_get_since_impl(self, use_less_queries):
         test_volume = 19
         audio_files_dict = {}
         def add_test_files(range_start, range_stop, import_timestamp):
@@ -150,7 +207,9 @@ class DatabaseTest(unittest.TestCase):
             add_txn.commit()
         def assert_num_since(num_expected, since_timestamp):
             num_since = 0
-            for au_file in self.db.get_since(since_timestamp):
+            get_since_impl = self.db.get_since_less_queries if use_less_queries\
+                else self.db.get_since
+            for au_file in get_since_impl(since_timestamp):
                 self.assertTrue(au_file.fingerprint in audio_files_dict)
                 self.assertEqual(au_file, audio_files_dict[au_file.fingerprint])
                 num_since += 1
@@ -169,6 +228,12 @@ class DatabaseTest(unittest.TestCase):
         assert_num_since(6, second_import_timestamp - 1)
         assert_num_since(0, second_import_timestamp)
         assert_num_since(0, second_import_timestamp + 1)
+
+    def test_get_since(self):
+        self._test_with_get_since_impl(False)
+    
+    def test_get_since_less_queries(self):
+        self._test_with_get_since_impl(True)
 
 
 if __name__ == "__main__":

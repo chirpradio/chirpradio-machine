@@ -52,10 +52,6 @@ _NML_SUFFIX = """</COLLECTION>
 </NML>
 """
 
-# Custom playlist hidden on Traktor Pro to track when we last edited this file
-_NML_TIMESTAMP = """<NODE TYPE="PLAYLIST" NAME="_CHIRP"><PLAYLIST ENTRIES="0" TYPE="LIST" UUID="%10d" />
-</NODE>"""
-
 def _traktor_path_quote(path):
     return path.replace("/", "/:")
 
@@ -76,6 +72,18 @@ class NMLReadWriter(object):
             be a previous NML file to minimize writes.
           db: An instance of the database object we will compare modified
             timestamps with
+        
+        Methods:
+          add_new_files: If a previous file is given, automatically detect
+            new files based on timestamps and add them to the file in album/track order.
+            If no previous file is given, generate a new NML file with all
+            audio files from the database in album/track order.
+          add_manual: Takes a list of audio files and adds them directly to the
+            given NML file or creates a new NML file with these audio files.
+            Doesn't do automatic timestamp detection or sorting.
+            Currently untested, but also not used anywhere.
+          close: Must call this to actually see changes in the file. Saves
+            in-memory changes to the NML file in permanent storage.
         """
         self._num_modified_entries = 0
         self._num_new_entries = 0
@@ -166,6 +174,15 @@ class NMLReadWriter(object):
         """
         modified_attrs = {}
 
+        # Fields that are not modified:
+            # Genre
+            # Dir
+            # Volume
+            # File name - changing this would affect the unique fingerprint identifier we depend on
+            # Bitrate - changing this would affect fingerprint
+            # Duration - changing this would affect fingerprint
+            # Modified time - is a hardset value in other places currently
+
         modified_attrs["order_num"], modified_attrs["total_num"] = order.decode(
             str(au_file.mutagen_id3.get("TRCK")))
         if modified_attrs["total_num"] is None:
@@ -180,21 +197,9 @@ class NMLReadWriter(object):
         
         modified_attrs["size_in_kb"] = int(au_file.frame_size / 1024)
 
-        # Assuming genre field doesn't get modified
-
-        # Not allowing dir or volume to change because all files should have the same values for these anyway
-
-        # Not allowing file name to change because this is the fingerprint that we
-        # treat as a unique key for the audio file. Changing it would cause problems
-
-        # Not allowing bitrate or duration to be modified
-        # because this would change the fingerprint which would cause problems
-
         modified_attrs["import_date"] = time.strftime(
             "%Y/%m/%d", time.gmtime(au_file.import_timestamp))
         modified_attrs["modified_date"] = modified_attrs["import_date"]
-        
-        # Modified time is a hardset value so I'm not modifying it
 
         entry_elem.set("ARTIST", modified_attrs["artist"])
         entry_elem.set("TITLE", modified_attrs["song"])
@@ -234,7 +239,7 @@ class NMLReadWriter(object):
             "PROGRAM": "Traktor - Native Instruments",
         })
         ET.SubElement(root_elem, "MUSICFOLDERS")
-        collection_elem = ET.SubElement(root_elem, "COLLECTION", { "ENTRIES": "%10d" % 0}) #TODO: maybe don't write this until the end when we know the value of entries?
+        collection_elem = ET.SubElement(root_elem, "COLLECTION", { "ENTRIES": "%10d" % 0})
 
         # create suffix
         playlists_elem = ET.SubElement(root_elem, "PLAYLISTS")
@@ -290,12 +295,8 @@ class NMLReadWriter(object):
                   "We recommend you change the TAG_SEPARATOR value to avoid this.")
             new_audio_files = self._db.get_since(int(last_modified))
 
-        # The plan is to loop through all audio files in the NML file and for each,
-        # check if its fingerprint exists in the new_audio_files list. If it does, then modify its entry with the new data.
-        # This should be faster if we store the fingerprints in a set or dict.
-        # For now, I'm going with a set, but if we need to access the audio file object, a hash would be better.
-        # I'm concerned that this might be a memory issue since there are a lot of audio files,
-        # but I think the original writer has all files in the whole db in memory at a time so it's probably fine
+        # Store fingerprints and audio files of all files to add in a dictionary
+        # so we can check if we have to modify them as we iterate through the file
         new_au_files_dict = {}
         for au_file in new_audio_files:
             new_au_files_dict[au_file.fingerprint] = au_file
@@ -321,7 +322,6 @@ class NMLReadWriter(object):
         entries_to_append = list(self._get_ordered_nml_entries(new_au_files_dict.values()))
         self._num_new_entries += len(entries_to_append)
         self._new_entries += entries_to_append
-        # collection.extend(entries_to_append)
 
         return new_timestamp
 
@@ -352,7 +352,6 @@ class NMLReadWriter(object):
         except:
             return False
         mapped_file.seek(0)
-        # TODO: change pattern so it works with Traktor Pro 4 format
         matches = list(re.finditer(
             (br'<((\s*COLLECTION\s*ENTRIES\s*=\s*".{10}"\s*>)|'
              br'(/\s*ENTRY\s*>\s*</\s*COLLECTION\s*>[\S\s]*<\s*PLAYLISTS\s*>[\S\s]*</\s*PLAYLISTS\s*>))'),
@@ -446,7 +445,7 @@ class NMLReadWriter(object):
         collection = self._et_tree.find("COLLECTION")
         if collection is None:
             raise ValueError("File format: No COLLECTION element found")
-        num_old_entries = int(collection.get("ENTRIES", 0).lstrip()) # TODO: remove this lstrip
+        num_old_entries = int(collection.get("ENTRIES", 0))
         collection.set("ENTRIES", "%10d" % (num_old_entries + self._num_new_entries))
         collection.extend(self._new_entries)
         self._overwrite_fh.seek(0)
