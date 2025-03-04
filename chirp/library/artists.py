@@ -32,12 +32,22 @@ _MAPPINGS_SEP = "\xbb\xbb\xbb"
 
 # A dict containing the data parsed from _WHITELIST_FILE.
 # This is populated at module import-time by calling _init().
+
+# maps standardized form to one unstandardized form
+# note: with the inclusion of breakpoints, the unstandardized value
+#       may not be the only artist name matching the standardized key
+#       and this whitelist may no longer be complete
 _global_whitelist  = {}
 
 # A pair of dicts containing the data parsed from _MAPPINGS_FILE.
 # These are populated at module import-time by calling _init().
 _global_raw_mappings = {}
 _global_mappings = {}
+
+#a dict to map standardized artist names to list of unstandardized names
+_collision_mappings = {}
+#list of all known artists, unstandardized
+_complete_whitelist = []
 
 # A global lock that guards the global whitelist and mappings.
 _global_lock = threading.Lock()
@@ -47,13 +57,34 @@ def all():
     """Returns an iterable sequence of all known artists."""
     _global_lock.acquire()
     try:
-        return list(_global_whitelist.values())
+        global _complete_whitelist
+        return _complete_whitelist
     finally:
         _global_lock.release()
 
 
 def sort_key(artist_name):
     return similarity.get_sort_key(artist_name.lower())
+
+def check_collisions(artist_name):
+    
+    global _collision_mappings
+    #print(_collision_mappings)
+    exact_matches = _check_collisions(artist_name, _collision_mappings)
+    return exact_matches
+
+def _check_collisions(artist_name, collisions):
+    if not artist_name:
+        return None
+    canon_name = similarity.canonicalize_string(artist_name)
+    if canon_name not in collisions.keys():
+        
+        return None
+    if len(collisions[canon_name]) == 1:
+        return None
+    return collisions[canon_name]
+
+
 
 
 def _standardize_simple(artist_name, whitelist, mappings):
@@ -70,6 +101,11 @@ def _standardize_simple(artist_name, whitelist, mappings):
       A string containing the standardized form of the artist name,
       or None if the name is not recognized.
     """
+    # Just return the artist name if an exist match is in whitelist
+    global _complete_whitelist
+    if artist_name in _complete_whitelist:
+        return artist_name
+    
     canon_name = similarity.canonicalize_string(artist_name)
     # We just try to look up the canonicalized form of the artist name
     # in both the whitelist and mapping dicts.
@@ -269,13 +305,16 @@ def suggest(name, whitelist = None):
 
 def _seq_to_whitelist(seq_of_names):
     new_whitelist = {}
+    global _collision_mappings
     for name in seq_of_names:
         canon = similarity.canonicalize_string(name)
         if canon in new_whitelist:
-            sys.stderr.write("Artist whitelist collision: \"%s\" and \"%s\"\n"
-                             % (new_whitelist[canon], name))
-            return None
+            _collision_mappings[canon].append(name)
+            print(canon, _collision_mappings[canon])
+        else:
+            _collision_mappings[canon] = [name]
         new_whitelist[canon] = name
+        
     return new_whitelist
 
 
@@ -295,7 +334,9 @@ def reset_artist_whitelist(seq_of_names):
     _global_lock.acquire()
     try:
         global _global_whitelist
+        global _complete_whitelist
         _global_whitelist = new_whitelist
+        _complete_whitelist = seq_of_names
         return True
     finally:
         _global_lock.release()
@@ -361,6 +402,8 @@ def _init():
     """Bootstrap the global whitelist and mappings."""
     # Read in the artist whitelist.
     global _global_whitelist
+    global _complete_whitelist
+
     assert reset_artist_whitelist(_read_artist_whitelist_from_file(
             codecs.open(_WHITELIST_FILE, "r", "utf-8")))
 
