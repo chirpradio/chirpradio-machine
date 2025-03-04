@@ -242,7 +242,7 @@ class NMLReadWriter(object):
             "TYPE": "FOLDER",
             "NAME": "$ROOT",
         })
-        subnodes_elem = ET.SubElement(folder_node_elem, "SUBNODES", { "COUNT": "2"}) # Should this value stay 1 even though we added the second one (timestamp)?
+        subnodes_elem = ET.SubElement(folder_node_elem, "SUBNODES", { "COUNT": "2"})
         recordings_node_elem = ET.SubElement(subnodes_elem, "NODE", {
             "TYPE": "PLAYLIST",
             "NAME": "_RECORDINGS",
@@ -325,7 +325,6 @@ class NMLReadWriter(object):
 
         return new_timestamp
 
-    # TODO: Add a memory/file limit parameter
     def add_new_files(self):
         if self._et_tree is None:
             return self._add_from_scratch()
@@ -344,12 +343,10 @@ class NMLReadWriter(object):
         
         new_entries = list(map(self._au_file_to_nml_entry, au_files))
         self._new_entries += new_entries
-        # collection_elem.extend(new_entries)
 
         return new_timestamp
     
     def _close_append_only(self):
-        print("yes doing the thing")
         try:
             mapped_file = mmap.mmap(self._overwrite_fh.fileno(), 0)
         except:
@@ -357,15 +354,20 @@ class NMLReadWriter(object):
         mapped_file.seek(0)
         # TODO: change pattern so it works with Traktor Pro 4 format
         matches = list(re.finditer(
-            br'<((\s*COLLECTION\s*ENTRIES\s*=\s*".{10}"\s*>)|(/\s*COLLECTION\s*>\s*<\s*PLAYLISTS\s*>[\S\s]*</\s*PLAYLISTS\s*>))',
+            (br'<((\s*COLLECTION\s*ENTRIES\s*=\s*".{10}"\s*>)|'
+             br'(/\s*ENTRY\s*>\s*</\s*COLLECTION\s*>[\S\s]*<\s*PLAYLISTS\s*>[\S\s]*</\s*PLAYLISTS\s*>))'),
             mapped_file
         ))
         if len(matches) != 2:
             return False
 
         entries_val_offset = matches[0].group().find(b'"')
-        playlists_tag_offset = matches[1].group().find(b'>') + 1
-        is_valid_matches = entries_val_offset != -1 and playlists_tag_offset > 0
+        collection_tag_offset = matches[1].group().find(b'>') + 1
+        playlist_match = re.search(br'<\s*PLAYLISTS', matches[1].group())
+        if playlist_match is None:
+            return False
+        playlists_tag_offset = playlist_match.start()
+        is_valid_matches = entries_val_offset != -1 and playlists_tag_offset != -1
         if not is_valid_matches:
             return False
 
@@ -380,9 +382,12 @@ class NMLReadWriter(object):
 
         # Append new entries and update timestamp
         playlists_match = matches[1]
-        playlists_seek_start = playlists_match.start()
+        suffix_seek_start = playlists_match.start() + collection_tag_offset
+        dist_btwn_suffix_playlists = playlists_tag_offset - collection_tag_offset
         playlists_seek_end = playlists_match.end()
 
+        self._overwrite_fh.seek(suffix_seek_start)
+        before_playlists_str = self._overwrite_fh.read(dist_btwn_suffix_playlists)
         self._overwrite_fh.seek(playlists_seek_end)
         after_playlists_str = self._overwrite_fh.read()
 
@@ -420,13 +425,13 @@ class NMLReadWriter(object):
             entry_str = ET.tostring(entry, encoding='unicode')
             append_str += entry_str + "\n"
 
-        append_str += "</COLLECTION>\n"
+        append_str += before_playlists_str
 
         append_str += ET.tostring(playlists_elem, encoding='unicode')
 
         append_str += after_playlists_str
 
-        self._overwrite_fh.seek(playlists_seek_start)
+        self._overwrite_fh.seek(suffix_seek_start)
         self._overwrite_fh.write(append_str)
 
         self._overwrite_fh.truncate()
@@ -437,7 +442,6 @@ class NMLReadWriter(object):
         if self._num_modified_entries == 0 and not self._is_file_empty\
             and self._close_append_only(): #_close_append_only returns True if it succeeds
                 return
-        print("not doing the thing")
 
         collection = self._et_tree.find("COLLECTION")
         if collection is None:
@@ -445,7 +449,6 @@ class NMLReadWriter(object):
         num_old_entries = int(collection.get("ENTRIES", 0).lstrip()) # TODO: remove this lstrip
         collection.set("ENTRIES", "%10d" % (num_old_entries + self._num_new_entries))
         collection.extend(self._new_entries)
-        # self._et_tree.write(self._overwrite_fh, "unicode")
         self._overwrite_fh.seek(0)
         self._overwrite_fh.write(ET.tostring(self._et_tree, encoding='unicode'))
         self._overwrite_fh.truncate()

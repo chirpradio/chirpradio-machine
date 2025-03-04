@@ -146,22 +146,6 @@ class NMLWriterTest(unittest.TestCase):
         expected_strs += test_data.TEST_NML_ENTRIES_1
         
         self._assert_strings_in_output(expected_strs, output)
-
-        # # Add new audio files to the NML file
-        # writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
-        # new_timestamp = writer.add_new_files()
-        # writer.close()
-
-        # # Check that all the expected elements are still in the file
-        # output_str = output.getvalue()
-        # self.assert_is_valid_xml(output_str)
-        # self.assertTrue(test_data.TEST_NML_PREFIX % 5 in output_str)
-        # self.assertTrue(test_data.TEST_NML_SUFFIX % new_timestamp in output_str)
-        # self.assertTrue(test_data.TEST_NML_ENTRIES_1 in output_str)
-        # output_str_no_newline = output_str.replace("\n", "")
-        # for i in range(4):
-        #     expected_entry = NMLWriterTest._au_file_to_nml_entry(test_au_files[i], root_dir, file_volume.replace("/", "/:"))
-        #     self.assertTrue(expected_entry.replace("\n", "") in output_str_no_newline)
     
     def test_add_more(self):
         # Create mock data
@@ -180,22 +164,6 @@ class NMLWriterTest(unittest.TestCase):
         expected_strs += test_data.TEST_NML_ENTRIES_20
         
         self._assert_strings_in_output(expected_strs, output)
-
-        # # Add new audio files to the NML file
-        # writer = nml_writer.NMLReadWriter(file_volume, root_dir, output, db)
-        # new_timestamp = writer.add_new_files()
-        # writer.close()
-
-        # # Check that all the expected elements are still in the file
-        # output_str = output.getvalue()
-        # self.assert_is_valid_xml(output_str)
-        # self.assertTrue(test_data.TEST_NML_PREFIX % 30 in output_str)
-        # self.assertTrue(test_data.TEST_NML_SUFFIX % new_timestamp in output_str)
-        # self.assertTrue(test_data.TEST_NML_ENTRIES_20 in output_str)
-        # output_str_no_newline = output_str.replace("\n", "")
-        # for i in range(10):
-        #     expected_entry = NMLWriterTest._au_file_to_nml_entry(test_au_files[i], root_dir, file_volume.replace("/", "/:"))
-        #     self.assertTrue(expected_entry.replace("\n", "") in output_str_no_newline)
 
     def test_modify(self):
         # Create mock data
