@@ -64,7 +64,7 @@ def main_generator():
             writer.close()
         except ValueError as e:
             cprint(f"NMLReadWriter failed with error {e} "
-                    "due to an incorrect NML file format. "
+                    "due to an unexpected NML file format. "
                     "Switching to backup NMLWriter.")
             yield from safe_nml_generator()
         except MemoryError:

@@ -111,11 +111,18 @@ class NMLReadWriter(object):
         if subnodes_elem is None:
             raise ValueError('File format: SUBNODES element not found')
 
-        for playlist in subnodes_elem.iter("PLAYLIST"):
-            old_timestamp = playlist.get("UUID")
+        for node_elem in subnodes_elem.iter("NODE"):
+            if node_elem.get("NAME") != "_CHIRP":
+                continue
+            
+            playlist_elem = node_elem.find("PLAYLIST")
+            if playlist_elem is None:
+                continue
+
+            old_timestamp = playlist_elem.get("UUID")
             if old_timestamp is not None:
                 new_timestamp = timestamp.now()
-                playlist.set("UUID", str(new_timestamp))
+                playlist_elem.set("UUID", str(new_timestamp))
                 return (old_timestamp, new_timestamp)
 
         # If timestamp is not found, add it to the NML file and consider all au files new
