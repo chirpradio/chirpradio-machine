@@ -12,6 +12,7 @@ import xml.sax.saxutils
 from lxml import etree as ET
 import mmap
 import re
+import io
 
 from chirp.common import timestamp
 from chirp.common import unicode_util
@@ -94,7 +95,10 @@ class NMLReadWriter(object):
         self._overwrite_fh = overwrite_fh
         self._db = db
         self._overwrite_fh.seek(0)
-        self._is_file_empty = self._overwrite_fh.read(1) == ''
+        try:
+            self._is_file_empty = self._overwrite_fh.read(1) == ''
+        except io.UnsupportedOperation:
+            self._is_file_empty = True
         self._overwrite_fh.seek(0)
         if self._is_file_empty:
             self._et_tree = None
