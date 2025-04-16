@@ -477,6 +477,41 @@ class Database(object):
 
 
 
+    def _extract_fingerprint(self, title: str, artist: str) -> list[str]:
+        '''
+        Extract a list of fingerprints that matches the user's input of title and artist.
+
+        Args:
+            title: User input of the song title.
+            artist: User input of the artist.
+
+        Return a list of fingerprints in the database that matches the user's
+        input of title and artist.
+        '''
+        fingerprints: list[str] = []
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        sql = ("SELECT  a.fingerprint, b.fingerprint "
+                "FROM id3_tags a "
+                "JOIN id3_tags  b ON a.fingerprint = b.fingerprint "
+                "WHERE a.frame_id = 'TIT2' AND a.value = ? "
+                "AND b.frame_id = 'TPE1' AND b.value = ? ;")
+        cursor.execute(sql, (title, artist))
+
+        result = cursor.fetchall()
+        for row in result:
+            fingerprints.append(row[0])
+
+        cursor.close()
+        return fingerprints
+
+
+
+
+
+
+
+
 class _AddTransaction(object):
     """Encapsulates a database transaction."""
 
