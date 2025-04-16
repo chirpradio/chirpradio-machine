@@ -16,6 +16,7 @@ import io
 
 from chirp.common import timestamp
 from chirp.common import unicode_util
+from chirp.common.printing import cprint
 from chirp.library import artists
 from chirp.library import order, database
 from chirp.common.conf import LIBRARY_DB
@@ -280,6 +281,7 @@ class NMLReadWriter(object):
         return (root_elem, collection_elem)
 
     def _add_from_scratch(self):
+        cprint("Creating new NML catalog from scratch...")
         new_timestamp = timestamp.now()
         (root_elem, collection_elem) = self._create_tree_prefix_suffix(new_timestamp)
 
@@ -294,6 +296,7 @@ class NMLReadWriter(object):
         return new_timestamp
 
     def _add_from_pre_existing(self):
+        cprint("Updating existing NML catalog...")
         (last_modified, new_timestamp) = self._update_timestamp()
 
         try:
@@ -311,6 +314,7 @@ class NMLReadWriter(object):
         new_au_files_dict = {}
         for au_file in new_audio_files:
             new_au_files_dict[au_file.fingerprint] = au_file
+        cprint("Found %s new or modified audio %s" % (len(new_au_files_dict), "file" if len(new_au_files_dict) == 1 else "files"))
         
         collection = self._et_tree.find("COLLECTION")
         if collection is None:
