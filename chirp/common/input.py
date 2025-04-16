@@ -1,4 +1,5 @@
 from chirp.common.printing import cprint
+import contextlib
 
 class CustomInput():
     """
@@ -42,8 +43,19 @@ class CustomInput():
                     return ci
             cprint(f"Please type a number between 1 and {len(choices) + allow_custom}")
 
+    @contextlib.contextmanager
+    def use_input_function(self, func):
+        self.input = func
+        yield
+        self.input = self.default_input
+
 
 cinput = CustomInput()
 
+def test():
+    #choice = cinput("What topping do you want on your pizza?", ["Cheese", "Pepperoni", "Pineapple"], True)
+    choice = cinput("Saw %d errors. Continue anyways?" % 3, ["Yes", "No"], False)
+    cprint("You chose: " + choice)
+
 if __name__ == "__main__":
-    cprint(cinput("Hello?", ["aaa"], True))
+    test()
