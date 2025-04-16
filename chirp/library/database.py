@@ -195,7 +195,6 @@ def _audio_file_with_tags_generator(conn, sql):
 
         reprs = tag_components[0].split(TAGS_SEPARATOR)
         values = tag_components[1].split(TAGS_SEPARATOR)
-        # TODO: backup slower query if this one has unequal lengths
         if len(reprs) != len(values):
             raise ValueError("Repr or value included the delimiter")
 

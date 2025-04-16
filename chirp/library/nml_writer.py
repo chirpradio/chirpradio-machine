@@ -12,9 +12,11 @@ import xml.sax.saxutils
 from lxml import etree as ET
 import mmap
 import re
+import io
 
 from chirp.common import timestamp
 from chirp.common import unicode_util
+from chirp.common.printing import cprint
 from chirp.library import artists
 from chirp.library import order, database
 from chirp.common.conf import LIBRARY_DB
@@ -94,7 +96,10 @@ class NMLReadWriter(object):
         self._overwrite_fh = overwrite_fh
         self._db = db
         self._overwrite_fh.seek(0)
-        self._is_file_empty = self._overwrite_fh.read(1) == ''
+        try:
+            self._is_file_empty = self._overwrite_fh.read(1) == ''
+        except io.UnsupportedOperation:
+            self._is_file_empty = True
         self._overwrite_fh.seek(0)
         if self._is_file_empty:
             self._et_tree = None
@@ -111,11 +116,18 @@ class NMLReadWriter(object):
         if subnodes_elem is None:
             raise ValueError('File format: SUBNODES element not found')
 
-        for playlist in subnodes_elem.iter("PLAYLIST"):
-            old_timestamp = playlist.get("UUID")
+        for node_elem in subnodes_elem.iter("NODE"):
+            if node_elem.get("NAME") != "_CHIRP":
+                continue
+            
+            playlist_elem = node_elem.find("PLAYLIST")
+            if playlist_elem is None:
+                continue
+
+            old_timestamp = playlist_elem.get("UUID")
             if old_timestamp is not None:
                 new_timestamp = timestamp.now()
-                playlist.set("UUID", str(new_timestamp))
+                playlist_elem.set("UUID", str(new_timestamp))
                 return (old_timestamp, new_timestamp)
 
         # If timestamp is not found, add it to the NML file and consider all au files new
@@ -269,6 +281,7 @@ class NMLReadWriter(object):
         return (root_elem, collection_elem)
 
     def _add_from_scratch(self):
+        cprint("Creating new NML catalog from scratch...")
         new_timestamp = timestamp.now()
         (root_elem, collection_elem) = self._create_tree_prefix_suffix(new_timestamp)
 
@@ -283,6 +296,7 @@ class NMLReadWriter(object):
         return new_timestamp
 
     def _add_from_pre_existing(self):
+        cprint("Updating existing NML catalog...")
         (last_modified, new_timestamp) = self._update_timestamp()
 
         try:
@@ -300,6 +314,7 @@ class NMLReadWriter(object):
         new_au_files_dict = {}
         for au_file in new_audio_files:
             new_au_files_dict[au_file.fingerprint] = au_file
+        cprint("Found %s new or modified audio %s" % (len(new_au_files_dict), "file" if len(new_au_files_dict) == 1 else "files"))
         
         collection = self._et_tree.find("COLLECTION")
         if collection is None:

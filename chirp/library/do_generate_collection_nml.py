@@ -50,7 +50,9 @@ def safe_nml_generator():
 def main_generator():
     # TODO: maybe add more progress updates
     nml_file = os.path.join(os.getcwd(), 'output.nml')
-    with codecs.open(nml_file, "r+", "utf-8") as out_fh:
+    if not os.path.exists(nml_file): mode = "w"
+    else: mode = "r+"
+    with codecs.open(nml_file, mode, "utf-8") as out_fh:
         # TODO(trow): Don't hard-wire the drive letter.
         db = database.Database(conf.LIBRARY_DB)
         cprint('Writing Traktor file to {}'.format(nml_file))
@@ -64,7 +66,7 @@ def main_generator():
             writer.close()
         except ValueError as e:
             cprint(f"NMLReadWriter failed with error {e} "
-                    "due to an incorrect NML file format. "
+                    "due to an unexpected NML file format. "
                     "Switching to backup NMLWriter.")
             yield from safe_nml_generator()
         except MemoryError:

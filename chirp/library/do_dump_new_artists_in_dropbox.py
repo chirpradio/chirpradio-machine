@@ -22,19 +22,27 @@ def main_generator(rewrite):
         if not rewrite:
             new_artists.add(tpe1)
         else:
-            standardized_name = artists.standardize(tpe1)
-            if not standardized_name:
-                new_artists.add(tpe1)
-            elif standardized_name != tpe1:
-                bp_inpt = cinput(f"Correct {tpe1} to {standardized_name}?", ["Yes (default)","No"],allow_custom=False)
-                if(bp_inpt == "No"): #Breakpoint passed
+            collisions = artists.check_collisions(tpe1)
+            if collisions:
+                cl_inpt = cinput(f"Multiple potential matches found for {tpe1}. Choose which is correct.",
+                                 collisions, allow_custom=False)
+                au_file.mutagen_id3["TPE1"].text[0] = cl_inpt
+            
+            else:
+                standardized_name = artists.standardize(tpe1)
+                if not standardized_name:
                     new_artists.add(tpe1)
+                elif standardized_name != tpe1:
+                    bp_inpt = cinput(f"Correct {tpe1} to {standardized_name}?", ["Yes (default)","No"],allow_custom=False)
+                    if(bp_inpt == "No"): #Breakpoint passed
+                        new_artists.add(tpe1)
+                    else:
+                        au_file.mutagen_id3["TPE1"].text[0] = standardized_name
 
-
-
-    to_print = list(new_artists)
+    to_print = set(new_artists)
     if rewrite:
-        to_print.extend(artists.all())
+        to_print.update(set(artists.all()))
+    to_print = list(to_print)
     to_print.sort(key=artists.sort_key)
 
     output = None
