@@ -67,9 +67,8 @@ def sort_key(artist_name):
     return similarity.get_sort_key(artist_name.lower())
 
 def check_collisions(artist_name):
-    
+
     global _collision_mappings
-    #print(_collision_mappings)
     exact_matches = _check_collisions(artist_name, _collision_mappings)
     return exact_matches
 
@@ -78,7 +77,7 @@ def _check_collisions(artist_name, collisions):
         return None
     canon_name = similarity.canonicalize_string(artist_name)
     if canon_name not in collisions.keys():
-        
+
         return None
     if len(collisions[canon_name]) == 1:
         return None
@@ -310,10 +309,9 @@ def _seq_to_whitelist(seq_of_names):
         canon = similarity.canonicalize_string(name)
         if canon in new_whitelist:
             _collision_mappings[canon].append(name)
-            print(canon, _collision_mappings[canon])
         else:
             _collision_mappings[canon] = [name]
-        new_whitelist[canon] = name
+            new_whitelist[canon] = name
         
     return new_whitelist
 
