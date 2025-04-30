@@ -520,6 +520,8 @@ class Database(object):
         used when there are multiple entries corresponding to the same title
         and artist, and the web interface needs to print out information
         about each entry, based on the fingerprint.
+        Didn't show an alert if there is multiple rows with the same 
+        (fingerprint, id_frame) tuple.
         '''
         songinfo: dict[str, str | None] = {}
         idframesinfo: list[str] = ['TIT2', 'TPE1', 'TALB', 'TRCK', 'TDRC', 
