@@ -505,6 +505,43 @@ class Database(object):
         return fingerprints
 
 
+    def _fingerprint_display(self, fingerprint) -> dict:
+        '''
+        Given a fingerprint, display important information about the Mutagen
+        information.
+        We include information about: TIT2, TALB (album title), TRCK (track
+        number in set), TLEN (length of audio in ms), TPE1 (lead artist),
+        TDRC (Recording Time), TFLT (file type).
+
+        Args:
+            fingerprint: a fingerprint for a file
+
+        Return a list of important characterstics of the file. This feature is
+        used when there are multiple entries corresponding to the same title
+        and artist, and the web interface needs to print out information
+        about each entry, based on the fingerprint.
+        '''
+        songinfo: dict[str, str | None] = {}
+        idframesinfo: list[str] = ['TIT2', 'TPE1', 'TALB', 'TRCK', 'TDRC', 
+                                   'TLEN', 'TFLT']
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        for frame_id in idframesinfo:
+            sql = ("SELECT value FROM id3_tags "
+                "where fingerprint = ? AND frame_id = ?")
+            cursor.execute(sql, (fingerprint, frame_id))
+            result = cursor.fetchall()
+            if not result:
+                songinfo[frame_id] = None
+            else:
+                songinfo[frame_id] = result[0]
+        cursor.close()
+        conn.close()
+
+        return songinfo
+
+
 
 
 
