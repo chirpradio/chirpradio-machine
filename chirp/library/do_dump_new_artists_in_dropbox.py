@@ -9,9 +9,18 @@ from chirp.library import dropbox
 
 
 
-def main_generator(rewrite):
+def main_generator(rewrite, test=False, update_artists=False, update_drop=False):
+
     drop = dropbox.Dropbox()
+    if test:
+        if update_artists:
+            update_artists(artists)
+        if update_drop:
+            update_drop(drop)
+
     new_artists = set()
+
+
     for au_file in drop.tracks():
         try:
             tpe1 = au_file.mutagen_id3["TPE1"].text[0]
@@ -24,6 +33,7 @@ def main_generator(rewrite):
         else:
             collisions = artists.check_collisions(tpe1)
             if collisions:
+                collisions.sort()
                 cl_inpt = cinput(f"Multiple potential matches found for {tpe1}. Choose which is correct.",
                                  collisions, allow_custom=False)
                 au_file.mutagen_id3["TPE1"].text[0] = cl_inpt
@@ -33,7 +43,7 @@ def main_generator(rewrite):
                 if not standardized_name:
                     new_artists.add(tpe1)
                 elif standardized_name != tpe1:
-                    bp_inpt = cinput(f"Correct {tpe1} to {standardized_name}?", ["Yes (default)","No"],allow_custom=False)
+                    bp_inpt = cinput(f"Correct {tpe1} to {standardized_name}?", ["Yes (default)","No"], allow_custom=False)
                     if(bp_inpt == "No"): #Breakpoint passed
                         new_artists.add(tpe1)
                     else:

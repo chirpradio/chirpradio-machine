@@ -95,9 +95,10 @@ def import_albums(dry_run):
     cprint("Found %d albums" % album_count)
     if error_count > 0:
         cprint("Saw %d errors" % error_count, type='failure')
-        response = cinput("Continue anyways?", ["Yes", "No"], False)
-        if response == "No":
-            return
+        if not dry_run:
+            response = cinput("Continue anyways?", ["Yes", "No"], False)
+            if response == "No":
+                return
     else:
         cprint("No errors found")
 

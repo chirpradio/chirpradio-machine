@@ -62,7 +62,8 @@ def canonicalize_string(txt):
 def get_sort_key(text):
     """Returns a sort key for the string 'text'."""
     if text.lower().startswith("the "):
-        text = text[4:]
+        #if two strings are the same, the one that begins with 'the' is sorted after
+        text = text[4:] + " "
     return text
 
 
