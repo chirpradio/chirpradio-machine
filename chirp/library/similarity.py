@@ -30,6 +30,7 @@ def canonicalize_string(txt):
         txt = str(txt)
     # Map txt to lower-case.
     txt = txt.lower()
+    txt = txt.strip()
     # Strip off any leading "the".
     if txt.startswith("the "):
         txt = txt[4:]
