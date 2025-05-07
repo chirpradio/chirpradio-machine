@@ -37,6 +37,7 @@ from chirp.library import schema
 from os.path import exists, join, basename, dirname
 from shutil import copyfile
 
+
 """A string unlikely to appear in any values that is used to separate concatenated tags"""
 TAGS_SEPARATOR = "^&*"
 
@@ -435,7 +436,7 @@ class Database(object):
         conn.commit()
 
 
-    def _modify_tag(self, fingerprint, frame_id: str, val: str) -> bool:
+    def _modify_tag(self, fingerprint, frame_id, val) -> bool:
       '''
       Update a tag value of a given audio file into the database.
 
@@ -476,18 +477,18 @@ class Database(object):
 
 
 
-    def _extract_fingerprint(self, title: str, artist: str) -> list[str]:
+    def _extract_fingerprint(self, title, artist):
         '''
         Extract a list of fingerprints that matches the user's input of title and artist.
 
         Args:
-            title: User input of the song title.
-            artist: User input of the artist.
+            title (str): User input of the song title.
+            artist (str): User input of the artist.
 
         Return a list of fingerprints in the database that matches the user's
-        input of title and artist.
+        input of title and artist. (list[str])
         '''
-        fingerprints: list[str] = []
+        fingerprints = []
         conn = self._get_connection()
         cursor = conn.cursor()
         sql = ("SELECT  a.fingerprint, b.fingerprint "
@@ -505,7 +506,7 @@ class Database(object):
         return fingerprints
 
 
-    def _fingerprint_display(self, fingerprint) -> dict:
+    def _fingerprint_display(self, fingerprint):
         '''
         Given a fingerprint, display important information about the Mutagen
         information.
@@ -514,14 +515,15 @@ class Database(object):
         TDRC (Recording Time), TFLT (file type).
 
         Args:
-            fingerprint: a fingerprint for a file
+            fingerprint (str): a fingerprint for a file
 
-        Return a list of important characterstics of the file. This feature is
-        used when there are multiple entries corresponding to the same title
-        and artist, and the web interface needs to print out information
-        about each entry, based on the fingerprint.
+        Return a dictionary of important characterstics of the file. This 
+        feature is used when there are multiple entries corresponding to the 
+        same title and artist, and the web interface needs to print out 
+        information about each entry, based on the fingerprint. (dict)
         Didn't show an alert if there is multiple rows with the same 
         (fingerprint, id_frame) tuple.
+
         '''
         songinfo: dict[str, str | None] = {}
         idframesinfo: list[str] = ['TIT2', 'TPE1', 'TALB', 'TRCK', 'TDRC', 
