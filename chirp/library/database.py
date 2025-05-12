@@ -29,6 +29,8 @@ import sqlite3
 import mutagen.id3
 
 import re
+import time
+import sys
 
 from chirp.common import timestamp
 from chirp.common.printing import cprint
@@ -210,12 +212,19 @@ def _audio_file_with_tags_generator(conn, sql):
 def _audio_file_generator(conn, sql):
     """Turns a SQL query into a generator of AudioFile objects."""
     cursor = conn.execute(sql)
+    start_t = time.time()
+    count = 0
     while True:
         au_file_tuple = cursor.fetchone()
         if au_file_tuple is None:
             return
         au_file = schema.tuple_to_audio_file(au_file_tuple)
         assert _get_tags(conn, au_file, None)
+        count += 1
+        if count % 1000 == 0:
+            elapsed_t = time.time() - start_t
+            cprint(type='count', count=count, elapsed_seconds=elapsed_t)
+            sys.stderr.write("{count} ({rate:.1f}/s)...\n".format(count=count, rate=count / elapsed_t))
         yield au_file
 
 
