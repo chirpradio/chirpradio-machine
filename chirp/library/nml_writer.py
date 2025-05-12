@@ -240,7 +240,7 @@ class NMLReadWriter(object):
                 order_nums[au_file.fingerprint] = order_num
             return (au_file.album_id, order_num)
         sorted_new_au_files = sorted(audio_files, key=get_order_key)
-
+        cprint("Finalizing NML...")
         return map(self._au_file_to_nml_entry, sorted_new_au_files)
     
     def _create_tree_prefix_suffix(self, import_timestamp):
