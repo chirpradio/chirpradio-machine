@@ -53,7 +53,8 @@ class CustomInput():
 cinput = CustomInput()
 
 def test():
-    #choice = cinput("What topping do you want on your pizza?", ["Cheese", "Pepperoni", "Pineapple"], True)
+    choice = cinput("What topping do you want on your pizza?", ["Cheese", "Pepperoni", "Pineapple"], True)
+    cprint("You chose: " + choice)
     choice = cinput("Saw %d errors. Continue anyways?" % 3, ["Yes", "No"], False)
     cprint("You chose: " + choice)
 
