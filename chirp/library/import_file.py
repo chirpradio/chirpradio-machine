@@ -7,6 +7,7 @@ import hashlib
 
 import mutagen.id3
 
+from chirp.common.printing import cprint
 from chirp.library import artists
 from chirp.library import audio_file
 from chirp.library import checker
@@ -131,7 +132,6 @@ def standardize_file(au_file):
     # Make sure our checker finds no errors.
     pre_write_tagging_errors = checker.find_tags_errors(au_file)
     if pre_write_tagging_errors:
-        au_file.mutagen_id3 = original_id3  # Put back the original tags
         raise ImportFileError(
             ["Found pre-write errors"] + pre_write_tagging_errors)
 
@@ -165,7 +165,6 @@ def write_file(au_file, prefix):
     out_fh.write(au_file.payload)
     out_fh.close()
 
-    # Now make sure that the file we just wrote passes our checks.
     new_au_file = audio_file.scan(path)
     if new_au_file is None:
         raise ImportFileError(["New file damaged!"])
@@ -173,9 +172,7 @@ def write_file(au_file, prefix):
     new_au_file.import_timestamp = au_file.import_timestamp
     post_write_tagging_errors = checker.find_tags_errors(new_au_file)
     if post_write_tagging_errors:
-        os.unlink(path)
-        raise ImportFileError(
-            ["Found post-write errors!"] + post_write_tagging_errors)
+        cprint(["Post-write errors:"] + post_write_tagging_errors)
 
     return path
 
