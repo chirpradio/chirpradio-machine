@@ -117,16 +117,16 @@ def _transform_tag_tuple_to_obj(this_repr, value):
     id3_class = getattr(mutagen.id3, frame_id)
     tag = ""
     if frame_id == "UFID":
-        owner = re.search("owner=u[\'|\"](.+?)[\'|\"]", this_repr).group(1)
+        owner = re.search("owner=u*[\'|\"](.+?)[\'|\"]", this_repr).group(1)
         data = b""
         if owner != "http://www.cddb.com/id3/taginfo1.html":
-            data = re.search("data=b[\'|\"](.+?)[\'|\"]", this_repr).group(1).encode()
+            data = re.search("data=b*[\'|\"](.+?)[\'|\"]", this_repr).group(1).encode()
         tag = id3_class(owner=owner, data=data)
 
 
     elif frame_id == "TXXX":
         encoding = int(re.search("encoding=(.+?),", this_repr).group(1))
-        desc = re.search("desc=u[\'|\"](.+?)[\'|\"]", this_repr).group(1)
+        desc = re.search("desc=u*[\'|\"](.+?)[\'|\"]", this_repr).group(1)
         text = value
         tag = id3_class(encoding=encoding,desc=desc,text=text)
     
