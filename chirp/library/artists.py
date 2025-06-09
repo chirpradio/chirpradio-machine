@@ -401,6 +401,8 @@ def _init():
     # Read in the artist whitelist.
     global _global_whitelist
     global _complete_whitelist
+    global _collision_mappings
+    _collision_mappings = {}
 
     assert reset_artist_whitelist(_read_artist_whitelist_from_file(
             codecs.open(_WHITELIST_FILE, "r", "utf-8")))

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import tempfile
 import logging
 import os
 import sys
@@ -22,7 +22,7 @@ VOLUME_NUMBER = 1
 IMPORT_SIZE_LIMIT = 0.95 * (3 << 30)  # 95% of 3GB.
 
 
-def import_albums(dry_run):
+def import_albums(dry_run, test=False, update_artists=False, update_drop=False, update_db=False):
     inbox = dropbox.Dropbox()
     prescan_timestamp = timestamp.now()
     error_count = 0
@@ -30,6 +30,14 @@ def import_albums(dry_run):
     seen_fp = {}
 
     db = database.Database(LIBRARY_DB)
+
+    if test:
+        if update_artists:
+            update_artists(artists)
+        if update_drop:
+            update_drop(inbox)
+        if update_db:
+            update_db(db)
 
     try:
         for alb in inbox.albums():

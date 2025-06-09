@@ -17,6 +17,9 @@ def main_generator(rewrite, test=False, update_artists=False, update_drop=False)
             update_artists(artists)
         if update_drop:
             update_drop(drop)
+    print(artists._complete_whitelist)
+    print(artists._collision_mappings)
+    print(drop._path)
 
     new_artists = set()
 
@@ -37,6 +40,8 @@ def main_generator(rewrite, test=False, update_artists=False, update_drop=False)
                 cl_inpt = cinput(f"Multiple potential matches found for {tpe1}. Choose which is correct.",
                                  collisions, allow_custom=False)
                 au_file.mutagen_id3["TPE1"].text[0] = cl_inpt
+                new_artists.add(cl_inpt)
+                au_file.mutagen_id3.save(au_file.path)
             
             else:
                 standardized_name = artists.standardize(tpe1)
@@ -48,6 +53,7 @@ def main_generator(rewrite, test=False, update_artists=False, update_drop=False)
                         new_artists.add(tpe1)
                     else:
                         au_file.mutagen_id3["TPE1"].text[0] = standardized_name
+                        au_file.mutagen_id3.save(au_file.path)
 
     to_print = set(new_artists)
     if rewrite:

@@ -81,7 +81,7 @@ class DoDumpNewArtists(unittest.TestCase):
         self.write_whitelist(whitelist)
         self.set_dropbox("Beatles")
 
-        input = "1" #Yes
+        input = "1"
         sys.stdin = io.StringIO(input)
 
         for _ in do_dump_new_artists_in_dropbox.main_generator(True, True,
