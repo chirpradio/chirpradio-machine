@@ -4,10 +4,19 @@ import io
 import shutil
 import tempfile
 import time
+import os
 
 from chirp.library.do_periodic_import import import_albums
 from chirp.library import do_dump_new_artists_in_dropbox
 from chirp.library import database
+
+def get_temp_dropbox(source):
+    tempdir = tempfile.gettempdir()
+    dropbox = os.path.join(tempdir, "do_periodic_import_test_dropbox")
+    if os.path.exists(dropbox):
+        shutil.rmtree(dropbox)
+    shutil.copytree(source, dropbox)
+    return dropbox
 
 class DoPeriodicImport(unittest.TestCase):
     old_audio_file = "plasterbrain - Nimbasa CORE - Nimbasa CORE - Single (01a6c39c69a662103e83dd8ace4a18a8d16a11c6)"
@@ -47,7 +56,7 @@ class DoPeriodicImport(unittest.TestCase):
             for _ in import_albums(False, True,
                                    update_db = self.update_db(tmp.name),
                                    update_artists = self.update_artists("Beatles"),
-                                   update_drop = self.update_drop("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles")):
+                                   update_drop = self.update_drop(get_temp_dropbox("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles"))):
                 pass
             tmp_db = database.Database(tmp.name)
             for audio_file in tmp_db.get_all():
@@ -69,7 +78,7 @@ class DoPeriodicImport(unittest.TestCase):
         sys.stdin = io.StringIO(input)
         for _ in do_dump_new_artists_in_dropbox.main_generator(True, True,
                                                                update_artists=self.update_artists("The Beatles\n"),
-                                                               update_drop=self.update_drop("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles")):
+                                                               update_drop=self.update_drop(get_temp_dropbox("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles"))):
             
             pass
 
@@ -82,7 +91,7 @@ class DoPeriodicImport(unittest.TestCase):
             for _ in import_albums(False, True,
                                    update_db = self.update_db(tmp.name),
                                    update_artists = self.update_artists("The Beatles\n"),
-                                   update_drop = self.update_drop("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles")):
+                                   update_drop = self.update_drop(get_temp_dropbox("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles"))):
                 pass
             tmp_db = database.Database(tmp.name)
             for audio_file in tmp_db.get_all():
@@ -105,7 +114,7 @@ class DoPeriodicImport(unittest.TestCase):
         sys.stdin = io.StringIO(input)
         for _ in do_dump_new_artists_in_dropbox.main_generator(True, True,
                                                                update_artists=self.update_artists("The Beatles\n"),
-                                                               update_drop=self.update_drop("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles")):
+                                                               update_drop=self.update_drop(get_temp_dropbox("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles"))):
             
             pass
 
@@ -118,7 +127,7 @@ class DoPeriodicImport(unittest.TestCase):
             for _ in import_albums(False, True,
                                    update_db = self.update_db(tmp.name),
                                    update_artists = self.update_artists("Beatles\nThe Beatles\n"),
-                                   update_drop = self.update_drop("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles")):
+                                   update_drop = self.update_drop(get_temp_dropbox("chirp/library/testdata/do_dump_new_artists_test/dropbox/Beatles"))):
                 pass
             tmp_db = database.Database(tmp.name)
             for audio_file in tmp_db.get_all():
@@ -142,7 +151,7 @@ class DoPeriodicImport(unittest.TestCase):
         sys.stdin = io.StringIO(input)
         for _ in do_dump_new_artists_in_dropbox.main_generator(True, True,
                                                                update_artists=self.update_artists("Beatles\nThe Beatles\n"),
-                                                               update_drop=self.update_drop("chirp/library/testdata/do_periodic_import_test/dropbox/")):
+                                                               update_drop=self.update_drop(get_temp_dropbox("chirp/library/testdata/do_periodic_import_test/dropbox/"))):
             
             pass
 
