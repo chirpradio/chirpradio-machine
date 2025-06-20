@@ -147,7 +147,7 @@ class DoPeriodicImport(unittest.TestCase):
             self.assertEqual(str(audio_file), "Beatles - Beatles Song - Beatles Album (01a6c39c69a662103e83dd8ace4a18a8d16a11c6)")
         db.close()
 
-        input = "1" #Beatles
+        input = "1\n1" #Beatles
         sys.stdin = io.StringIO(input)
         for _ in do_dump_new_artists_in_dropbox.main_generator(True, True,
                                                                update_artists=self.update_artists("Beatles\nThe Beatles\n"),
@@ -155,10 +155,10 @@ class DoPeriodicImport(unittest.TestCase):
             
             pass
 
-
+        print("here")
         with tempfile.NamedTemporaryFile() as tmp:
             shutil.copy(db_path, tmp.name)
-            input = "1" #Yes
+            input = "2\n1\n2\n2" #Ignore error and continue, Yes, Ignore error and continue
             sys.stdin = io.StringIO(input)
 
             for _ in import_albums(False, True,
@@ -170,8 +170,8 @@ class DoPeriodicImport(unittest.TestCase):
             tmp_db = database.Database(tmp.name)
             audio_files = [str(audiofile) for audiofile in tmp_db.get_all()]
             print(audio_files)
-            correct_audio_files = ["Beatles - Touch-Tone Telephone - Spirit Phone (999851444012f39ef90f12cc22c06166afb0a848)",
-                                   "Beatles - Beatles Song - Beatles Album (01a6c39c69a662103e83dd8ace4a18a8d16a11c6)"]
+            correct_audio_files = ["Beatles - Beatles Song - Beatles Album (01a6c39c69a662103e83dd8ace4a18a8d16a11c6)",
+                                   "Beatles - Song 2 - Beatles Album (78ca6bf9cef51ac662f34a5f446f14f755f62fac)"]
             self.assertEqual(audio_files, correct_audio_files)
         
         time.sleep(1)
