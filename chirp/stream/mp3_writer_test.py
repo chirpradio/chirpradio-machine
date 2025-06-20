@@ -34,7 +34,7 @@ class MP3WriterTestCase(unittest.TestCase):
 
         # Now repeatedly add the test message to the writer.
         time_ms = test_start_ms
-        for i in xrange(10):
+        for i in range(10):
             msg.start_timestamp_ms = time_ms
             time_ms += msg.mp3_header.duration_ms
             msg.end_timestamp_ms = time_ms
@@ -58,9 +58,9 @@ class MP3WriterTestCase(unittest.TestCase):
                                partial_mp3.info.length)
         # These are only some of the tags.
         self.assertTrue("TRSN" in partial_mp3)
-        self.assertEqual([u"CHIRP Radio"], partial_mp3["TRSN"].text)
+        self.assertEqual(["CHIRP Radio"], partial_mp3["TRSN"].text)
         self.assertTrue("TIT1" in partial_mp3)
-        self.assertEqual([u"20100102-184500.000 to ???????????????????"],
+        self.assertEqual(["20100102-184500.000 to ???????????????????"],
                          partial_mp3["TIT1"].text)
 
         # Now close the writer.  After that, we should be able to open
@@ -69,15 +69,15 @@ class MP3WriterTestCase(unittest.TestCase):
         final_mp3 = mutagen.mp3.MP3(writer.path)
         self.assertAlmostEqual(writer.duration_ms/1000, final_mp3.info.length)
         # Check finalized title.
-        self.assertEqual([u"20100102-184500.000 to 20100102-184500.261"],
+        self.assertEqual(["20100102-184500.000 to 20100102-184500.261"],
                          final_mp3["TIT1"].text)
         # Check frame count.
         self.assertTrue(constants.TXXX_FRAME_COUNT_KEY in final_mp3)
-        self.assertEqual([unicode(writer.frame_count)],
+        self.assertEqual([str(writer.frame_count)],
                          final_mp3[constants.TXXX_FRAME_COUNT_KEY].text)
         # Check frame size.
         self.assertTrue(constants.TXXX_FRAME_SIZE_KEY in final_mp3)
-        self.assertEqual([unicode(writer.frame_size)],
+        self.assertEqual([str(writer.frame_size)],
                          final_mp3[constants.TXXX_FRAME_SIZE_KEY].text)
         # Check UFID.
         self.assertTrue(constants.MUTAGEN_UFID_KEY in final_mp3)
