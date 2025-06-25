@@ -17,9 +17,9 @@ TEST_VOL = 123
 TEST_TS =  1228080954
 
 TEST_TAG_LIST = (
-    mutagen.id3.TRCK(text=["3/7"], encoding=0),
-    mutagen.id3.TPE1(text=["Fall, The"], encoding=0),
-    mutagen.id3.TIT2(text=["Song Title [With Tag]"], encoding=0),
+    mutagen.id3.TRCK(text=["3/7"], encoding=3),
+    mutagen.id3.TPE1(text=["Fall, The"], encoding=3),
+    mutagen.id3.TIT2(text=["Song Title [With Tag]"], encoding=3),
     )
 
 
@@ -35,9 +35,9 @@ class ImportFileTest(unittest.TestCase):
         os.system("rm -rf %s" % self.temp_dir)
     
     def create_test_file(self, tag_list):
-        raw_hdr, hdr = mp3_header_test.VALID_MP3_HEADERS.items()[0]
+        raw_hdr, hdr = list(mp3_header_test.VALID_MP3_HEADERS.items())[0]
         num_frames = 1000
-        frame_data = raw_hdr.ljust(hdr.frame_size, "!")
+        frame_data = raw_hdr.ljust(hdr.frame_size, b"!")
         payload = num_frames * frame_data
 
         mutagen_id3 = mutagen.id3.ID3()
@@ -46,11 +46,14 @@ class ImportFileTest(unittest.TestCase):
 
         path = os.path.join(self.temp_dir,
                             "%d.mp3" % int(1000000 * time.time()))
-        mutagen_id3.save(path)
-        out_fh = open(path, "a")
-        out_fh.write(payload)
-        out_fh.close()
+        
+        with open(path, "wb") as out_fh: 
+            pass
 
+        mutagen_id3.save(path)
+        with open(path, "ab") as out_fh:
+            out_fh.write(payload)  
+        
         return path
 
     create_test_file.__test__ = False  # not a test itself
@@ -68,7 +71,7 @@ class ImportFileTest(unittest.TestCase):
 
         import_file.standardize_file(au_file)
         # Do some basic checks
-        for tag in au_file.mutagen_id3.values():
+        for tag in list(au_file.mutagen_id3.values()):
             self.assertTrue(
                 (tag.FrameID in constants.ID3_TAG_WHITELIST
                  or tag.HashKey in constants.ID3_TAG_WHITELIST))
@@ -82,7 +85,7 @@ class ImportFileTest(unittest.TestCase):
         new_au_file = audio_file.scan(new_path)
         self.assertEqual(sorted(au_file.mutagen_id3.keys()),
                          sorted(new_au_file.mutagen_id3.keys()))
-        for key in au_file.mutagen_id3.keys():
+        for key in list(au_file.mutagen_id3.keys()):
             self.assertEqual(repr(au_file.mutagen_id3[key]),
                              repr(new_au_file.mutagen_id3[key]))
         self.assertEqual(au_file.fingerprint, new_au_file.fingerprint)

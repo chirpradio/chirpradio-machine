@@ -31,13 +31,13 @@ class CrawlerTest(unittest.TestCase):
             self.assertTrue(au_file.mp3_header is not None)
             # Make sure the fingerprint returned by the crawler matches
             # what is returned by fingerprint.compute().
-            f_in = open(au_file.path)
-            computed_fp = fingerprint.compute(f_in)
+            with open(au_file.path, "rb") as f_in:
+                computed_fp = fingerprint.compute(f_in)
             self.assertEqual(computed_fp, au_file.fingerprint)
             # Each test file has the fingerprint in a UFID tag.
             # Make sure it matches.
             ufid = au_file.mutagen_id3["UFID:test"]
-            self.assertEqual(ufid.data, au_file.fingerprint)
+            self.assertEqual(ufid.data.decode(), au_file.fingerprint)
             # TODO(trow): We should have a better test of the frame count
             # and frame size.
             self.assertTrue(au_file.frame_count > 0)

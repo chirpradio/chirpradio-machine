@@ -34,7 +34,7 @@ def main():
     os.system('chown -R musiclib "%s"' % dest)
     os.system('chgrp -R traktor "%s"' % dest)
     os.system('chmod -R 0775 "%s"' % dest)
-    print 'move %r -> %r' % (dir, dest)
+    print('move %r -> %r' % (dir, dest))
 
 
 if __name__ == '__main__':
