@@ -22,7 +22,7 @@ def load_dir_hash_map():
 
 
 def main():
-    db = database.Database("/home/trow/library/catalog.sqlite3_db")
+    db = database.Database(conf.LIBRARY_DB)
     
     def new_txn():
         # TODO(trow): Use a better /tmp directory.
@@ -38,7 +38,7 @@ def main():
     form = bulk_tagging_form.parse_file(
         codecs.open("/home/trow/initial_import/form2.txt", "r", "utf-8"))
     verified = sorted(
-        [x for x in form.iteritems() if x[1][0] == bulk_tagging_form.VERIFIED],
+        [x for x in form.items() if x[1][0] == bulk_tagging_form.VERIFIED],
         key = lambda x: x[1])
     for i, (dir_hash, val) in enumerate(verified):
         code = val[0]

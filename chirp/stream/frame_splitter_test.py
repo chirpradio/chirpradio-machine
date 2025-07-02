@@ -24,7 +24,7 @@ class FrameSplitterTestCase(unittest.TestCase):
 
     def test_basic(self):
         # Find a header with the right frequency and build a dummy frame.
-        for raw_hdr, hdr in mp3_header_test.VALID_MP3_HEADERS.items():
+        for raw_hdr, hdr in list(mp3_header_test.VALID_MP3_HEADERS.items()):
             if (hdr.sampling_rate_hz
                 == frame_splitter.FrameSplitter.sampling_rate_hz):
                 break

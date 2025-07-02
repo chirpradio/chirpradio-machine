@@ -26,7 +26,7 @@ class BlockInjectorTestCase(unittest.TestCase):
 
         # Add 3 frames; since we haven't set a block payload yet, the
         # injector should just let these pass through
-        for _ in xrange(3):
+        for _ in range(3):
             src._add_message(mock_frame)
         src.wait_until_empty()
         
@@ -36,7 +36,7 @@ class BlockInjectorTestCase(unittest.TestCase):
 
         # Now add 5 more frames.  A block should be injected after the first
         # (i.e. immediately) and fourth (i.e. after >30s elapse) frames.
-        for _ in xrange(5):
+        for _ in range(5):
             src._add_message(mock_frame)
         src._add_message(mock_block)
         # Also add our mock block.  Blocks should pass through the
@@ -49,7 +49,7 @@ class BlockInjectorTestCase(unittest.TestCase):
 
         # Now add 5 more frames.  Once again, a block should be
         # injected after the first and fourth frames.
-        for _ in xrange(5):
+        for _ in range(5):
             src._add_message(mock_frame)
         src.wait_until_empty()
 
@@ -58,7 +58,7 @@ class BlockInjectorTestCase(unittest.TestCase):
 
         # Now add 10 more frames.  Since we cleared our injected block
         # payload, nothing should be injected.
-        for _ in xrange(10):
+        for _ in range(10):
             src._add_message(mock_frame)
 
         # Stop the source, and wait for the injector to settle.
@@ -69,14 +69,14 @@ class BlockInjectorTestCase(unittest.TestCase):
         # we got what we expected.
         all_messages = list(inj.get_all_messages())
         # Our initial three frames, plus one more.
-        for _ in xrange(4):
+        for _ in range(4):
             self.assertTrue(all_messages.pop(0) is mock_frame)
         # Our first injected block.
         msg = all_messages.pop(0)
         self.assertEqual(message.BLOCK, msg.message_type)
         self.assertEqual(injected_one, msg.payload)
         # Three more frames.
-        for _ in xrange(3):
+        for _ in range(3):
             self.assertTrue(all_messages.pop(0) is mock_frame)
         # The next injected block.
         msg = all_messages.pop(0)
@@ -93,14 +93,14 @@ class BlockInjectorTestCase(unittest.TestCase):
         self.assertEqual(message.BLOCK, msg.message_type)
         self.assertEqual(injected_two, msg.payload)
         # Three more frames.
-        for _ in xrange(3):
+        for _ in range(3):
             self.assertTrue(all_messages.pop(0) is mock_frame)
         # The next injected block.
         msg = all_messages.pop(0)
         self.assertEqual(message.BLOCK, msg.message_type)
         self.assertEqual(injected_two, msg.payload)
         # Eleven more frames.
-        for _ in xrange(11):
+        for _ in range(11):
             self.assertTrue(all_messages.pop(0) is mock_frame)
         # Finally, our end-of-stream marker.
         msg = all_messages.pop(0)
