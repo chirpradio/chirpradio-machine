@@ -56,7 +56,7 @@ def find_tags_errors(au_file):
             errors.append(ERROR_TAG_MISSING_REQUIRED + tag)
 
     # Checks that are not really tag-specific.
-    for tag in au_file.mutagen_id3.itervalues():
+    for tag in au_file.mutagen_id3.values():
         # Make sure all tags are on the whitelist.
         if (tag.FrameID not in constants.ID3_TAG_WHITELIST
             and tag.HashKey not in constants.ID3_TAG_WHITELIST):
@@ -110,7 +110,7 @@ def find_tags_errors(au_file):
         errors.append(ERROR_TOWN_INCORRECT)
 
     # Check that the TPE tags contain known artists.
-    for tag in au_file.mutagen_id3.itervalues():
+    for tag in au_file.mutagen_id3.values():
         if tag.FrameID.startswith("TPE"):
             for txt in tag.text:
                 if not artists.is_standardized(txt):
@@ -137,12 +137,12 @@ def find_tags_errors(au_file):
                 errors.append(ERROR_UFID_BAD_TIMESTAMP)
             if au_file.fingerprint != fp:
                 errors.append(ERROR_UFID_BAD_FINGERPRINT)
-        except ValueError, ex:
+        except ValueError as ex:
             errors.append(ERROR_UFID_BAD_MALFORMED)
 
     # We made it!  Return the list of errors.
     return errors
-    
-    
 
-    
+
+
+

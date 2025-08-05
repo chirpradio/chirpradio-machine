@@ -18,7 +18,7 @@ class MessageTestCase(unittest.TestCase):
         expected_hex_sha1 = "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"
         # Convert the expected SHA1 from hex to binary.
         expected_sha1 = "".join([chr(int(expected_hex_sha1[2*i:2*i+2], 16))
-                                 for i in xrange(len(expected_hex_sha1)/2)])
+                                 for i in range(len(expected_hex_sha1)/2)])
         self.assertEqual(expected_sha1, msg.payload_sha1)
         self.assertEqual(expected_hex_sha1, msg.payload_hex_sha1)
 
