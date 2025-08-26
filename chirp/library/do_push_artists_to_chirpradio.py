@@ -34,7 +34,7 @@ def main_generator():
             continue
         std_name = artists.standardize(art.name)
         if std_name != art.name:
-            cprint(u"Mapping {}: {} => {}".format(mapped, art.name, std_name))
+            cprint("Mapping {}: {} => {}".format(mapped, art.name, std_name))
             mapped += 1
             art.name = std_name
             idx = search.Indexer()
