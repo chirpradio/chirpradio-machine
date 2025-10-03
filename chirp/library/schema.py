@@ -6,10 +6,12 @@ Our data model is extremely simple:
   * Each audio file has many ID3 tags.
   * ID3 tags are partitioned into sets by a timestamp.
 """
+import re
 
 from chirp.common import mp3_header
 from chirp.library import audio_file
 
+# Schema version 0 (legacy tables)
 
 create_audio_files_table = """
 CREATE TABLE audio_files (
@@ -49,6 +51,62 @@ CREATE INDEX id3_tags_index_fingerprint
 ON id3_tags ( fingerprint, timestamp DESC )
 """
 
+# Schema version 1
+
+enable_foreign_keys = """
+PRAGMA foreign_keys = ON;
+"""
+
+create_last_modified = """
+CREATE TABLE last_modified (
+    fingerprint TEXT UNIQUE,           /* fingerprint of corresponding file */
+    modified_timestamp INTEGER,        /* seconds since the epoch,
+                                          time the metadata was last modified */
+    FOREIGN KEY(fingerprint) REFERENCES audio_files(fingerprint)
+)
+"""
+
+create_last_modified_index = """
+CREATE UNIQUE INDEX last_modified_index_fingerprint
+ON last_modified ( fingerprint )
+"""
+
+populate_last_modified = """
+INSERT INTO last_modified (fingerprint, modified_timestamp)
+    SELECT fingerprint, import_timestamp FROM audio_files;
+"""
+
+fix_burning_stars = '''
+UPDATE id3_tags
+SET value = "Burning Stars (featuring Alan Ruffin)"
+WHERE fingerprint = "8625c3610301c6949d20ea7400bc39c205703973"
+AND frame_id = "TIT2";
+'''
+
+# List of database migrations to run when creating the database.
+# Each item in this list is a list of SQLite queries to run to migrate
+# to a new version of the database. The version number is saved in
+# the SQLite user_version pragma.
+MIGRATIONS = [
+        [create_audio_files_table,
+         create_audio_files_index,
+         create_id3_tags_table,
+         create_id3_tags_index], # schema version 0 (original)
+        [enable_foreign_keys,
+         create_last_modified,
+         create_last_modified_index,
+         populate_last_modified], # schema version 1 (adds last_modified table)
+        [fix_burning_stars]] # schema version 2 (manually fix broken value fields)
+LATEST_VERSION = len(MIGRATIONS) - 1
+
+# Names of legacy (unversioned) tables to check for;
+# if these do not exist, migration will start at schema version 0.
+# If these do exist, migration will start at schema version 1.
+LEGACY_TABLES = ["id3_tags", "audio_files"]
+
+# Application ID to use in the sqlite3 header.
+APPLICATION_ID = int.from_bytes(b"CHRP", byteorder="big")
+
 
 def audio_file_to_tuple(au_file):
     """Turn an AudioFile object into an insertable tuple."""
@@ -62,6 +120,10 @@ def audio_file_to_tuple(au_file):
             au_file.frame_count,
             au_file.frame_size,
             au_file.duration_ms)
+
+def audio_file_to_last_modified(au_file):
+    """Turn an AudioFile object into a tuple for the last_modified table."""
+    return (au_file.fingerprint, au_file.import_timestamp)
 
 
 def tuple_to_audio_file(au_file_tuple):
@@ -90,7 +152,15 @@ def tuple_to_audio_file(au_file_tuple):
 
 def id3_tag_to_tuple(fingerprint, timestamp, tag):
     """Turn a Mutagen ID3 tag object into an insertable tuple."""
-    value = u""
+    value = ""
+
     if hasattr(tag, "text"):
-        value = unicode(tag)
-    return (fingerprint, timestamp, tag.FrameID, value, repr(tag))
+        value = str(tag)
+
+    tag_repr = repr(tag)
+    index = tag_repr.find(">")
+    if index > -1:
+        encoding = tag_repr[index - 1]
+        tag_repr = re.sub("encoding=<.+>", f"encoding={encoding}", tag_repr)
+
+    return (fingerprint, timestamp, tag.FrameID, value, tag_repr)

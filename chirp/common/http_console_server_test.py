@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from chirp.common import http_console_server
 
@@ -9,7 +9,7 @@ from chirp.common import http_console_server
 class HttpConsoleServerTest(unittest.TestCase):
 
     def open(self, path):
-        return urllib2.urlopen(http_console_server.url(path))
+        return urllib.request.urlopen(http_console_server.url(path))
 
     def setUp(self):
         # Set a short timeout to speed up this test.
@@ -50,7 +50,7 @@ class HttpConsoleServerTest(unittest.TestCase):
         try:
             self.open("/foo")
             self.assertTrue(False)
-        except urllib2.URLError, ex:
+        except urllib.error.URLError as ex:
             self.assertEqual(404, ex.code)
 
         # Now register a simple page handler and a POST-only handler.
@@ -74,13 +74,13 @@ class HttpConsoleServerTest(unittest.TestCase):
         try:
             self.open("/bar")
             self.assertTrue(False)
-        except urllib2.URLError, ex:
+        except urllib.error.URLError as ex:
             self.assertEqual(405, ex.code)
 
         # We should be able to fetch /bar if we force a POST.
-        request = urllib2.Request(http_console_server.url("/bar"), "")
+        request = urllib.request.Request(http_console_server.url("/bar"), "")
         self.assertEqual("POST", request.get_method())
-        self.assertEqual(post_only_string, urllib2.urlopen(request).read())
+        self.assertEqual(post_only_string, urllib.request.urlopen(request).read())
 
 
 if __name__ == "__main__":
