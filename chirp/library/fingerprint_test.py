@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import cStringIO
+import io
 import hashlib
 import unittest
 from chirp.common import mp3_header_test
@@ -10,22 +10,22 @@ from chirp.library import fingerprint
 class FingerprintTest(unittest.TestCase):
 
     def test_compute(self):
-        raw_hdr, hdr = mp3_header_test.VALID_MP3_HEADERS.items()[0]
-        frame_data = raw_hdr + ("x" * (hdr.frame_size - len(raw_hdr)))
+        raw_hdr, hdr = list(mp3_header_test.VALID_MP3_HEADERS.items())[0]
+        frame_data = raw_hdr + (b"x" * (hdr.frame_size - len(raw_hdr)))
 
         for i, seq in enumerate((
             [ frame_data ],
-            [ "junk", frame_data ],
-            [ frame_data, "junk" ],
-            [ "junk", frame_data, "junk" ],
+            [ b"junk", frame_data ],
+            [ frame_data, b"junk" ],
+            [ b"junk", frame_data, b"junk" ],
             [ frame_data, frame_data ],
-            [ "junk", frame_data, frame_data ],
-            [ frame_data, "junk", frame_data ],
-            [ frame_data, frame_data, "junk" ],
-            [ "junk", frame_data, "junk", frame_data ],
-            [ frame_data, "junk", frame_data, "junk" ],
-            [ "junk", frame_data, frame_data, "junk" ],
-            [ "junk", frame_data, "junk", frame_data, "junk" ],
+            [ b"junk", frame_data, frame_data ],
+            [ frame_data, b"junk", frame_data ],
+            [ frame_data, frame_data, b"junk" ],
+            [ b"junk", frame_data, b"junk", frame_data ],
+            [ frame_data, b"junk", frame_data, b"junk" ],
+            [ b"junk", frame_data, frame_data, b"junk" ],
+            [ b"junk", frame_data, b"junk", frame_data, b"junk" ],
             )):
             sha1_calc = hashlib.sha1()
             for data in seq:
@@ -33,14 +33,14 @@ class FingerprintTest(unittest.TestCase):
                     sha1_calc.update(data)
             expected_fingerprint = sha1_calc.hexdigest()
 
-            stream = cStringIO.StringIO(''.join(seq))
+            stream = io.BytesIO(b''.join(seq))
             actual_fingerprint = fingerprint.compute(stream)
             self.assertEqual(expected_fingerprint, actual_fingerprint,
                              msg="Case #%d failed" % i)
             self.assertTrue(fingerprint.is_valid(actual_fingerprint))
 
         # We return None if we cannot find any valid frames.
-        stream = cStringIO.StringIO('no valid MPEG frames')
+        stream = io.BytesIO(b'no valid MPEG frames')
         self.assertTrue(fingerprint.compute(stream) is None)
 
     def test_validate(self):
