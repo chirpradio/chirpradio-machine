@@ -1,7 +1,10 @@
 setuptools
 mutagen
 simplejson
-# This is used by the do_push_artists_to_chirpradio command (maybe?)
-# when it loads the App Engine SDK.
+# Modern Google Cloud Datastore client library
+google-cloud-datastore
+# Required for service account impersonation
+google-auth
+# Legacy: used by App Engine SDK (can be removed after migration complete)
 pycryptodome
 lxml

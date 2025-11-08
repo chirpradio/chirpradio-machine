@@ -1,8 +1,8 @@
 
 import codecs
 
-from chirp.common import chirpradio
-from djdb import models
+from chirp.library.datastore import connection
+from chirp.library.datastore import models
 
 
 def all_matches():
@@ -14,12 +14,12 @@ def all_matches():
         batch = list(q.fetch(100))
         if not batch:
             break
-        last_key = batch[-1].key()
+        last_key = batch[-1].key
         for sm in batch:
             yield sm
 
 
-chirpradio.connect()
+connection.connect()
 
 counts = {}
 

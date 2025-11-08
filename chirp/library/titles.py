@@ -13,11 +13,11 @@ _TEXT_RE = re.compile("".join((
             # The main part of the title
             _NOT_OPEN_OR_CLOSE_TAG, "+",
             # Zero or more tags, including leading whitespace
-            r"(\s\[", _NOT_CLOSE_TAG, "+\])*",
+            r"(\s\[", _NOT_CLOSE_TAG, r"+\])*",
             r"$")))
 
 # A regular expression that matches the contents of a tag.
-_TAG_RE = re.compile(r"\[(" + _NOT_CLOSE_TAG + "+)\]")
+_TAG_RE = re.compile(r"\[(" + _NOT_CLOSE_TAG + r"+)\]")
 
 
 def standardize(text):

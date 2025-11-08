@@ -7,9 +7,9 @@ import time
 from chirp.library import artists
 
 from chirp.common.printing import cprint
-from chirp.common import chirpradio
-from djdb import models
-from djdb import search
+from chirp.library.datastore import connection
+from chirp.library.datastore import models
+from chirp.library.datastore import search
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
 
 
 def main_generator():
-    chirpradio.connect()
+    connection.connect()
 
     dry_run = False
 

@@ -23,10 +23,9 @@ from chirp.library import database
 from chirp.library import order
 from chirp.library import titles
 
-from chirp.common import chirpradio
-from google.appengine.ext import db
-from djdb import models
-from djdb import search
+from chirp.library.datastore import connection
+from chirp.library.datastore import models
+from chirp.library.datastore import search
 
 
 START_TIMESTAMP = 0
@@ -40,7 +39,7 @@ for arg in sys.argv:
 # TODO(trow): Is this optimal?
 _NUM_ALBUMS_PER_FLUSH = 3
 
-_DISC_NUM_RE = re.compile("disc\s+(\d+)", re.IGNORECASE)
+_DISC_NUM_RE = re.compile(r"disc\s+(\d+)", re.IGNORECASE)
 
 _artist_cache = {}
 
@@ -144,8 +143,7 @@ def flush(list_of_pending_albums):
     # This runs as a batch job, so set a very long deadline.
     while True:
         try:
-            rpc = db.create_rpc(deadline=120)
-            idx.save(rpc=rpc)
+            idx.save(timeout=120)
             return
         except urllib.error.URLError:
             cprint("Retrying indexer flush")
@@ -164,8 +162,7 @@ def main():
 
 
 def main_generator(start_timestamp):
-    #chirpradio.connect("10.0.1.98:8000")
-    chirpradio.connect()
+    connection.connect()
 
     sql_db = database.Database(conf.LIBRARY_DB)
     pending_albums = []
