@@ -123,12 +123,14 @@ def process_one_album(idx, alb):
             ufid=au_file.ufid(),
             album=album.key,  # Pass key, not full object
             title=track_title,
-            import_tags=import_tags,
+            pronunciation="",
+            current_tags=[],
             track_num=track_num,
             sampling_rate_hz=au_file.mp3_header.sampling_rate_hz,
             bit_rate_kbps=int(au_file.mp3_header.bit_rate_kbps),
             channels=au_file.mp3_header.channels_str,
             duration_ms=au_file.duration_ms,
+            revoked=False,
             **kwargs)
         idx.add_track(track)
 
