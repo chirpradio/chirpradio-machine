@@ -138,11 +138,14 @@ class Model:
         # Handle parent parameter
         parent = kwargs.pop('parent', None)
 
-        # Create key
+        # Create incomplete key
         if parent:
-            self.key = client.key(self.KIND, parent=parent)
+            incomplete_key = client.key(self.KIND, parent=parent)
         else:
-            self.key = client.key(self.KIND)
+            incomplete_key = client.key(self.KIND)
+
+        # Allocate ID to make the key complete
+        self.key = client.allocate_ids(incomplete_key, 1)[0]
 
         # Create entity
         self._entity = datastore.Entity(key=self.key)

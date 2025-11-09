@@ -91,7 +91,8 @@ def process_one_album(idx, alb):
         kwargs["is_compilation"] = True
     else:
         kwargs["is_compilation"] = False
-        kwargs["album_artist"] = get_artist_by_name(alb.artist_name())
+        artist = get_artist_by_name(alb.artist_name())
+        kwargs["album_artist"] = artist.key  # Pass key, not full object
 
     for key, val in sorted(kwargs.items()):
         cprint("%s: %s" % (key, val))
@@ -115,11 +116,12 @@ def process_one_album(idx, alb):
         track_num, _ = order.decode(str(au_file.mutagen_id3["TRCK"]))
         kwargs = {}
         if alb.is_compilation():
-            kwargs["track_artist"] = get_artist_by_name(au_file.tpe1())
+            track_artist = get_artist_by_name(au_file.tpe1())
+            kwargs["track_artist"] = track_artist.key  # Pass key, not full object
         track = models.Track(
             parent=idx.transaction,
             ufid=au_file.ufid(),
-            album=album,
+            album=album.key,  # Pass key, not full object
             title=track_title,
             import_tags=import_tags,
             track_num=track_num,
