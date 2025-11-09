@@ -4,6 +4,7 @@ This module replaces the legacy djdb.models using google-cloud-datastore.
 """
 
 import datetime
+import hashlib
 from typing import Optional, List, Any, Iterator
 from google.cloud import datastore
 from google.cloud.datastore.query import Query as DatastoreQuery, PropertyFilter
@@ -184,6 +185,37 @@ class Artist(Model):
 
     KIND = "Artist"
 
+    def __init__(self, **kwargs):
+        """Initialize artist with properties.
+
+        Uses named key format: artist:{sha1_hash_of_name}
+        """
+        # Extract name to create SHA1-based key
+        name = kwargs.get('name')
+        if not name:
+            raise ValueError("name is required for Artist entities")
+
+        # Create named key based on SHA1 hash of name
+        # Match legacy format: "artist:%s" % hashlib.sha1(name.encode('utf-8')).hexdigest()
+        client = get_client()
+        parent = kwargs.pop('parent', None)
+
+        encoded_name = name.encode('utf-8')
+        hashed = hashlib.sha1(encoded_name).hexdigest()
+        key_name = f"artist:{hashed}"
+
+        if parent:
+            self.key = client.key(self.KIND, key_name, parent=parent)
+        else:
+            self.key = client.key(self.KIND, key_name)
+
+        # Create entity
+        self._entity = datastore.Entity(key=self.key)
+
+        # Set all properties
+        for key, value in kwargs.items():
+            self._entity[key] = value
+
     @classmethod
     def fetch_by_name(cls, name: str) -> Optional['Artist']:
         """Fetch an artist by name.
@@ -244,11 +276,37 @@ class Album(Model):
     KIND = "Album"
 
     def __init__(self, **kwargs):
-        """Initialize album with properties."""
+        """Initialize album with properties.
+
+        Uses named key format: djdb/a:{album_id}
+        """
+        # Extract album_id to create named key
+        album_id = kwargs.get('album_id')
+        if not album_id:
+            raise ValueError("album_id is required for Album entities")
+
         # Set default values
         if 'revoked' not in kwargs:
             kwargs['revoked'] = False
-        super().__init__(**kwargs)
+
+        # Create named key instead of using auto-generated ID
+        client = get_client()
+        parent = kwargs.pop('parent', None)
+
+        # Create key with name format "djdb/a:{album_id_hex}"
+        # Match legacy format: "djdb/a:%x" where %x formats as lowercase hex
+        key_name = f"djdb/a:{album_id:x}"
+        if parent:
+            self.key = client.key(self.KIND, key_name, parent=parent)
+        else:
+            self.key = client.key(self.KIND, key_name)
+
+        # Create entity
+        self._entity = datastore.Entity(key=self.key)
+
+        # Set all properties
+        for key, value in kwargs.items():
+            self._entity[key] = value
 
 
 class Track(Model):
@@ -257,8 +315,38 @@ class Track(Model):
     KIND = "Track"
 
     def __init__(self, **kwargs):
-        """Initialize track with properties."""
-        super().__init__(**kwargs)
+        """Initialize track with properties.
+
+        Uses named key format: djdb/t:{ufid}
+        The ufid is extracted from kwargs and used as the key name,
+        and is NOT stored as a property on the entity.
+        """
+        # Extract ufid to create named key
+        ufid = kwargs.pop('ufid', None)
+        if not ufid:
+            raise ValueError("ufid is required for Track entities")
+
+        # ufid is returned as bytes from au_file.ufid(), so decode it to string
+        if isinstance(ufid, bytes):
+            ufid = ufid.decode('utf-8')
+
+        # Create named key instead of using auto-generated ID
+        client = get_client()
+        parent = kwargs.pop('parent', None)
+
+        # Create key with name format "djdb/t:{ufid}"
+        key_name = f"djdb/t:{ufid}"
+        if parent:
+            self.key = client.key(self.KIND, key_name, parent=parent)
+        else:
+            self.key = client.key(self.KIND, key_name)
+
+        # Create entity
+        self._entity = datastore.Entity(key=self.key)
+
+        # Set all properties (ufid already removed via pop())
+        for key, value in kwargs.items():
+            self._entity[key] = value
 
 
 class SearchMatches(Model):
