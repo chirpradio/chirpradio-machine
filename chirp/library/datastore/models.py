@@ -6,7 +6,7 @@ This module replaces the legacy djdb.models using google-cloud-datastore.
 import datetime
 from typing import Optional, List, Any, Iterator
 from google.cloud import datastore
-from google.cloud.datastore.query import Query as DatastoreQuery
+from google.cloud.datastore.query import Query as DatastoreQuery, PropertyFilter
 from . import connection
 
 
@@ -52,7 +52,8 @@ class Query:
             field = parts[0]
             op = "="
 
-        self._query.add_filter(field, op, value)
+        # Use PropertyFilter for modern Datastore client
+        self._query.add_filter(filter=PropertyFilter(field, op, value))
         return self
 
     def order(self, field: str) -> 'Query':
@@ -194,8 +195,8 @@ class Artist(Model):
             Artist entity or None if not found
         """
         query = get_client().query(kind=cls.KIND)
-        query.add_filter("name", "=", name)
-        query.add_filter("revoked", "=", False)
+        query.add_filter(filter=PropertyFilter("name", "=", name))
+        query.add_filter(filter=PropertyFilter("revoked", "=", False))
 
         results = list(query.fetch(limit=1))
         if results:
