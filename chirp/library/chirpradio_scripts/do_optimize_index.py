@@ -1,6 +1,6 @@
 import codecs
 import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from chirp.common import chirpradio
 from google.appengine.api import datastore_errors
@@ -27,11 +27,11 @@ for term in terms_to_opt:
         try:
             n = search.optimize_index(term)
             break
-        except (datastore_errors.Timeout, urllib2.URLError):
+        except (datastore_errors.Timeout, urllib.error.URLError):
             attempt += 1
-            print "Timeout on attempt %d for %s!" % (attempt,
-                                                     term.encode("utf-8"))
+            print("Timeout on attempt %d for %s!" % (attempt,
+                                                     term.encode("utf-8")))
             time.sleep(2)
     deleted += n
-    print term.encode("utf-8"), n, deleted
+    print(term.encode("utf-8"), n, deleted)
     

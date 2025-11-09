@@ -3,7 +3,7 @@ The Message class, and a few helpful related base classes.
 """
 
 import hashlib
-import Queue
+import queue
 import time
 from chirp.stream import looper
 
@@ -121,7 +121,7 @@ class MessageSource(object):
     """
 
     def __init__(self):
-        self._message_queue = Queue.Queue()
+        self._message_queue = queue.Queue()
 
     def _add_message(self, msg):
         """Add a new message onto the end of the stream."""
@@ -145,7 +145,7 @@ class MessageSource(object):
         """
         try:
             return self._message_queue.get(timeout=timeout)
-        except Queue.Empty:
+        except queue.Empty:
             return None
 
     def get_all_messages(self):
@@ -215,7 +215,7 @@ class MessageTee(MessageConsumer):
             create.
         """
         MessageConsumer.__init__(self, input_src)
-        self.outputs = tuple(MessageSource() for _ in xrange(num_outputs))
+        self.outputs = tuple(MessageSource() for _ in range(num_outputs))
 
     def _process_message(self, msg):
         for out in self.outputs:
