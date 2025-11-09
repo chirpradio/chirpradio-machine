@@ -7,6 +7,7 @@ import datetime
 from typing import Optional, List, Any, Iterator
 from google.cloud import datastore
 from google.cloud.datastore.query import Query as DatastoreQuery
+from . import connection
 
 
 # Global datastore client instance
@@ -17,8 +18,8 @@ def get_client() -> datastore.Client:
     """Get or create the global Datastore client."""
     global _client
     if _client is None:
-        # Client automatically uses GOOGLE_APPLICATION_CREDENTIALS env var
-        _client = datastore.Client()
+        # Use the connection module which handles impersonation
+        _client = connection.connect()
     return _client
 
 
