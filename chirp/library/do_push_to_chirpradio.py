@@ -82,8 +82,8 @@ def process_one_album(idx, alb):
     kwargs["parent"] = idx.transaction
     kwargs["title"] = alb.title()
     kwargs["album_id"] = alb.album_id
-    kwargs["import_timestamp"] = datetime.datetime.utcfromtimestamp(
-        alb.import_timestamp())
+    kwargs["import_timestamp"] = datetime.datetime.fromtimestamp(
+        alb.import_timestamp(), datetime.UTC)
     kwargs["num_tracks"] = len(alb.all_au_files)
     kwargs["import_tags"] = alb.tags()
 
