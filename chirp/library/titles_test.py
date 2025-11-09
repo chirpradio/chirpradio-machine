@@ -16,9 +16,9 @@ class TitlesTest(unittest.TestCase):
             ("Foo [Tag][Tag]", "Foo [Tag] [Tag]"),
             ("Foo[Tag]", "Foo [Tag]"),
             # Check quote handling
-            (u"Don\u2019t Worry", "Don't Worry"),
+            ("Don\u2019t Worry", "Don't Worry"),
             ("Name [7'']", 'Name [7"]'),
-            (u"Name [7\u201d]", 'Name [7"]'),
+            ("Name [7\u201d]", 'Name [7"]'),
             ):
             self.assertEqual(expected_standardization,
                              titles.standardize(raw_text))

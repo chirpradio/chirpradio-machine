@@ -1,0 +1,97 @@
+-inherit command.plim
+
+-block page_title
+  Update MP3s in the Database
+
+-block extrastyle
+  = parent.extrastyle()
+  link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker3.min.css'
+
+-block extrascripts
+  = parent.extrascripts()
+  script src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.min.js'
+  script
+    (function(){
+      // Set the value of the datepicker to be today.
+      let d = new Date()
+      let dateString = (d.getMonth() + 1) + '/' + d.getDate() + '/' + (d.getYear() + 1900)
+      $('#date-picker').val(dateString)
+    })()
+
+-block desc
+  -md
+    Use this form to modify an MP3 tag in the database using its frame_id.
+
+
+  form method="post" action="/update-mp3"
+    .form-group
+      strong Song Title:&nbsp;
+      input type='text' name="song_title" value='''''' maxlength="""32"""  
+    .form-group
+      strong Song Artist:&nbsp;
+      input type='text' name="song_artist" value='''''' maxlength="""32"""  
+    .form-group
+      strong Album Title:&nbsp;
+      input type='text' name="album_title" value='''''' maxlength="""32"""  
+    
+    .form-inline style='margin-bottom: 2rem;'
+      .form-group
+        label for='date-picker' Date of Modification:&nbsp;
+        input#date-picker.form-control name='date' type='text' data-provide='datepicker'
+    
+    .form-group
+      form action='/action_page.php' method='post'
+        label for='tag' Tag you would like:
+        select#tag name='tag'
+            option value='TALB' Album Title - TALB
+            option value='TBPM' Beats per minute - TBPM 
+            option value='TCOM' Composer - TCOM
+            option value='TCON' Content type (genre) - TCON 
+            option value='TCOP' Copyright message - TCOP
+            option value='TDAT' Date - TDAT 
+            option value='TENC' Encoded by - TENC
+            option value='TEXT' Lyricist/text writer - TEXT
+            option value='TFLT' File Type - TFLT 
+            option value='TIME' Date - TIME 
+            option value='TIT1' Content group description - TIT1
+            option value='TIT2' Title - TIT2 
+            option value='TIT3' Subtitle - TIT3 
+            option value='TKEY' Initial Key - TKEY
+            option value='TLAN' Language - TLAN 
+            option value='TLEN' Lenght of Audio in miliseconds - TLEN
+            option value='TMED' Media Type - TMED
+            option value='TOAL' Original Album title - TOAL
+            option value='TOLY' Original Lyricist - TOLY
+            option value='TOPE' Original Artist/Performer - TOPE
+            option value='TOWN' File owner/licensee - TOWN
+            option value='TPE1' Lead Performer/soloist - TPE1
+            option value='TPE2' Band/orchestra/accompaniment - TPE2
+            option value='TPE3' Conductor/performer refinement - TPE3
+            option value='TPUB' Publisher - TPUB
+            option value='TRCK' Track number/position in set - TRCK
+            option value='TSRC' ISRC (International Standard Recording Code) TSRC 
+            option value='TSSE' Software/hardware and settings used for encoding - TSSE 
+            option value='TYER' Year - TYER [#TYER Year]
+            option value='TXXX' User defined text information frame - TXXX 
+            option value='UFID' Unique file identifier - UFID 
+
+        br
+
+  -if message:
+    p.text-success {{ message }}
+
+  -if error:
+    p.text-danger {{ error }}
+  -if matches:
+    form method="post" action="/finalize-mp3-update"
+      input type="hidden" name="frame_id" value="{{ frame_id }}"
+      input type="hidden" name="new_value" value="{{ new_value }}"
+      ul
+        - for match in matches:
+          li
+            input type="radio" name="fingerprint" value="{{ match[0] }}"
+            | Title: {{ match[1] }} | Artist: {{ match[2] }} | Album: {{ match[3] or 'N/A' }}
+      button.btn.btn-warning type="submit" Confirm Update
+    
+-def name='next_url()' filter='trim'
+  |../new-artists/

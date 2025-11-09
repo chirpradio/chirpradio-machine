@@ -4,7 +4,8 @@ import os.path as op
 # For importing files:
 SAMBA = "/samba"
 LIBRARY_PREFIX = op.join(SAMBA, "traktor/Library")
-LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
+#LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
+LIBRARY_DB = op.join("catalog.sqlite3_db")
 LIBRARY_TMP_PREFIX = op.join(LIBRARY_PREFIX, "tmp")
 MUSIC_DROPBOX = op.join(SAMBA,
                  "public/public/Departments/Music Dept/New Music Dropbox/")
@@ -48,9 +49,17 @@ MOUNT_BY_HDSN_ROOT = "/mnt/by_hdsn/"
 
 # You can create a new service account key on the API manager credentials page:
 # https://console.cloud.google.com/apis/credentials
-# This service key is needed when using the Remote API:
+# This service key is needed when using direct service account authentication (legacy):
 # https://cloud.google.com/appengine/docs/python/tools/remoteapi
 GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/.chirpradio_service_account_key.json')
 
+# Service Account Impersonation (Recommended)
+# If set, uses your default gcloud credentials to impersonate this service account.
+# This is more secure than using service account keys directly.
+# Set to None to use direct service account key authentication.
+# Example: 'chirpradio-datastore@your-project.iam.gserviceaccount.com'
+IMPERSONATE_SERVICE_ACCOUNT = None
+
 # This is the location where Traktor users expect to find the new NML file:
-TRAKTOR_NML_FILE = '/mnt/disk_array/traktor/TraktorProRootDirectory/new-collection.nml'
+#TRAKTOR_NML_FILE = '/mnt/disk_array/traktor/TraktorProRootDirectory/new-collection.nml'
+TRAKTOR_NML_FILE = "./new-collection.nml"

@@ -7,9 +7,9 @@ import time
 from chirp.library import artists
 
 from chirp.common.printing import cprint
-from chirp.common import chirpradio
-from djdb import models
-from djdb import search
+from chirp.library.datastore import connection
+from chirp.library.datastore import models
+from chirp.library.datastore import search
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
 
 
 def main_generator():
-    chirpradio.connect()
+    connection.connect()
 
     dry_run = False
 
@@ -34,7 +34,7 @@ def main_generator():
             continue
         std_name = artists.standardize(art.name)
         if std_name != art.name:
-            cprint(u"Mapping {}: {} => {}".format(mapped, art.name, std_name))
+            cprint("Mapping {}: {} => {}".format(mapped, art.name, std_name))
             mapped += 1
             art.name = std_name
             idx = search.Indexer()
