@@ -63,7 +63,11 @@ def _connect_with_impersonation(service_account_email: str) -> datastore.Client:
         Initialized Datastore client with impersonated credentials
     """
     # Get default credentials (from gcloud auth login)
+    # Don't pass scopes here - let the credentials use their default scopes
     source_credentials, project_id = google.auth.default()
+
+    # Define the scopes needed for Datastore operations
+    target_scopes = ['https://www.googleapis.com/auth/datastore']
 
     # If project is not set, try multiple strategies
     if not project_id:
@@ -88,9 +92,6 @@ def _connect_with_impersonation(service_account_email: str) -> datastore.Client:
             f"2. Ensure service account email is in format: sa@PROJECT.iam.gserviceaccount.com\n"
             f"3. Provide a valid GOOGLE_APPLICATION_CREDENTIALS file"
         )
-
-    # Define the scopes needed for Datastore operations
-    target_scopes = ['https://www.googleapis.com/auth/datastore']
 
     # Create impersonated credentials
     target_credentials = impersonated_credentials.Credentials(
