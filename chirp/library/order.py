@@ -67,8 +67,8 @@ def encode(order_num, total_num):
             raise BadOrderError("Bad order-number \"%d/%d\""
                                 % (order_num, total_num))
         
-        return u"%d/%d" % (order_num, total_num)
-    return u"%d" % order_num
+        return "%d/%d" % (order_num, total_num)
+    return "%d" % order_num
 
 
 def standardize_str(text):
@@ -150,7 +150,7 @@ def verify_and_standardize_str_list(text_list):
             raise BadOrderError("Bad order-number: \"%s\"" % text)
         new_text_list.append(encode(order_num, total_num))
 
-    missing_order_nums = set(xrange(1, expected_total_num+1)) - seen_order_nums
+    missing_order_nums = set(range(1, expected_total_num+1)) - seen_order_nums
     if missing_order_nums:
         raise BadOrderError("Missing order-numbers: %s"
                             % sorted(missing_order_nums))

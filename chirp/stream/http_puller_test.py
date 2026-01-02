@@ -222,7 +222,7 @@ class HttpPullerTest(unittest.TestCase):
         hp.loop_in_thread()
         # Pull a few messages off the queue.  This shows us that the
         # work thread has spun up and is looping.
-        for _ in xrange(10):
+        for _ in range(10):
             unused_msg = hp.get_next_message()
         hp.stop()
         hp.wait()

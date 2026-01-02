@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import tempfile
 import logging
 import os
 import sys
@@ -7,6 +7,7 @@ from chirp.common import timestamp
 from chirp.common.conf import (LIBRARY_PREFIX, LIBRARY_DB,
                                    LIBRARY_TMP_PREFIX)
 from chirp.common.printing import cprint
+from chirp.common.input import cinput
 from chirp.library import album
 from chirp.library import analyzer
 from chirp.library import artists
@@ -21,7 +22,7 @@ VOLUME_NUMBER = 1
 IMPORT_SIZE_LIMIT = 0.95 * (3 << 30)  # 95% of 3GB.
 
 
-def import_albums(dry_run):
+def import_albums(dry_run, test=False, update_artists=False, update_drop=False, update_db=False):
     inbox = dropbox.Dropbox()
     prescan_timestamp = timestamp.now()
     error_count = 0
@@ -30,40 +31,48 @@ def import_albums(dry_run):
 
     db = database.Database(LIBRARY_DB)
 
+    if test:
+        if update_artists:
+            update_artists(artists)
+        if update_drop:
+            update_drop(inbox)
+        if update_db:
+            update_db(db)
+
     try:
         for alb in inbox.albums():
             alb.drop_payloads()
             album_count += 1
-            cprint(u'#{num} "{title}"'.format(num=album_count, title=alb.title()))
+            cprint('#{num} "{title}"'.format(num=album_count, title=alb.title()))
             if alb.tags():
-                cprint(u"(%s)" % ", ".join(alb.tags()))
+                cprint("(%s)" % ", ".join(alb.tags()))
             else:
-                print
+                print()
             duration_ms = sum(au.duration_ms for au in alb.all_au_files)
             if alb.is_compilation():
                 cprint("Compilation")
                 for i, au in enumerate(alb.all_au_files):
                     artist = au.mutagen_id3["TPE1"]
-                    cprint(u"  {:02d}: {}".format(i+1, artist))
+                    cprint("  {:02d}: {}".format(i+1, artist))
             else:
                 cprint(alb.artist_name())
-            cprint(u"{} tracks / {} minutes".format(
+            cprint("{} tracks / {} minutes".format(
                 len(alb.all_au_files), int(duration_ms / 60000)))
-            cprint(u"ID=%015x" % alb.album_id)
+            cprint("ID=%015x" % alb.album_id)
             sys.stdout.flush()
 
             # Check that the album isn't already in library.
             collision = False
             for au in alb.all_au_files:
                 if au.fingerprint in seen_fp:
-                    cprint(u"***** ERROR: DUPLICATE TRACK WITHIN IMPORT", type='error')
-                    cprint(u"This one is at %s" % au.path)
-                    cprint(u"Other one is at %s" % seen_fp[au.fingerprint].path)
+                    cprint("***** ERROR: DUPLICATE TRACK WITHIN IMPORT", type='error')
+                    cprint("This one is at %s" % au.path)
+                    cprint("Other one is at %s" % seen_fp[au.fingerprint].path)
                     collision = True
                     break
                 fp_au_file = db.get_by_fingerprint(au.fingerprint)
                 if fp_au_file is not None:
-                    cprint(u"***** ERROR: TRACK ALREADY IN LIBRARY", type='error')
+                    cprint("***** ERROR: TRACK ALREADY IN LIBRARY", type='error')
                     cprint(fp_au_file.mutagen_id3)
                     collision = True
                     break
@@ -78,7 +87,7 @@ def import_albums(dry_run):
             try:
                 alb.standardize()
                 cprint("OK!\n")
-            except (import_file.ImportFileError, album.AlbumError), ex:
+            except (import_file.ImportFileError, album.AlbumError) as ex:
                 cprint("***** IMPORT ERROR")
                 cprint("*****   %s\n" % str(ex))
                 error_count += 1
@@ -94,8 +103,12 @@ def import_albums(dry_run):
     cprint("Found %d albums" % album_count)
     if error_count > 0:
         cprint("Saw %d errors" % error_count, type='failure')
-        return
-    cprint("No errors found")
+        if not dry_run:
+            response = cinput("Saw %d errors. Continue anyways?" % error_count, ["Yes", "No"], False)
+            if response == "No":
+                return
+    else:
+        cprint("No errors found")
 
     if dry_run:
         cprint("Dry run --- terminating", type='success')
