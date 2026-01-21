@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 
-import cStringIO
+import io
 import unittest
 
 from chirp.common import ROOT_DIR
@@ -15,7 +15,7 @@ from chirp.library import audio_file
 class AnalyzerTest(unittest.TestCase):
 
     def test_basic(self):
-        stream = cStringIO.StringIO('invalid data')
+        stream = io.StringIO('invalid data')
         au_file = audio_file.AudioFile()
         self.assertRaises(analyzer.InvalidFileError,
                           analyzer.analyze, stream, au_file)
@@ -23,7 +23,7 @@ class AnalyzerTest(unittest.TestCase):
     def test_known(self):
         f = os.path.join(ROOT_DIR,
                          "library/testdata/analyzer_test/test001.mp3")
-        stream = open(f)
+        stream = open(f, 'rb')
         au_file = audio_file.AudioFile()
         analyzer.analyze(stream, au_file)
         stream.close()

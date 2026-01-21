@@ -18,6 +18,6 @@ class Logger(message.MessageConsumer):
         if msg.message_type == message.BLOCK:
             output += "length = %d\n%r\n" % (len(msg.payload), msg.payload)
         elif msg.message_type == message.RESPONSE:
-            output += "".join(["%s: %s\n" % x for x in msg.http_headers.items()])
-        print output.strip()
+            output += "".join(["%s: %s\n" % x for x in list(msg.http_headers.items())])
+        print(output.strip())
         self._fh.write(output)

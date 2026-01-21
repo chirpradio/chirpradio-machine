@@ -102,7 +102,7 @@ class Crawler(object):
                     # operation fails.
                     try:
                         stat_obj = os.stat(full_path)
-                    except (IOError, OSError), ex:
+                    except (IOError, OSError) as ex:
                         self.skipped_files.append((full_path, str(ex)))
                         continue
 
@@ -111,7 +111,7 @@ class Crawler(object):
                             au_file = audio_file.scan_fast(full_path)
                         else:
                             au_file = audio_file.scan(full_path)
-                    except Exception, ex:
+                    except Exception as ex:
                         # TODO(trow): Here we should really only catch
                         # the exceptions we expect audio_file.scan and
                         # .scan_fast to raise.
