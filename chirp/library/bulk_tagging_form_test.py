@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import codecs
-import cStringIO
+import io
 import unittest
 
 from chirp.library import bulk_tagging_form
@@ -77,12 +77,12 @@ class BulkTaggingFormTest(unittest.TestCase):
 
     def test_parser(self):
         # Check that we can parse an empty file.
-        parsed_0 = bulk_tagging_form.parse_file(cStringIO.StringIO(""))
+        parsed_0 = bulk_tagging_form.parse_file(io.StringIO(""))
         self.assertEqual({}, parsed_0)
 
         # Check that we can parse a simple test form.
         parsed_1 = bulk_tagging_form.parse_file(
-            cStringIO.StringIO(TEST_FORM_1))
+            io.StringIO(TEST_FORM_1))
         self.assertEqual(EXPECTED_RESULTS_1, parsed_1)
 
 

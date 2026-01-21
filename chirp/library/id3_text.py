@@ -33,7 +33,7 @@ def standardize(tag):
     # Fix up the whitespace, stripping out empties.
     new_text = []
     for text_str in tag.text:
-        text_str = _TWO_OR_MORE_SPACES_RE.sub(u" ", text_str.strip())
+        text_str = _TWO_OR_MORE_SPACES_RE.sub(" ", text_str.strip())
         if text_str:
             new_text.append(text_str)
     tag.text = new_text

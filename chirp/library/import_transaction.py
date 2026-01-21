@@ -32,7 +32,7 @@ class ImportTransaction(object):
             self._volume, self._import_timestamp)
         alb.ensure_payloads()
 
-        cprint(u'Adding Album "%s"' % alb.title())
+        cprint('Adding Album "%s"' % alb.title())
         sys.stdout.flush()
 
         # Write the files to our temporary prefix.

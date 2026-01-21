@@ -1,6 +1,6 @@
 """Implements a simple HTTP-based console for applications."""
 
-import BaseHTTPServer
+import http.server
 import logging
 import gc
 import os
@@ -8,7 +8,7 @@ import socket  # For gethostname
 import sys
 import threading
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from chirp.common import timestamp
 
 
@@ -16,7 +16,7 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 9000
 
 
-class _RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class _RequestHandler(http.server.BaseHTTPRequestHandler):
 
     # Global dictionary of page handers, mapping paths to callables.
     page_handlers = {}
@@ -25,7 +25,7 @@ class _RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     server_version = "Console"
     sys_version = (
-        "chirpy %s" % BaseHTTPServer.BaseHTTPRequestHandler.sys_version)
+        "chirpy %s" % http.server.BaseHTTPRequestHandler.sys_version)
 
     def _dispatch(self):
         # Try to response using a request handler.
@@ -62,7 +62,8 @@ class _RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
-        except socket.error, (err_code, err_msg):
+        except socket.error as xxx_todo_changeme:
+            (err_code, err_msg) = xxx_todo_changeme.args
             sys.stderr.write("Socket error: (%d) %s\n" % (err_code, err_msg))
 
     def send_text(self, body):
@@ -132,7 +133,7 @@ class _HttpConsoleServer(object):
         The constructor blocks until the server is able to respond
         to requests.
         """
-        self._server = BaseHTTPServer.HTTPServer((host, port),
+        self._server = http.server.HTTPServer((host, port),
                                                  _RequestHandler)
         self._server.socket.settimeout(self._TIMEOUT_S)
         self._is_stopped = threading.Event()
@@ -143,9 +144,9 @@ class _HttpConsoleServer(object):
         # This ensures that the object is ready to handle requests
         # immediately after we return.
         self.url = "http://%s:%d" % (host, port)
-        for _ in xrange(20):  # Try at most 20 times, then give up.
+        for _ in range(20):  # Try at most 20 times, then give up.
             try:
-                response = urllib.urlopen(self.url + "/ok").read()
+                response = urllib.request.urlopen(self.url + "/ok").read()
             except IOError:
                 # Wait a bit, then try again.
                 time.sleep(0.1)

@@ -35,7 +35,7 @@ class MP3Writer(object):
         # The requested file should't already exist.  If so, delete it.
         try:
             os.unlink(self.path)
-        except OSError, ex:
+        except OSError as ex:
             if ex.errno != errno.ENOENT:
                 raise ex
         mutagen_id3 = self._get_id3()
@@ -45,17 +45,17 @@ class MP3Writer(object):
 
     def _get_id3(self):
         mutagen_id3 = mutagen.id3.ID3()
-        mutagen_id3.add(mutagen.id3.TFLT(text=[u"MPG/3"]))
+        mutagen_id3.add(mutagen.id3.TFLT(text=["MPG/3"]))
         mutagen_id3.add(mutagen.id3.TOWN(text=[constants.TOWN_FILE_OWNER]))
-        mutagen_id3.add(mutagen.id3.TRSN(text=[u"CHIRP Radio"]))
-        mutagen_id3.add(mutagen.id3.TPE1(text=[u"CHIRP Archives"]))
+        mutagen_id3.add(mutagen.id3.TRSN(text=["CHIRP Radio"]))
+        mutagen_id3.add(mutagen.id3.TPE1(text=["CHIRP Archives"]))
         mutagen_id3.add(mutagen.id3.TIT1(text=[self._get_title()]))
         talb_str =  time.strftime("%Y-%m-%d: %a %b %d, %Y",
                                   time.localtime(int(self._start_ms / 1000)))
         mutagen_id3.add(mutagen.id3.TALB(text=[talb_str]))
 
         # Set the default encoding on all tags.
-        for tag in mutagen_id3.itervalues():
+        for tag in mutagen_id3.values():
             tag.encoding = constants.DEFAULT_ID3_TEXT_ENCODING
         return mutagen_id3
 
@@ -65,7 +65,7 @@ class MP3Writer(object):
             end = "?" * len(start)
         else:
             end = timestamp.get_human_readable_ms(int(self._end_ms))
-        return u"%s to %s" % (start, end)
+        return "%s to %s" % (start, end)
 
     def write(self, msg):
         # Skip anything other than an MPEG frame.
@@ -89,20 +89,20 @@ class MP3Writer(object):
         mp3 = mutagen.mp3.MP3(self.path)
         # Put in the correct length.
         mp3.tags.add(
-            mutagen.id3.TLEN(text=u"%d" % self.duration_ms,
+            mutagen.id3.TLEN(text="%d" % self.duration_ms,
                              encoding=constants.DEFAULT_ID3_TEXT_ENCODING))
         # Store a version of the title w/ both start and end times.
         mp3["TIT1"].text = [self._get_title()]
         # Add the frame count header.
         frame_count_tag = mutagen.id3.TXXX(
             desc=constants.TXXX_FRAME_COUNT_DESCRIPTION,
-            text=[unicode(self.frame_count)],
+            text=[str(self.frame_count)],
             encoding=constants.DEFAULT_ID3_TEXT_ENCODING)
         mp3.tags.add(frame_count_tag)
         # Add the frame size header.
         frame_size_tag = mutagen.id3.TXXX(
             desc=constants.TXXX_FRAME_SIZE_DESCRIPTION,
-            text=[unicode(self.frame_size)],
+            text=[str(self.frame_size)],
             encoding=constants.DEFAULT_ID3_TEXT_ENCODING)
         mp3.tags.add(frame_size_tag)
         # Add a UFID tag.  We use the start_ms timestamp as an import

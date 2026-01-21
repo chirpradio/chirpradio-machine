@@ -4,7 +4,8 @@ import os.path as op
 # For importing files:
 SAMBA = "/samba"
 LIBRARY_PREFIX = op.join(SAMBA, "traktor/Library")
-LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
+#LIBRARY_DB = op.join(LIBRARY_PREFIX, "catalog.sqlite3_db")
+LIBRARY_DB = op.join("catalog.sqlite3_db")
 LIBRARY_TMP_PREFIX = op.join(LIBRARY_PREFIX, "tmp")
 MUSIC_DROPBOX = op.join(SAMBA,
                  "public/public/Departments/Music Dept/New Music Dropbox/")
@@ -53,4 +54,5 @@ MOUNT_BY_HDSN_ROOT = "/mnt/by_hdsn/"
 GOOGLE_APPLICATION_CREDENTIALS = op.expanduser('~/.chirpradio_service_account_key.json')
 
 # This is the location where Traktor users expect to find the new NML file:
-TRAKTOR_NML_FILE = '/mnt/disk_array/traktor/TraktorProRootDirectory/new-collection.nml'
+#TRAKTOR_NML_FILE = '/mnt/disk_array/traktor/TraktorProRootDirectory/new-collection.nml'
+TRAKTOR_NML_FILE = "./new-collection.nml"

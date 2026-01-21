@@ -54,7 +54,7 @@ class AudioFile(object):
 
     def __eq__(self, other):
         def _mutagen_id3_set(obj):
-            return set(repr(x) for x in obj.mutagen_id3.itervalues())
+            return set(repr(x) for x in obj.mutagen_id3.values())
         return (self.volume == other.volume
                 and self.import_timestamp == other.import_timestamp
                 and self.fingerprint == other.fingerprint
@@ -66,6 +66,18 @@ class AudioFile(object):
                 and _mutagen_id3_set(self) == _mutagen_id3_set(other)
                 and self.path == other.path
                 and self.payload == other.payload)
+
+    def __repr__(self):
+        tpe1 = self.tpe1()
+        tit2 = self.tit2()
+        if (tpe1 and tit2):
+            talb = self.talb()
+            if talb:
+                return f"{tpe1} - {tit2} - {talb} ({self.fingerprint})"
+            else:
+                return f"{tpe1} - {tit2} ({self.fingerprint})"
+        else:
+            return self.fingerprint
 
     def has_ufid(self):
         """Return True if we have enough info to construct a complete UFID."""
@@ -95,7 +107,7 @@ class AudioFile(object):
         tpe1_tag = self.mutagen_id3.get("TPE1")
         if tpe1_tag is None:
             return None
-        return unicode(tpe1_tag)
+        return str(tpe1_tag)
 
     def talb(self):
         """Returns this file's TALB tag as a unicode string, or None."""
@@ -104,7 +116,7 @@ class AudioFile(object):
         talb_tag = self.mutagen_id3.get("TALB")
         if talb_tag is None:
             return None
-        return unicode(talb_tag)
+        return str(talb_tag)
 
     def tit2(self):
         """Returns this file's TIT2 tag as a unicode string, or None."""
@@ -113,7 +125,7 @@ class AudioFile(object):
         tit2_tag = self.mutagen_id3.get("TIT2")
         if tit2_tag is None:
             return None
-        return unicode(tit2_tag)
+        return str(tit2_tag)
 
     def canonical_directory(self, prefix=""):
         """Returns the storage directory for this file.
@@ -164,7 +176,7 @@ def _get_mp3(path):
             struct.error):
         return None
     # Automatically clean up the text tags.
-    for tag in mp3.itervalues():
+    for tag in mp3.values():
         id3_text.standardize(tag)
     return mp3
 
@@ -255,14 +267,13 @@ def scan(path, _read_id3_hook=None):
     """
     au_file = AudioFile()
     au_file.path = path
-    au_file.mutagen_id3 = (_read_id3_hook or _get_mp3)(path)
+    au_file.mutagen_id3 = mutagen.id3.ID3(path)
+
     if au_file.mutagen_id3 is None:
         return None
 
-    file_obj = open(path)
-    try:
+    with open(path, "rb") as file_obj: 
         analyzer.analyze(file_obj, au_file)
-    finally:
-        file_obj.close()
 
     return au_file
+

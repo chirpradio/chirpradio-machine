@@ -117,7 +117,7 @@ class HttpPuller(looper.Looper, message.MessageSource):
             sock.connect((msg.connect_host, msg.connect_port))
         except socket.timeout:
             return self._finish_message(msg, message.CONNECT_TIMEOUT_ERROR)
-        except socket.error, err:
+        except socket.error as err:
             return self._finish_message(msg, message.CONNECT_ERROR, err)
         # TODO(trow): Other exceptions?
 
@@ -127,7 +127,7 @@ class HttpPuller(looper.Looper, message.MessageSource):
                 'host': ("%s:%s" % (msg.connect_host, msg.connect_port)),
                 }
             sock.sendall(request_str)
-        except socket.error, err:
+        except socket.error as err:
             return self._finish_message(msg, message.REQUEST_ERROR, err)
         # TODO(trow): Other exceptions?
 
@@ -172,7 +172,7 @@ class HttpPuller(looper.Looper, message.MessageSource):
                 payload = self._sock.recv(self.READ_SIZE)
             except socket.timeout:
                 return self._finish_message(msg, message.READ_TIMEOUT_ERROR)
-            except socket.error, err:
+            except socket.error as err:
                 return self._finish_message(msg, message.READ_ERROR, err)
             # TODO(trow): Other exceptions?
 

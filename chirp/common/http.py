@@ -32,7 +32,7 @@ def get_with_timeout(host, port, path, timeout_s):
     # Connect to the remote host.
     try:
         sock.connect((host, port))
-    except socket.error, err:
+    except socket.error as err:
         return None
     # Create and send an HTTP request.
     request_str = _GET_REQUEST % {
@@ -40,7 +40,7 @@ def get_with_timeout(host, port, path, timeout_s):
         }
     try:
         sock.sendall(request_str)
-    except socket.error, err:
+    except socket.error as err:
         return None
     # Pull back the response.
     response_list = []
@@ -50,7 +50,7 @@ def get_with_timeout(host, port, path, timeout_s):
             if not data:
                 break
             response_list.append(data)
-        except socket.error, err:
+        except socket.error as err:
             return None
     response = "".join(response_list)
     # Strip off headers.
