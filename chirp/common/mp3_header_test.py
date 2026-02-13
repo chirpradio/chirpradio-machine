@@ -11,15 +11,15 @@ from chirp.common import mp3_header
 
 
 VALID_MP3_HEADERS = {
-    '\xff\xfb\x90\x64':
+    b'\xff\xfb\x90\x64':
         mp3_header.MP3Header(bit_rate_kbps=128, sampling_rate_hz=44100,
                              channels=mp3_header.JOINT_STEREO,
                              padding=False, protected=False),
-    '\xff\xfb\xb0\x00': 
+    b'\xff\xfb\xb0\x00': 
         mp3_header.MP3Header(bit_rate_kbps=192, sampling_rate_hz=44100,
                              channels=mp3_header.STEREO,
                              padding=False, protected=False),
-    '\xff\xfb\xb2\x00': 
+    b'\xff\xfb\xb2\x00': 
         mp3_header.MP3Header(bit_rate_kbps=192, sampling_rate_hz=44100,
                              channels=mp3_header.STEREO,
                              padding=True, protected=False),
@@ -27,10 +27,10 @@ VALID_MP3_HEADERS = {
     
 
 INVALID_MP3_HEADERS = (
-    '',
-    'GARBAGE',
-    '\xff\xf0\0\0',
-    '\xff', '\xff' * 2, '\xff' * 3, '\xff' * 4,
+    b'',
+    b'GARBAGE',
+    b'\xff\xf0\0\0',
+    b'\xff', b'\xff' * 2, b'\xff' * 3, b'\xff' * 4,
     )
 
 
@@ -49,13 +49,13 @@ class ParseHeaderTest(unittest.TestCase):
         self.assertFalse(hdr.is_complete())
 
     def test_parse(self):
-        for valid, expected_hdr in VALID_MP3_HEADERS.items():
+        for valid, expected_hdr in list(VALID_MP3_HEADERS.items()):
             hdr = mp3_header.parse(valid)
             self.assertTrue(hdr)
             self.assertTrue(hdr.is_complete())
             self.assertTrue(hdr.match(expected_hdr))
             # Now try with a non-zero offset.
-            hdr = mp3_header.parse("xxxx" + valid + "xxxx", offset=4)
+            hdr = mp3_header.parse(b"xxxx" + valid + b"xxxx", offset=4)
             self.assertTrue(hdr)
             self.assertTrue(hdr.is_complete())
             self.assertTrue(hdr.match(expected_hdr))
@@ -74,21 +74,21 @@ class ParseHeaderTest(unittest.TestCase):
         # Check header-free data.
         self.assertEqual((None, 0), mp3_header.find(''))
         self.assertEqual((None, 5), mp3_header.find('12345'))
-        self.assertEqual((None, 8), mp3_header.find('123\xff5678'))
+        self.assertEqual((None, 8), mp3_header.find(b'123\xff5678'))
 
         # Check data that might end with a truncated header
-        self.assertEqual((None, 0), mp3_header.find('\xff'))
-        self.assertEqual((None, 3), mp3_header.find('123\xff'))
+        self.assertEqual((None, 0), mp3_header.find(b'\xff'))
+        self.assertEqual((None, 3), mp3_header.find(b'123\xff'))
 
         # Check that we can find a valid header that occurs near
         # a bogus 0xff synch byte.
-        for raw_hdr, hdr in VALID_MP3_HEADERS.items():
+        for raw_hdr, hdr in list(VALID_MP3_HEADERS.items()):
             for test_data in (
                 raw_hdr,
-                '\xff' + raw_hdr,
-                '123\xff\xff' + raw_hdr,
-                '123\xff123\xff' + raw_hdr,
-                raw_hdr + '\xff',
+                b'\xff' + raw_hdr,
+                b'123\xff\xff' + raw_hdr,
+                b'123\xff123\xff' + raw_hdr,
+                raw_hdr + b'\xff',
                 ):
                 found_hdr, offset = mp3_header.find(test_data)
                 self.assertEqual(test_data.find(raw_hdr), offset)

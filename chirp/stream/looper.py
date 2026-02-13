@@ -43,7 +43,7 @@ class Looper(object):
         """
         try:
             callable_to_wrap()
-        except Exception, err:
+        except Exception as err:
             logging.exception("Swallowed Exception in %s" % self)
             # We save the current exception as well as the timestamp
             # it occurred at.

@@ -16,6 +16,8 @@ from chirp.library import ufid
 TESTDATA = os.path.join(ROOT_DIR, "library/testdata/audio_file_test")
 
 
+
+
 # This is used in other tests.
 def get_test_audio_file(n):
     """Generates a test AudioFile object.
@@ -90,8 +92,8 @@ class AudioFileTest(unittest.TestCase):
 
         self.assertTrue(TEST_FP + ".mp3", au_file.canonical_filename())
 
-        self.assertTrue(TEST_UFID + ".mp3", au_file.canonical_path())
-        self.assertTrue("foo/" + TEST_UFID + ".mp3",
+        self.assertTrue(TEST_UFID + b".mp3", au_file.canonical_path())
+        self.assertTrue(b"foo/" + TEST_UFID + b".mp3",
                         au_file.canonical_path(prefix="foo"))
 
     def test_tag_accessors(self):
@@ -106,9 +108,9 @@ class AudioFileTest(unittest.TestCase):
         self.assertTrue(test_au.talb() is None)
 
         test_au = get_test_audio_file(0)
-        self.assertEqual(u"TPE1 0", test_au.tpe1())
-        self.assertEqual(u"TIT2 0", test_au.tit2())
-        self.assertEqual(u"TALB 0", test_au.talb())
+        self.assertEqual("TPE1 0", test_au.tpe1())
+        self.assertEqual("TIT2 0", test_au.tit2())
+        self.assertEqual("TALB 0", test_au.talb())
 
     def test_scan_fast_tag_handling(self):
         test_mp3 = mutagen.mp3.MP3()
@@ -116,17 +118,17 @@ class AudioFileTest(unittest.TestCase):
         test_mp3.info = MockInfo()
         test_mp3.add_tags()
         test_mp3.tags.add(ufid.ufid_tag(TEST_VOL, TEST_TS, TEST_FP))
-        test_mp3.tags.add(mutagen.id3.TLEN(text=u"11111"))
+        test_mp3.tags.add(mutagen.id3.TLEN(text="11111"))
         test_mp3.tags.add(mutagen.id3.TXXX(
                 desc=constants.TXXX_ALBUM_ID_DESCRIPTION,
-                text=[u"222"]))
+                text=["222"]))
         test_mp3.tags.add(mutagen.id3.TXXX(
                 desc=constants.TXXX_FRAME_COUNT_DESCRIPTION,
-                text=[u"333"]))
+                text=["333"]))
         test_mp3.tags.add(mutagen.id3.TXXX(
                 desc=constants.TXXX_FRAME_SIZE_DESCRIPTION,
                 text=["444"]))
-        for tag in test_mp3.tags.values():
+        for tag in list(test_mp3.tags.values()):
             id3_text.standardize(tag)
         test_mp3.info.sample_rate = 5555
         test_mp3.info.bitrate = 6666
@@ -164,11 +166,12 @@ class AudioFileTest(unittest.TestCase):
         fp = slow_au_file.mutagen_id3.get("UFID:test").data
         self.assertEqual(None, slow_au_file.volume)
         self.assertEqual(None, slow_au_file.import_timestamp)
-        self.assertEqual(fp, slow_au_file.fingerprint)
+        self.assertEqual(fp, slow_au_file.fingerprint.encode())
         # Test file contains 150 frames for a total of 137,173 bytes.
         self.assertEqual(150, slow_au_file.frame_count)
         self.assertEqual(137173, slow_au_file.frame_size)
         self.assertEqual(path, slow_au_file.path)
+
 
     def test_scan_has_chirp_tags(self):
         path = os.path.join(TESTDATA, "has_chirp_tags.mp3")

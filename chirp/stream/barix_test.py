@@ -75,7 +75,7 @@ class BarixTestCase(unittest.TestCase):
         self.assertEqual("SENDING", barix_obj.status)
         self.assertEqual("5610", barix_obj.left_level)
         self.assertEqual("5422", barix_obj.right_level)
-        print barix_obj.clients
+        print(barix_obj.clients)
         self.assertEqual(3, len(barix_obj.clients))
         self.assertEqual(("216.235.91.36", "52770"),
                          barix_obj.clients["11111"])

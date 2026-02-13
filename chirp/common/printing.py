@@ -20,10 +20,10 @@ class CustomPrint(object):
         if message is None:
             # If there were no arguments at all, print a newline to stdout.
             if len(kwargs) == 0:
-                print
+                print()
         else:
-            if not isinstance(message, basestring):
-                message = unicode(message)
+            if not isinstance(message, str):
+                message = str(message)
             if not isinstance(message, str):
                 # This is a Unicode object so we should encode it as a byte
                 # string before writing it to the console.

@@ -59,7 +59,7 @@ def _update(this_batch, artist, results):
             dup_resolver[code] = (dir_hash, bitrate, artist, talb)
 
     # Move anything left in our dup_resolver dict into results.
-    for dir_hash, _, artist, talb in dup_resolver.itervalues():
+    for dir_hash, _, artist, talb in dup_resolver.values():
         if dir_hash not in results:
             results[dir_hash] = (VERIFIED, artist, talb)
 

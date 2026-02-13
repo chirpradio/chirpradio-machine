@@ -12,14 +12,14 @@ class CanonicalizeStringTest(unittest.TestCase):
 
     def test_basic(self):
         test_cases = (
-            ("", u""),
-            ("   ", u""),
-            (u"foo", u"foo"),
-            ("foo. bar.", u"foobar"),
-            ("foo &   Bar  ", u"foo&bar"),
-            ("The Foo and Bar", u"foo&bar"),
-            ("Foo!!!", u"foo"),
-            ("!!!!", u"!!!!"),
+            ("", ""),
+            ("   ", ""),
+            ("foo", "foo"),
+            ("foo. bar.", "foobar"),
+            ("foo &   Bar  ", "foo&bar"),
+            ("The Foo and Bar", "foo&bar"),
+            ("Foo!!!", "foo"),
+            ("!!!!", "!!!!"),
             )
         for before, after in test_cases:
             self.assertEqual(after, similarity.canonicalize_string(before))
@@ -51,7 +51,7 @@ class LevenshteinDistanceTest(unittest.TestCase):
             self.assertEqual(expected_dist, dist,
                              msg="(%s, %s)" % (string_2, string_1))
             # Test setting max_value for many different values.
-            for max_value in xrange(1, expected_dist+2):
+            for max_value in range(1, expected_dist+2):
                 clamped_dist = similarity.get_levenshtein_distance(
                     string_1, string_2, max_value=max_value)
                 self.assertEqual(min(expected_dist, max_value),

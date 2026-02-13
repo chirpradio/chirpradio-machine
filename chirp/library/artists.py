@@ -12,6 +12,8 @@ import threading
 
 from chirp.common import ROOT_DIR
 from chirp.library import similarity
+from chirp.common.input import cinput
+from chirp.common import printing
 
 
 # The directory containing the library data.
@@ -19,23 +21,33 @@ _LIBRARY_DATA_PREFIX = os.path.join(ROOT_DIR, "library", "data")
 
 # The file containing the official artist list.
 _WHITELIST_FILE = os.path.join(_LIBRARY_DATA_PREFIX, "artist-whitelist")
- 
+
 # The file containing mappings from alternative forms of an artist name
 # to the official form.
 _MAPPINGS_FILE = os.path.join(_LIBRARY_DATA_PREFIX, "artist-mappings")
 
 # The separator used between the key/value pairs in a file of mappings.
 # Unicode char \xbb is the double-greater-than sign.
-_MAPPINGS_SEP = u"\xbb\xbb\xbb"
+_MAPPINGS_SEP = "\xbb\xbb\xbb"
 
 # A dict containing the data parsed from _WHITELIST_FILE.
 # This is populated at module import-time by calling _init().
+
+# maps standardized form to one unstandardized form
+# note: with the inclusion of breakpoints, the unstandardized value
+#       may not be the only artist name matching the standardized key
+#       and this whitelist may no longer be complete
 _global_whitelist  = {}
 
 # A pair of dicts containing the data parsed from _MAPPINGS_FILE.
 # These are populated at module import-time by calling _init().
 _global_raw_mappings = {}
 _global_mappings = {}
+
+#a dict to map standardized artist names to list of unstandardized names
+_collision_mappings = {}
+#list of all known artists, unstandardized
+_complete_whitelist = []
 
 # A global lock that guards the global whitelist and mappings.
 _global_lock = threading.Lock()
@@ -45,13 +57,33 @@ def all():
     """Returns an iterable sequence of all known artists."""
     _global_lock.acquire()
     try:
-        return _global_whitelist.values()
+        global _complete_whitelist
+        return _complete_whitelist
     finally:
         _global_lock.release()
 
 
 def sort_key(artist_name):
     return similarity.get_sort_key(artist_name.lower())
+
+def check_collisions(artist_name):
+
+    global _collision_mappings
+    exact_matches = _check_collisions(artist_name, _collision_mappings)
+    return exact_matches
+
+def _check_collisions(artist_name, collisions):
+    if not artist_name:
+        return None
+    canon_name = similarity.canonicalize_string(artist_name)
+    if canon_name not in collisions.keys():
+        return None
+    
+    if len(collisions[canon_name]) == 1:
+        return None
+    return collisions[canon_name]
+
+
 
 
 def _standardize_simple(artist_name, whitelist, mappings):
@@ -68,6 +100,11 @@ def _standardize_simple(artist_name, whitelist, mappings):
       A string containing the standardized form of the artist name,
       or None if the name is not recognized.
     """
+    # Just return the artist name if an exist match is in whitelist
+    global _complete_whitelist
+    if artist_name in _complete_whitelist:
+        return artist_name
+    
     canon_name = similarity.canonicalize_string(artist_name)
     # We just try to look up the canonicalized form of the artist name
     # in both the whitelist and mapping dicts.
@@ -93,11 +130,14 @@ def _standardize(artist_name, whitelist, mappings):
       A string containing the standardized form of the artist name,
       or None if the name is not recognized.
     """
+
     artist_name = artist_name.strip()
     # First just try standardization based on the whitelist and mappings.
     # If that works, return the standardized string.
     std = _standardize_simple(artist_name, whitelist, mappings)
-    if std: return std
+
+    if std:
+        return std
     # Since that didn't work, we now try to find a corresponding item
     # in the whitelist by shuffling the order of the words.
     artist_name_split = artist_name.split()
@@ -106,7 +146,8 @@ def _standardize(artist_name, whitelist, mappings):
     if len(artist_name_split) > 1:
         parts = [artist_name_split[-1]] + artist_name_split[:-1]
         std = _standardize_simple(" ".join(parts), whitelist, mappings)
-        if std: return std
+        if std:
+            return std
     # Try swapping the first two words.
     # This handles cases like "Cave, Nick & the Bad Seeds" ->
     # "Nick Cave & the Bad Seeds"
@@ -114,7 +155,8 @@ def _standardize(artist_name, whitelist, mappings):
         parts = ([artist_name_split[1], artist_name_split[0]]
                  + artist_name_split[2:])
         std = _standardize_simple(" ".join(parts), whitelist, mappings)
-        if std: return std
+        if std:
+            return std
     # Nothing worked, so we just return None.
     return None
 
@@ -124,7 +166,7 @@ def standardize(artist_name):
 
     Args:
       artist_name: A unicode string containing an artist's name
-      
+
     Returns:
       A string containing the standardized form of the artist name
       according to the official artist list stored in chirp/library/data,
@@ -231,13 +273,16 @@ def split_and_standardize(artist_name):
     return best_head, best_tail
 
 
-def suggest(name):
+def suggest(name, whitelist = None):
     canon_name = similarity.canonicalize_string(name)
-    _global_lock.acquire()
-    try:
-        canon_whitelist = list(_global_whitelist)
-    finally:
-        _global_lock.release()
+    if whitelist:
+        canon_whitelist = whitelist
+    else:
+        _global_lock.acquire()
+        try:
+            canon_whitelist = list(_global_whitelist)
+        finally:
+            _global_lock.release()
     best_guess = None
     # We ignore any items that are more than 10 edits away from our
     # original name.
@@ -259,13 +304,15 @@ def suggest(name):
 
 def _seq_to_whitelist(seq_of_names):
     new_whitelist = {}
+    global _collision_mappings
     for name in seq_of_names:
         canon = similarity.canonicalize_string(name)
         if canon in new_whitelist:
-            sys.stderr.write("Artist whitelist collision: \"%s\" and \"%s\"\n"
-                             % (new_whitelist[canon], name))
-            return None
-        new_whitelist[canon] = name
+            _collision_mappings[canon].append(name)
+        else:
+            _collision_mappings[canon] = [name]
+            new_whitelist[canon] = name
+        
     return new_whitelist
 
 
@@ -285,11 +332,13 @@ def reset_artist_whitelist(seq_of_names):
     _global_lock.acquire()
     try:
         global _global_whitelist
+        global _complete_whitelist
         _global_whitelist = new_whitelist
+        _complete_whitelist = seq_of_names
         return True
     finally:
         _global_lock.release()
-            
+
 
 ###
 ### The below is code related to initializing the artist whitelist.
@@ -351,6 +400,10 @@ def _init():
     """Bootstrap the global whitelist and mappings."""
     # Read in the artist whitelist.
     global _global_whitelist
+    global _complete_whitelist
+    global _collision_mappings
+    _collision_mappings = {}
+
     assert reset_artist_whitelist(_read_artist_whitelist_from_file(
             codecs.open(_WHITELIST_FILE, "r", "utf-8")))
 
@@ -369,7 +422,7 @@ def merge_whitelist_and_mappings(whitelist, raw_mappings):
     Args:
       whitelist: A whitelist dict
       raw_mappings: A raw mappings dict
-      
+
     Returns:
       A (whitelist, raw_mapping) pair that is equivalent to the args
       but with certain normalizations applied that take information
@@ -377,9 +430,9 @@ def merge_whitelist_and_mappings(whitelist, raw_mappings):
       correcting any inconsistencies.
     """
     new_whitelist = dict(whitelist)
-    inv_whitelist = dict((v, k) for k, v in whitelist.iteritems())
+    inv_whitelist = dict((v, k) for k, v in whitelist.items())
     new_raw_mappings = {}
-    for before, after in raw_mappings.iteritems():
+    for before, after in raw_mappings.items():
         std_before = _standardize(before, whitelist, {})
         std_after = _standardize(after, whitelist, {})
         # Every "after" should exactly match a whitelist item.

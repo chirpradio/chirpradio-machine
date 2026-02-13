@@ -12,7 +12,7 @@ import datetime
 import re
 import sys
 import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from chirp.common.printing import cprint
 from chirp.common import timestamp
@@ -23,10 +23,9 @@ from chirp.library import database
 from chirp.library import order
 from chirp.library import titles
 
-from chirp.common import chirpradio
-from google.appengine.ext import db
-from djdb import models
-from djdb import search
+from chirp.library.datastore import connection
+from chirp.library.datastore import models
+from chirp.library.datastore import search
 
 
 START_TIMESTAMP = 0
@@ -40,7 +39,7 @@ for arg in sys.argv:
 # TODO(trow): Is this optimal?
 _NUM_ALBUMS_PER_FLUSH = 3
 
-_DISC_NUM_RE = re.compile("disc\s+(\d+)", re.IGNORECASE)
+_DISC_NUM_RE = re.compile(r"disc\s+(\d+)", re.IGNORECASE)
 
 _artist_cache = {}
 
@@ -62,7 +61,7 @@ def get_artist_by_name(name):
                 raise UnknownArtistError("Unknown artist: %s" % name)
             _artist_cache[name] = art
             return art
-        except urllib2.URLError:
+        except urllib.error.URLError:
             cprint("Retrying fetch_by_name for '%s'" % name)
 
 
@@ -73,7 +72,7 @@ def seen_album(album_id):
                 if not alb.revoked:
                     return True
             return False
-        except urllib2.URLError:
+        except urllib.error.URLError:
             cprint("Retrying fetch of album_id=%s" % album_id)
 
 
@@ -83,8 +82,8 @@ def process_one_album(idx, alb):
     kwargs["parent"] = idx.transaction
     kwargs["title"] = alb.title()
     kwargs["album_id"] = alb.album_id
-    kwargs["import_timestamp"] = datetime.datetime.utcfromtimestamp(
-        alb.import_timestamp())
+    kwargs["import_timestamp"] = datetime.datetime.fromtimestamp(
+        alb.import_timestamp(), datetime.UTC)
     kwargs["num_tracks"] = len(alb.all_au_files)
     kwargs["import_tags"] = alb.tags()
 
@@ -92,9 +91,10 @@ def process_one_album(idx, alb):
         kwargs["is_compilation"] = True
     else:
         kwargs["is_compilation"] = False
-        kwargs["album_artist"] = get_artist_by_name(alb.artist_name())
+        artist = get_artist_by_name(alb.artist_name())
+        kwargs["album_artist"] = artist.key  # Pass key, not full object
 
-    for key, val in sorted(kwargs.iteritems()):
+    for key, val in sorted(kwargs.items()):
         cprint("%s: %s" % (key, val))
     if seen_album(alb.album_id):
         cprint("   Skipping")
@@ -113,21 +113,24 @@ def process_one_album(idx, alb):
 
     for au_file in alb.all_au_files:
         track_title, import_tags = titles.split_tags(au_file.tit2())
-        track_num, _ = order.decode(unicode(au_file.mutagen_id3["TRCK"]))
+        track_num, _ = order.decode(str(au_file.mutagen_id3["TRCK"]))
         kwargs = {}
         if alb.is_compilation():
-            kwargs["track_artist"] = get_artist_by_name(au_file.tpe1())
+            track_artist = get_artist_by_name(au_file.tpe1())
+            kwargs["track_artist"] = track_artist.key  # Pass key, not full object
         track = models.Track(
             parent=idx.transaction,
             ufid=au_file.ufid(),
-            album=album,
+            album=album.key,  # Pass key, not full object
             title=track_title,
-            import_tags=import_tags,
+            pronunciation="",
+            current_tags=[],
             track_num=track_num,
             sampling_rate_hz=au_file.mp3_header.sampling_rate_hz,
             bit_rate_kbps=int(au_file.mp3_header.bit_rate_kbps),
             channels=au_file.mp3_header.channels_str,
             duration_ms=au_file.duration_ms,
+            revoked=False,
             **kwargs)
         idx.add_track(track)
 
@@ -144,10 +147,9 @@ def flush(list_of_pending_albums):
     # This runs as a batch job, so set a very long deadline.
     while True:
         try:
-            rpc = db.create_rpc(deadline=120)
-            idx.save(rpc=rpc)
+            idx.save(timeout=120)
             return
-        except urllib2.URLError:
+        except urllib.error.URLError:
             cprint("Retrying indexer flush")
 
 
@@ -164,8 +166,7 @@ def main():
 
 
 def main_generator(start_timestamp):
-    #chirpradio.connect("10.0.1.98:8000")
-    chirpradio.connect()
+    connection.connect()
 
     sql_db = database.Database(conf.LIBRARY_DB)
     pending_albums = []

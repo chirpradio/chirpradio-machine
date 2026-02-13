@@ -1,5 +1,5 @@
 
-import BaseHTTPServer
+import http.server
 import logging
 import os
 import sys
@@ -39,7 +39,7 @@ LEVEL_HISTORY_MAX_SIZE = 360
 level_history = []
 
 
-class _RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class _RequestHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         b_obj = self.barix
@@ -89,7 +89,7 @@ def handle_requests(srv, done):
     while not done.isSet():
         try:
             srv.handle_request()
-        except Exception, err:
+        except Exception as err:
             logging.exception("Swallowed exception")
 
 
@@ -110,7 +110,7 @@ def poll_barix(b_obj, log_fh):
             log_fh.write(log_info)
             log_fh.flush()
 
-    except Exception, err:
+    except Exception as err:
         logging.exception("Swallowed exception")
 
 
@@ -121,7 +121,7 @@ def main():
 
     _RequestHandler.barix = barix.Barix(BARIX_HOST, BARIX_PORT)
 
-    srv = BaseHTTPServer.HTTPServer((BARIX_STATUS_HOST, BARIX_STATUS_PORT),
+    srv = http.server.HTTPServer((BARIX_STATUS_HOST, BARIX_STATUS_PORT),
                                     _RequestHandler)
     srv.socket.settimeout(_TIMEOUT_S)
     done = threading.Event()

@@ -1,12 +1,12 @@
 import codecs
 import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
-from chirp.common import chirpradio
-from google.appengine.api import datastore_errors
-from djdb import search
+from chirp.library.datastore import connection
+from google.api_core import exceptions as gcp_exceptions
+from chirp.library.datastore import search
 
-chirpradio.connect()
+connection.connect()
 
 terms_to_opt = set()
 for line in codecs.open("index.data", "r", "utf-8"):
@@ -27,11 +27,11 @@ for term in terms_to_opt:
         try:
             n = search.optimize_index(term)
             break
-        except (datastore_errors.Timeout, urllib2.URLError):
+        except (gcp_exceptions.DeadlineExceeded, gcp_exceptions.ServerError, urllib.error.URLError):
             attempt += 1
-            print "Timeout on attempt %d for %s!" % (attempt,
-                                                     term.encode("utf-8"))
+            print("Timeout on attempt %d for %s!" % (attempt,
+                                                     term.encode("utf-8")))
             time.sleep(2)
     deleted += n
-    print term.encode("utf-8"), n, deleted
+    print(term.encode("utf-8"), n, deleted)
     

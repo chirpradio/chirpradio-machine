@@ -4,16 +4,16 @@ Simple HTTP Proxying for streams.
 This code is strictly experimental, and should not be used in production.
 """
 
-import Queue
+import queue
 import socket
-import SocketServer
+import socketserver
 import threading
 
 from chirp.stream import looper
 from chirp.stream import message
 
 
-class _OurTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+class _OurTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """The TCP server to use when listening for new connections."""
     allow_reuse_address = True
 
@@ -36,11 +36,11 @@ def _send_all(sock, data):
         i += sock.send(data[i:])
 
 
-class _ConnectionHandler(SocketServer.BaseRequestHandler):
+class _ConnectionHandler(socketserver.BaseRequestHandler):
     """A handler for incoming requests."""
 
     def setup(self):
-        self._data_queue = Queue.Queue()
+        self._data_queue = queue.Queue()
 
     def send(self, data):
         """Queue up raw data to be sent to the connected client."""
@@ -53,7 +53,7 @@ class _ConnectionHandler(SocketServer.BaseRequestHandler):
             request_str = self.request.recv(1024)
             if not request_str:
                 return
-            print request_str
+            print(request_str)
             if "\r\n\r\n" in request_str:
                 break
         # Queue up the response headers that we will send back.
@@ -70,7 +70,7 @@ class _ConnectionHandler(SocketServer.BaseRequestHandler):
                 break
             try:
                 _send_all(self.request, data)
-            except socket.error, err:
+            except socket.error as err:
                 # Drop the connection on an error.
                 self.server.proxy.dropped_connections += 1
                 return
@@ -112,17 +112,17 @@ class HttpProxy(message.MessageConsumer):
 
     def _process_message(self, msg):
         if msg.payload is not None:
-            for connection in self._all_connections.itervalues():
+            for connection in self._all_connections.values():
                 connection.send(msg.payload)
 
     def _done_looping(self):
         # Send 'None' to all connections to make them shut down.
-        for connection in self._all_connections.itervalues():
+        for connection in self._all_connections.values():
             connection.send(None)
         self._server.stop()
         self._server.wait()
-        print "Connections = %d" % self.connections
-        print "Dropped connections = %d" % self.dropped_connections
+        print("Connections = %d" % self.connections)
+        print("Dropped connections = %d" % self.dropped_connections)
         
 
     

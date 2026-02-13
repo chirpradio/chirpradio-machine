@@ -106,7 +106,7 @@ _MAX_REASONABLE_TIMESTAMP = parse_human_readable("20380119-000000")
 
 def is_valid(ts):
     """Check if a timestamp appears to be valid."""
-    return (isinstance(ts, (int, long))
+    return (isinstance(ts, int)
             and (_MIN_REASONABLE_TIMESTAMP < ts < _MAX_REASONABLE_TIMESTAMP))
             
 

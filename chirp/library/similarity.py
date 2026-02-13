@@ -26,10 +26,11 @@ def canonicalize_string(txt):
       A unicode string containing a canonicalized version of txt.
     """
     # If necessary, convert txt to unicode.
-    if not isinstance(txt, unicode):
-        txt = unicode(txt)
+    if not isinstance(txt, str):
+        txt = str(txt)
     # Map txt to lower-case.
     txt = txt.lower()
+    txt = txt.strip()
     # Strip off any leading "the".
     if txt.startswith("the "):
         txt = txt[4:]
@@ -42,7 +43,7 @@ def canonicalize_string(txt):
     chars = []
     for c in txt:
         c_cat = unicodedata.category(c)[0]
-        if c == u"&" or c_cat == "L" or c_cat == "N":
+        if c == "&" or c_cat == "L" or c_cat == "N":
             # This strips off any diacritics.
             c = unicodedata.normalize("NFD", c)[0]
             chars.append(c)
@@ -55,13 +56,14 @@ def canonicalize_string(txt):
             # C = other, Z = separators
             if c_cat != "C" and c_cat != "Z":
                 chars.append(c)
-    return u''.join(chars)
+    return ''.join(chars)
 
 
 def get_sort_key(text):
     """Returns a sort key for the string 'text'."""
-    if text.lower().startswith(u"the "):
-        text = text[4:]
+    if text.lower().startswith("the "):
+        #if two strings are the same, the one that begins with 'the' is sorted after
+        text = text[4:] + " "
     return text
 
 
@@ -104,12 +106,14 @@ def get_levenshtein_distance(string_1, string_2, max_value=None):
     if max_value and max_value < abs(len(string_1) - len(string_2)):
         return max_value
 
-    prev_distance_vec = range(1, 1+len(string_2))
+    prev_distance_vec = list(range(1, 1+len(string_2)))
     for i, c_i in enumerate(string_1):
         new_distance_vec = []
         for j, c_j in enumerate(string_2):
             # cost is 0 if c_i == c_j, 1 otherwise.
-            cost = abs(cmp(c_i, c_j))
+            # Python 2 code, deprecated
+            # cost = abs(cmp(c_i, c_j))
+            cost = 0 if c_i == c_j else 1
             delete_dist = prev_distance_vec[j] + 1
             if j == 0:
                 insert_dist  = i + 2
@@ -147,7 +151,7 @@ def get_common_prefix(string_1, string_2):
     if not (string_1 and string_2):
         return ""
     min_len = min(len(string_1), len(string_2))
-    for i in xrange(min_len):
+    for i in range(min_len):
         if string_1[i] != string_2[i]:
             return string_1[:i]
     return string_1[:min_len]
